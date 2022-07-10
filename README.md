@@ -1,11 +1,11 @@
-# allinone_py_lib
+# bagbag
 
 An all in one python library
 
 # Install 
 
 ```bash
-pip3 install allinone_py_lib --upgrade
+pip3 install bagbag --upgrade
 ```
 
 # Library
