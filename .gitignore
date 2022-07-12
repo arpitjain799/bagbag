@@ -3,3 +3,4 @@ ident
 dist
 requirements.txt
 *.ident
+event_log.txt

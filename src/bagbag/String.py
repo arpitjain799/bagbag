@@ -1,4 +1,5 @@
 import re
+import langid
 
 class String():
     def __init__(self, string:str):
@@ -10,6 +11,9 @@ class String():
         """
     def HasChinese(self) -> bool:
         return len(re.findall(r'[\u4e00-\u9fff]+', self.string)) != 0
+    
+    def Language(self) -> str:
+        return langid.classify(self.string)[0]
 
 if __name__ == "__main__":
     print(1, String("ABC").HasChinese())
