@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/opt/homebrew/opt/python@3.10/libexec/bin/python3
 import re 
 import os 
 import sys
