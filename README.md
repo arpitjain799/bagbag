@@ -20,6 +20,7 @@ pip3 install bagbag --upgrade
   * Lg.Error(message:日志内容)
 * String(string:str) 一些字符串处理函数
   * HasChinese() -> bool 是否包含中文
+  * Language() -> str 语言
 * Time 时间
   * Strftime(format:str, timestamp:float|int) -> str
   * Strptime(format:str, timestring:str) -> int

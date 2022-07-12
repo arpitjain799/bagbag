@@ -13,6 +13,10 @@ class String():
         return len(re.findall(r'[\u4e00-\u9fff]+', self.string)) != 0
     
     def Language(self) -> str:
+        """
+        The function takes a string as input and returns the language of the string
+        :return: The language of the string.
+        """
         return langid.classify(self.string)[0]
 
 if __name__ == "__main__":
