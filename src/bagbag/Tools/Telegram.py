@@ -2,6 +2,30 @@ from telethon.sync import TelegramClient
 from telethon.sessions import StringSession
 import telethon
 
+class TelegramGeo():
+    def __init__(self):
+        self.Long = None
+        self.Lat = None 
+        self.AccessHash = None
+    
+    def __repr__(self):
+        return f"TelegramGeo(Long={self.Long}, Lat={self.Lat}, AccessHash={self.AccessHash})"
+        
+    def __str__(self):
+        return f"TelegramGeo(Long={self.Long}, Lat={self.Lat}, AccessHash={self.AccessHash})"
+        
+class TelegramPhoto():
+    def __init__(self):
+        self.ID = None
+        self.AccessHash = 0
+    
+    def __repr__(self):
+        return f"TelegramPhoto(ID={self.ID}, AccessHash={self.AccessHash})"
+        
+    def __str__(self):
+        return f"TelegramPhoto(ID={self.ID}, AccessHash={self.AccessHash})"
+        
+# File and Audio
 class TelegramFile():
     def __init__(self):
         self.Name = ""
@@ -24,14 +48,16 @@ class TelegramMessage():
         self.Time = None 
         self.Action = None 
         self.File = None
+        self.Photo = None
+        self.Geo = None
         self.Message = None
         self.User = None
     
     def __repr__(self):
-        return f"TelegramMessage(PeerType={self.PeerType}, Chat={self.Chat}, ID={self.ID}, Time={self.Time}, Action={self.Action}, File={self.File}, Message={self.Message}, User={self.User})"
+        return f"TelegramMessage(PeerType={self.PeerType}, Chat={self.Chat}, ID={self.ID}, Time={self.Time}, Action={self.Action}, File={self.File}, Photo={self.Photo}, Message={self.Message}, User={self.User})"
         
     def __str__(self):
-        return f"TelegramMessage(PeerType={self.PeerType}, Chat={self.Chat}, ID={self.ID}, Time={self.Time}, Action={self.Action}, File={self.File}, Message={self.Message}, User={self.User})"
+        return f"TelegramMessage(PeerType={self.PeerType}, Chat={self.Chat}, ID={self.ID}, Time={self.Time}, Action={self.Action}, File={self.File}, Photo={self.Photo}, Message={self.Message}, User={self.User})"
         
 class TelegramPeer():
     def __init__(self, Type:str=None, Name:str=None, Username:str=None, ID:int=None, AccessHash:int=None, PhoneNumber:int=None, LangCode:str=None, client:TelegramClient=None):
@@ -86,13 +112,27 @@ class TelegramPeer():
             if message.action:
                 msg.Action = message.action.to_dict()["_"]
             if message.media:
-                msg.File = TelegramFile()
-                msg.File.ID = message.document.id 
-                msg.File.AccessHash = message.document.access_hash
-                msg.File.Size = message.document.size 
-                for attr in message.media.document.attributes:
-                    if attr.to_dict()['_'] == "DocumentAttributeFilename":
-                        msg.File.Name = attr.to_dict()['file_name']
+                if message.document:
+                    msg.File = TelegramFile()
+                    msg.File.ID = message.document.id 
+                    msg.File.AccessHash = message.document.access_hash
+                    msg.File.Size = message.document.size 
+                    for attr in message.media.document.attributes:
+                        if attr.to_dict()['_'] == "DocumentAttributeFilename":
+                            msg.File.Name = attr.to_dict()['file_name']
+                elif message.photo:
+                    msg.Photo = TelegramPhoto()
+                    msg.Photo.ID = message.photo.id
+                    msg.Photo.AccessHash = message.photo.access_hash
+                elif message.geo:
+                    msg.Geo = TelegramGeo()
+                    msg.Geo.AccessHash = message.geo.access_hash
+                    msg.Geo.Lat = message.geo.lat 
+                    msg.Geo.Long = message.geo.long
+                # else: 
+                #     import ipdb 
+                #     ipdb.set_trace()
+                #     print(message)
             if message.message:
                 msg.Message = message.message
             if message.from_id:
@@ -164,7 +204,7 @@ class Telegram():
             tp.Name = obj.title
         elif type(obj) == telethon.tl.types.User:
             tp.Type = "user"
-            tp.Name = " ".join(filter([obj.first_name, obj.last_name], lambda x: x != None))
+            tp.Name = " ".join(filter(lambda x: x != None, [obj.first_name, obj.last_name]))
         
         tp.AccessHash = obj.access_hash
         tp.Username = obj.username 
