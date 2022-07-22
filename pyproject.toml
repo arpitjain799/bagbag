@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bagbag"
-version = "0.5.2"
+version = "0.8.0"
 description = "An all in one python library"
 
 license = "MIT"
@@ -21,6 +21,7 @@ exclude = [
   "publish.py",
   "__pycache__",
   ".github",
+  "*.ident",
 ]
 
 [tool.poetry.dependencies]
@@ -31,6 +32,9 @@ orator = "^0.9.9"
 PyMySQL = "^1.0.2"
 telethon = "^1.24.0"
 langid = "^1.1.6"
+selenium = "^4.3.0"
+Flask = "^2.1.3"
+tqdm = "^4.64.0"
 
 [build-system]
 requires = ["poetry>=0.12a3"]

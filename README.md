@@ -26,7 +26,15 @@ pip3 install bagbag --upgrade
   * Strptime(format:str, timestring:str) -> int
 * Re 正则
   * FindAll(pattern: str | Pattern[str], string: str, flags: _FlagsType = ...) -> list
+* Base64
+  * Encode(s:str) -> str
+  * Decode(s:str) -> str
 * Tools 一些工具
+  * Selenium(SeleniumServer:str=None)
+    * Get(url:str)
+    * PageSource() -> str
+    * Title() -> str
+    * Close()
   * Telegram(appid:str, apphash:str, sessionString:str=None)
     * SessionString() -> str
     * ResolvePeerByUsername(username:str) -> TelegramPeer

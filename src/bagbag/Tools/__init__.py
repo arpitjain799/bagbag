@@ -4,3 +4,5 @@ from .MySQL_SQLite import SQLite
 from .ProgressBar import ProgressBar
 from .Telegram import Telegram
 from .Telegram import TelegramPeer
+from .Selenium import Selenium
+from .Lock import Lock

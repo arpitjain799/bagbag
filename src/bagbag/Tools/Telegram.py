@@ -181,6 +181,9 @@ class Telegram():
         self.client = TelegramClient(StringSession(sessionString), appid, apphash)
         self.client.start()
 
+        me = self.client.get_me()
+        print(me.stringify())
+
     def SessionString(self) -> str:
         """
         It takes the session object from the client object and saves it to a string
