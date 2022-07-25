@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bagbag"
-version = "0.10.0"
+version = "0.11.0"
 description = "An all in one python library"
 
 license = "MIT"
@@ -35,6 +35,7 @@ langid = "^1.1.6"
 selenium = "^4.3.0"
 Flask = "^2.1.3"
 tqdm = "^4.64.0"
+prometheus-client = "^0.14.1"
 
 [build-system]
 requires = ["poetry>=0.12a3"]
