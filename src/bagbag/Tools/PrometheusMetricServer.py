@@ -1,13 +1,13 @@
 import prometheus_client as pc
 
-class prometheusCounter():
+class PrometheusCounter():
     def __init__(self, name:str, help:str) -> None:
         self.c = pc.Counter(name, help)
     
     def Add(self, num:int|float=1):
         self.c.inc(num)
 
-class prometheusCounterVec():
+class PrometheusCounterVec():
     def __init__(self, name:str, labels:list[str], help:str) -> None:
         self.labels = labels 
         self.c = pc.Counter(name, help, labels)
@@ -35,14 +35,14 @@ class prometheusCounterVec():
                 lb = labels[:len(self.labels)] + [""]*(len(self.labels) - len(labels))
         self.c.labels(*lb).inc(num)
 
-class prometheusGauge:
+class PrometheusGauge:
     def __init__(self, name:str, help:str) -> None:
         self.g = pc.Gauge(name, help)
     
     def Set(self, num:int|float):
         self.g.set(num)
 
-class prometheusGaugeVec():
+class PrometheusGaugeVec():
     def __init__(self, name:str, labels:list[str], help:str) -> None:
         self.labels = labels 
         self.g = pc.Gauge(name, help, labels)
@@ -75,17 +75,17 @@ class PrometheusMetricServer():
     def __init__(self, listen:str="0.0.0.0", port:int=9105):
         pc.start_http_server(port, listen)
     
-    def NewCounter(self, name:str, help:str) -> prometheusCounter:
-        return prometheusCounter(name, help)
+    def NewCounter(self, name:str, help:str) -> PrometheusCounter:
+        return PrometheusCounter(name, help)
     
-    def NewCounterWithLabel(self, name:str, labels:list[str], help:str) -> prometheusCounterVec:
-        return prometheusCounterVec(name, labels, help)
+    def NewCounterWithLabel(self, name:str, labels:list[str], help:str) -> PrometheusCounterVec:
+        return PrometheusCounterVec(name, labels, help)
     
-    def NewGauge(self, name:str, help:str) -> prometheusGauge:
-        return prometheusGauge(name, help)
+    def NewGauge(self, name:str, help:str) -> PrometheusGauge:
+        return PrometheusGauge(name, help)
     
-    def NewGaugeWithLabel(self, name:str, labels:list[str], help:str) -> prometheusGaugeVec:
-        return prometheusGaugeVec(name, labels, help)
+    def NewGaugeWithLabel(self, name:str, labels:list[str], help:str) -> PrometheusGaugeVec:
+        return PrometheusGaugeVec(name, labels, help)
 
 if __name__ == "__main__":
     import time
