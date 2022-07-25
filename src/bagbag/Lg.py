@@ -23,6 +23,8 @@ def Trace(*message):
     messages = []
     jstr = " "
     for msg in message:
+        if type(msg) == int or type(msg) == float:
+            msg = str(msg)
         if type(msg) != str:
             msg = "\n" + pformat(msg, indent=4)
         p = inspect.stack()[1]
@@ -42,6 +44,8 @@ def Debug(*message):
     messages = []
     jstr = " "
     for msg in message:
+        if type(msg) == int or type(msg) == float:
+            msg = str(msg)
         if type(msg) != str:
             msg = "\n" + pformat(msg, indent=4)
         p = inspect.stack()[1]
@@ -61,6 +65,8 @@ def Info(*message):
     messages = []
     jstr = " "
     for msg in message:
+        if type(msg) == int or type(msg) == float:
+            msg = str(msg)
         if type(msg) != str:
             msg = "\n" + pformat(msg, indent=4)
         p = inspect.stack()[1]
@@ -80,6 +86,8 @@ def Warn(*message):
     messages = []
     jstr = " "
     for msg in message:
+        if type(msg) == int or type(msg) == float:
+            msg = str(msg)
         if type(msg) != str:
             msg = "\n" + pformat(msg, indent=4)
         p = inspect.stack()[1]
@@ -99,6 +107,8 @@ def Error(*message):
     messages = []
     jstr = " "
     for msg in message:
+        if type(msg) == int or type(msg) == float:
+            msg = str(msg)
         if type(msg) != str:
             msg = "\n" + pformat(msg, indent=4)
         p = inspect.stack()[1]
@@ -158,3 +168,4 @@ if __name__ == "__main__":
     Error("error")
     Debug("text debug message", [ ['spam', 'eggs', 'lumberjack', 'knights', 'ni'], 'spam', 'eggs', 'lumberjack', 'knights', 'ni'])
     Debug("first", "second", "third")
+    Trace("初始化实例", 1)

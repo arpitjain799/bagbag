@@ -140,7 +140,7 @@ class TelegramPeer():
             res.append(msg)
         return res
 
-    def Resolve(self) -> None:
+    def Resolve(self):
         """
         Resolve Peer, get information by peer id. 
         """

@@ -1,14 +1,15 @@
 from __future__ import annotations
+
 from turtle import listen
 import orator
 
 class MySQLSQLiteTable():
-    def __init__(self, db: orator.DatabaseManager, schema: orator.Schema, tbname: str):
+    def __init__(self, db: MySQLSQLiteBase, schema: orator.Schema, tbname: str):
         """
-        This function initializes the class by setting the database, schema, table name, and table
+        This function initializes the class with the database, schema, and table name
         
-        :param db: orator.DatabaseManager
-        :type db: orator.DatabaseManager
+        :param db: The database object
+        :type db: MySQLSQLiteBase
         :param schema: orator.Schema
         :type schema: orator.Schema
         :param tbname: The name of the table you want to use
@@ -17,7 +18,7 @@ class MySQLSQLiteTable():
         self.db = db
         self.schema = schema
         self.tbname = tbname
-        self.table = self.db.table(tbname)
+        self.table = self.db.db.table(tbname)
         self.data = {}
 
     def AddColumn(self, colname: str, coltype: str, default=None, nullable:bool = True) -> MySQLSQLiteTable:
@@ -30,7 +31,7 @@ class MySQLSQLiteTable():
         :param nullable: Whether the column can be null, defaults to True
         :type nullable: bool (optional)
         """
-        if  self.schema.has_table(self.tbname):
+        if self.schema.has_table(self.tbname):
             with self.schema.table(self.tbname) as table:
                 exists = self.schema.has_column(self.tbname, colname)
         
@@ -55,6 +56,8 @@ class MySQLSQLiteTable():
                     col.change()
         else:
             with self.schema.create(self.tbname) as table:
+                table.increments('id').unsigned()
+
                 if coltype == "int":
                     col = table.big_integer(colname)
                 elif coltype == "string":
@@ -145,23 +148,23 @@ class MySQLSQLiteTable():
         self.table.insert(self.data)
         self.data = {}
 
-        self.table = self.db.table(self.tbname)
+        self.table = self.db.db.table(self.tbname)
 
     def Update(self):
         self.table.update(self.data)
 
-        self.table = self.db.table(self.tbname) 
+        self.table = self.db.db.table(self.tbname) 
 
     def Delete(self):
         self.table.delete()
 
-        self.table = self.db.table(self.tbname)
+        self.table = self.db.db.table(self.tbname)
 
     def InsertGetID(self) -> int:
         id = self.table.insert_get_id(self.data)
         self.data = {}
 
-        self.table = self.db.table(self.tbname)
+        self.table = self.db.db.table(self.tbname)
 
         return id
 
@@ -170,36 +173,57 @@ class MySQLSQLiteTable():
         if self.table.first():
             exists = True
 
-        self.table = self.db.table(self.tbname) 
+        self.table = self.db.db.table(self.tbname) 
         return exists
 
     def Count(self) -> int:
         count = self.table.count()
 
-        self.table = self.db.table(self.tbname)
+        self.table = self.db.db.table(self.tbname)
         return count
 
     def Find(self, id:int) -> map:
-        res = self.db.table(self.tbname).where('id', "=", id).first()
+        res = self.db.db.table(self.tbname).where('id', "=", id).first()
         return res
 
-    def First(self) -> map:
+    def First(self) -> map: 
+        """
+        :return: A map of the first row in the table. Return None if the table is empty. 
+        """
         res = self.table.first()
-        self.table = self.db.table(self.tbname)
+        self.table = self.db.db.table(self.tbname)
         return res
 
     def Get(self) -> list:
+        """
+        It gets the data from the table and then resets the table
+        len(result) == 0 if the result set is empty.
+
+        :return: A list of dictionaries.
+        """
         res = self.table.get()
-        self.table = self.db.table(self.tbname)
+        self.table = self.db.db.table(self.tbname)
         return res
 
-    def Columns_NotImplement(self):
-        pass
+    def Columns(self) -> list[map]:
+        """
+        It returns a list of dictionaries, each dictionary containing the name and type of a column in a
+        table
+        :return: A list of dictionaries.
+        """
+        res = []
+        if self.db.driver == "mysql":
+            for i in self.db.db.select("SHOW COLUMNS FROM `"+self.tbname+"`"):
+                res.append({'name': i["Field"], 'type': i["Type"]})
+        elif self.db.driver == "sqlite":
+            for i in self.db.db.select("PRAGMA table_info(`"+self.tbname+"`);"):
+                res.append({'name': i["name"], 'type': i["type"]})
+        return res
 
 # > The class is a base class for MySQL and SQLite
 class MySQLSQLiteBase():
     def Table(self, tbname: str) -> MySQLSQLiteTable:
-        return MySQLSQLiteTable(self.db, self.schema, tbname)
+        return MySQLSQLiteTable(self, self.schema, tbname)
 
     def Execute(self, sql: str) -> (bool | int | list):
         """
@@ -210,7 +234,7 @@ class MySQLSQLiteBase():
 
         if action == "insert":
             return self.db.insert(sql)
-        elif action == "select":
+        elif action in ["select", "show"]:
             return self.db.select(sql)
         elif action == "update":
             return self.db.update(sql)
@@ -220,7 +244,19 @@ class MySQLSQLiteBase():
             return self.db.statement(sql)
 
     def Tables(self) -> list:
-        raise Exception("还未实现")
+        """
+        It returns a list of all the tables in the database
+        :return: A list of tables in the database.
+        """
+        res = []
+        if self.driver == "mysql":
+            tbs = self.Execute("show tables;")
+        elif self.driver == "sqlite":
+            tbs = self.Execute("SELECT `name` FROM sqlite_master WHERE type='table';")
+        for i in tbs:
+            for k in i:
+                res.append(i[k])
+        return res
 
 # > This class is a wrapper for the orator library, which is a wrapper for the mysqlclient library,
 # which is a wrapper for the MySQL C API
@@ -269,7 +305,7 @@ class SQLite(MySQLSQLiteBase):
         config = {
             'sqlite': {
                 'driver': 'sqlite',
-                'database': '/home/Gilda/code/1/3/Cols.db',
+                'database': path,
                 'prefix': ''
             }
         }
@@ -278,10 +314,15 @@ class SQLite(MySQLSQLiteBase):
         self.driver = "sqlite"
 
 if __name__ == "__main__":
-    db = MySQL("10.69.69.1", 3306, "root", "r", "test")
+    db = MySQL("127.0.0.1", 3306, "root", "r", "test")
     # tbl = db.Table("test_tbl").AddColumn("string", "string").AddColumn("int", "string").AddIndex("int")
     #tbl.Data({"string":"string2", "int": 2}).Insert()
-    for row in db.Table("test_tbl").Get():
+    
+    for row in db.Table("__queue__name__name").Get():
         print(row)
 
-    print(db.Table("test_tbl").First())
+    # print(db.Table("test_tbl").First())
+
+    print(db.Table("__queue__name__name").Columns())
+
+    # table.increments('id').unsigned()

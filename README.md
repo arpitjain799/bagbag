@@ -29,17 +29,43 @@ pip3 install bagbag --upgrade
 * Base64
   * Encode(s:str) -> str
   * Decode(s:str) -> str
+* Json
+  * Dumps(obj, indent=4, ensure_ascii=False) -> str
+  * Loads(s:str) -> list | dict
 * Tools 一些工具
+  * Queue(db:Tools.MySql|Tools.SQLite)
+    * New(queueName="__queue__empty__name__") -> NamedQueue
+      * Size() -> int
+      * Get(waiting=True) -> str|None
+      * Put(string:str)
   * Selenium(SeleniumServer:str=None)
+    * ResizeWindow(width:int, height:int)
+    * ScrollRight(pixel:int)
+    * ScrollLeft(pixel:int)
+    * ScrollUp(pixel:int)
+    * ScrollDown(pixel:int)
+    * Url() -> str
+    * Cookie() -> List[dict]
+    * SetCookie(cookie_dict:dict)
+    * Refresh()
+    * GetSession() -> str
     * Get(url:str)
     * PageSource() -> str
     * Title() -> str
     * Close()
+    * Find(xpath:str, waiting=True) -> SeleniumElement
+      * Clear()
+      * Click()
+      * Text() -> str
+      * Attribute(name:str) -> str
+      * Input(string:str)
+      * Submit()
+      * PressEnter()
   * Telegram(appid:str, apphash:str, sessionString:str=None)
     * SessionString() -> str
     * ResolvePeerByUsername(username:str) -> TelegramPeer
       * History(limit:int=100, offset:int=0) -> list
-      * Resolve() -> None # 如果手动根据ID初始化一个TelegramPeer实例, 调用这个函数可以补全这个ID对应的Peer的信息
+      * Resolve() # 如果手动根据ID初始化一个TelegramPeer实例, 调用这个函数可以补全这个ID对应的Peer的信息
   * ProgressBar(iterable_obj, startfrom=0, total=None, title=None, leave=False)
   * Redis(host: str, port: int = 6379, database: int = 0, password: str = "")
     * Set(key:str, value:str, ttl:int=None) -> (bool | None)
@@ -50,29 +76,31 @@ pip3 install bagbag --upgrade
       * Release()
   * MySQL(host: str, port: int, user: str, password: str, database: str, prefix:str = "")
   * SQLite(path: str, prefix:str = "")
-    * Execute(self, sql: str) -> (bool | int | list)
-    * Table(self, tbname: str) -> MySQLSQLiteTable
-      * AddColumn(self, colname: str, coltype: str, default=None, nullable:bool = True) -> MySQLSQLiteTable
-      * AddIndex(self, *cols: str) -> MySQLSQLiteTable
-      * Fields(self, *cols: str) -> MySQLSQLiteTable
-      * Where(self, key:str, opera:str, value:str) -> MySQLSQLiteTable
-      * WhereIn(self, key:str, value: list) -> MySQLSQLiteTable
-      * WhereNotIn(self, key:str, value: list) -> MySQLSQLiteTable
-      * WhereNull(self, key:str) -> MySQLSQLiteTable
-      * WhereNotNull_WillNotImplement(self, key:str)
-      * OrWhere(self, key:str, opera:str, value:str) -> MySQLSQLiteTable
-      * OrWhereIn_WillNotImplement(self, key:str, value: list)
-      * OrderBy(self, *key:str) -> MySQLSQLiteTable
-      * Limit(self, num:int) -> MySQLSQLiteTable
-      * Paginate(self, size:int, page:int) -> MySQLSQLiteTable
-      * Data(self, value:map) -> MySQLSQLiteTable
-      * Offset(self, num:int) -> MySQLSQLiteTable
-      * Insert(self)
-      * Update(self)
-      * Delete(self)
-      * InsertGetID(self) -> int
-      * Exists(self) -> bool
-      * Count(self) -> int
-      * Find(self, id:int) -> map
-      * First(self) -> map
-      * Get(self) -> list
+    * Execute(sql: str) -> (bool | int | list)
+    * Tables() -> list
+    * Table(tbname: str) -> MySQLSQLiteTable
+      * AddColumn(colname: str, coltype: str, default=None, nullable:bool = True) -> MySQLSQLiteTable
+      * AddIndex(*cols: str) -> MySQLSQLiteTable
+      * Fields(*cols: str) -> MySQLSQLiteTable
+      * Where(key:str, opera:str, value:str) -> MySQLSQLiteTable
+      * WhereIn(key:str, value: list) -> MySQLSQLiteTable
+      * WhereNotIn(key:str, value: list) -> MySQLSQLiteTable
+      * WhereNull(key:str) -> MySQLSQLiteTable
+      * WhereNotNull_WillNotImplement(key:str)
+      * OrWhere(key:str, opera:str, value:str) -> MySQLSQLiteTable
+      * OrWhereIn_WillNotImplement(key:str, value: list)
+      * OrderBy(*key:str) -> MySQLSQLiteTable
+      * Limit(num:int) -> MySQLSQLiteTable
+      * Paginate(size:int, page:int) -> MySQLSQLiteTable
+      * Data(value:map) -> MySQLSQLiteTable
+      * Offset(num:int) -> MySQLSQLiteTable
+      * Insert()
+      * Update()
+      * Delete()
+      * InsertGetID() -> int
+      * Exists() -> bool
+      * Count() -> int
+      * Find(id:int) -> map
+      * First() -> map
+      * Get() -> list
+      * Columns() -> list[map]
