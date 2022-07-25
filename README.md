@@ -33,6 +33,19 @@ pip3 install bagbag --upgrade
   * Dumps(obj, indent=4, ensure_ascii=False) -> str
   * Loads(s:str) -> list | dict
 * Tools 一些工具
+  * URL(url:str)
+    * Parse() -> URLParseResult
+    * Encode() -> str
+    * Decode() -> str
+  * PrometheusMetricServer(listen:str="0.0.0.0", port:int=9105)
+    * NewCounter(name:str, help:str) -> prometheusCounter
+      * Add(num:int|float=1)
+    * NewCounterWithLabel(name:str, labels:list[str], help:str) -> prometheusCounterVec
+      * Add(labels:dict|list, num:int|float=1)
+    * NewGauge(name:str, help:str) -> prometheusGauge
+      * Set(num:int|float)
+    * NewGaugeWithLabel(name:str, labels:list[str], help:str) -> prometheusGaugeVec
+      * Set(labels:dict|list, num:int|float=1)
   * Queue(db:Tools.MySql|Tools.SQLite)
     * New(queueName="__queue__empty__name__") -> NamedQueue
       * Size() -> int
