@@ -1,17 +1,15 @@
 from __future__ import annotations
 
-from MySQL_SQLite import MySQL as mysql
-from MySQL_SQLite import SQLite as sqlite
+from .MySQL_SQLite import MySQL
+from .MySQL_SQLite import SQLite
 
 import time
 
-import sys 
-sys.path.append("..") 
-from Base64 import Encode as b64encode
-from Base64 import Decode as b64decode
+from ..Base64 import Encode as b64encode
+from ..Base64 import Decode as b64decode
 
-class Queue():
-    def __init__(self, db:mysql|sqlite):
+class Queue():  
+    def __init__(self, db:MySQL|SQLite):
         self.db = db 
     
     def New(self, queueName="__queue__empty__name__") -> NamedQueue:
@@ -24,7 +22,7 @@ class Queue():
         return NamedQueue(self.db, queueName, self)
         
 class NamedQueue():
-    def __init__(self, db:mysql|sqlite, name:str, tq:Queue) -> None:
+    def __init__(self, db:MySQL|SQLite, name:str, tq:Queue) -> None:
         self.db = db 
         self.name = name 
         self.tq = tq 
@@ -52,7 +50,7 @@ class NamedQueue():
         }).Insert()
 
 if __name__ == "__main__":
-    db = mysql("127.0.0.1", 3306, "root", "r", "test")
+    db = MySQL("127.0.0.1", 3306, "root", "r", "test")
     q = Queue(db)
     qn = q.New("name")
     qn.Put("abc")

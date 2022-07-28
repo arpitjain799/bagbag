@@ -1,8 +1,12 @@
+from __future__ import annotations
+
 from selenium import webdriver
 from typing import List
 from selenium.webdriver.common.by import By
 import selenium
 from selenium.webdriver.common.keys import Keys
+
+import time
 
 # > The SeleniumElement class is a wrapper for the selenium.webdriver.remote.webelement.WebElement
 # class
@@ -10,17 +14,19 @@ class SeleniumElement():
     def __init__(self, element:selenium.webdriver.remote.webelement.WebElement):
         self.element = element
     
-    def Clear(self):
+    def Clear(self) -> SeleniumElement:
         """
         Clear() clears the text if it's a text entry element
         """
         self.element.clear()
+        return self
     
-    def Click(self):
+    def Click(self) -> SeleniumElement:
         """
         Click() is a function that clicks on an element
         """
         self.element.click()
+        return self
     
     def Text(self) -> str:
         """
@@ -39,7 +45,7 @@ class SeleniumElement():
         """
         return self.element.get_attribute(name)
     
-    def Input(self, string:str):
+    def Input(self, string:str) -> SeleniumElement:
         """
         The function Input() takes in a string and sends it to the element
         
@@ -47,18 +53,21 @@ class SeleniumElement():
         :type string: str
         """
         self.element.send_keys(string)
+        return self
     
-    def Submit(self):
+    def Submit(self) -> SeleniumElement:
         """
         Submit() is a function that submits the form that the element belongs to
         """
         self.element.submit()
+        return self
     
-    def PressEnter(self):
+    def PressEnter(self) -> SeleniumElement:
         """
         It takes the element that you want to press enter on and sends the enter key to it
         """
         self.element.send_keys(Keys.ENTER)
+        return self
 
 class Selenium():
     def __init__(self, seleniumServer:str=None, disableLoadImage=False, sessionID=None):
@@ -95,7 +104,7 @@ class Selenium():
             self.Close()
             self.driver.session_id = sessionID
     
-    def Find(self, xpath:str, waiting=True) -> SeleniumElement:
+    def Find(self, xpath:str, waiting=True) -> SeleniumElement|None:
         """
         It will keep trying to find the element until it finds it or keep waiting
         
@@ -113,7 +122,7 @@ class Selenium():
                 if waiting:
                     time.sleep(1)
                 else:
-                    raise e
+                    return None
 
         # import ipdb
         # ipdb.set_trace()
