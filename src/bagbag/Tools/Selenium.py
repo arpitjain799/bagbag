@@ -127,6 +127,9 @@ class Selenium():
         # import ipdb
         # ipdb.set_trace()
     
+    def StatusCode(self) -> int:
+        self.driver.stat
+    
     def ResizeWindow(self, width:int, height:int):
         """
         :param width: The width of the window in pixels

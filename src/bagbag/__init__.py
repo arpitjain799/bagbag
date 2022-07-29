@@ -10,3 +10,4 @@ from . import Json
 from . import Os
 from . import Funcs
 from . import Re
+from . import Hash
