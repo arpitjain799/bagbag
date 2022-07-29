@@ -1,12 +1,22 @@
 from __future__ import annotations
 
-from .MySQL_SQLite import MySQL
-from .MySQL_SQLite import SQLite
+try:
+    from .MySQL_SQLite import MySQL
+    from .MySQL_SQLite import SQLite
+except:
+    from MySQL_SQLite import MySQL
+    from MySQL_SQLite import SQLite
 
 import time
 
-from ..Base64 import Encode as b64encode
-from ..Base64 import Decode as b64decode
+try:
+    from ..Base64 import Encode as b64encode
+    from ..Base64 import Decode as b64decode
+except:
+    import sys 
+    sys.path.append("..")
+    from Base64 import Encode as b64encode
+    from Base64 import Decode as b64decode
 
 class Queue():  
     def __init__(self, db:MySQL|SQLite):

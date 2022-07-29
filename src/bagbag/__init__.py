@@ -11,3 +11,4 @@ from . import Os
 from . import Funcs
 from . import Re
 from . import Hash
+from . import Http
