@@ -26,3 +26,4 @@ if __name__ == "__main__":
     print(1, String("ABC").HasChinese())
     print(2, String("ddddd中kkkkkkk").HasChinese())
     print(3, String("\"wef\t测\b试....\n\tffef'").Repr())
+
