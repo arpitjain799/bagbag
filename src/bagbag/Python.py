@@ -16,3 +16,7 @@ def Range(startOrEnd:int, end:int=None) -> Iterable:
         return range(startOrEnd, end)
     else:
         return range(0, startOrEnd)
+
+if __name__ == "__main__":
+    print([i for i in Range(10)])
+    print([i for i in Range(20, 30)])

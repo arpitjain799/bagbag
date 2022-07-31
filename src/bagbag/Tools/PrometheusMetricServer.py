@@ -47,7 +47,7 @@ class PrometheusGaugeVec():
         self.labels = labels 
         self.g = pc.Gauge(name, help, labels)
     
-    def Set(self, labels:dict|list, num:int|float=1):
+    def Set(self, labels:dict|list, num:int|float):
         """
         It adds a number to the graph.
         
