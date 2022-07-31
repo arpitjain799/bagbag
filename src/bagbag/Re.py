@@ -1,6 +1,6 @@
 import re
 
-def FindAll(pattern:str, string:str, multiline=False) -> list:
+def FindAll(pattern:str, string:str, multiline=False) -> list[list[str]]:
     res = []
     if multiline:
         reres = re.findall(pattern, string, re.MULTILINE)
