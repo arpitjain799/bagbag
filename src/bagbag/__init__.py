@@ -1,5 +1,4 @@
 import ipdb
-import os
 
 from . import Lg
 from . import Tools
@@ -12,6 +11,6 @@ from . import Os
 from . import Funcs
 from . import Re
 from . import Hash
-from . import Htt
+from . import Http
 from .Thread import Thread
 

@@ -1,5 +1,6 @@
 import os
 import sys 
+from . import Path
 
 def Exit(num:int=0):
     sys.exit(num)
