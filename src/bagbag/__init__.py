@@ -11,4 +11,6 @@ from . import Os
 from . import Funcs
 from . import Re
 from . import Hash
-from . import Http
+from . import Htt
+from .Thread import Thread
+

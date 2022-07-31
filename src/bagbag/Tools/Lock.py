@@ -1,13 +1,20 @@
 import multiprocessing
 
+# > The `Lock` class is a wrapper around the `multiprocessing.Lock` class
 class Lock():
     def __init__(self):
         self.lock = multiprocessing.Lock()
     
     def Acquire(self):
+        """
+        The function Acquire() is a method of the class Lock. It acquires the lock
+        """
         self.lock.acquire()
 
     def Release(self):
+        """
+        The function releases the lock
+        """
         self.lock.release()
 
 if __name__ == "__main__":
