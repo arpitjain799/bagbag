@@ -3,9 +3,11 @@ from __future__ import annotations
 try:
     from .MySQL_SQLite import MySQL
     from .MySQL_SQLite import SQLite
+    from .Lock import Lock 
 except:
     from MySQL_SQLite import MySQL
     from MySQL_SQLite import SQLite
+    from Lock import Lock
 
 import time
 
@@ -36,14 +38,17 @@ class NamedQueue():
         self.db = db 
         self.name = name 
         self.tq = tq 
+        self.lock = Lock()
     
     def Size(self) -> int:
         return self.db.Table(self.name).Count()
     
     def Get(self, waiting=True) -> str|None:
+        self.lock.Acquire()
         r = self.db.Table(self.name).First()
         if not r:
             if not waiting:
+                self.lock.Release()
                 return None 
             else:
                 while not r:
@@ -52,6 +57,7 @@ class NamedQueue():
         
         self.db.Table(self.name).Where("id", "=", r["id"]).Delete()
 
+        self.lock.Release()
         return b64decode(r["data"])
     
     def Put(self, string:str):
