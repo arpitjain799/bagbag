@@ -1,9 +1,11 @@
 import sys as __sys
 from loguru import logger
 from pprint import pformat
-from pprint import pprint
 import inspect
 import os
+import threading 
+import multiprocessing
+import re
 
 __config = {
     "handlers": [
@@ -33,11 +35,15 @@ def Trace(*message):
         messages.append(msg)
     
     logger.opt(ansi=True).trace(
-        "<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
+        "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
         message=jstr.join(messages), 
-        function=p.function,
+        function=p.function.replace("<module>", "None"),
         line=p.lineno,
         filename=os.path.basename(p.filename),
+        # tid=threading.get_native_id()
+        # tid=threading.get_ident(),
+        tname=re.sub("\([a-zA-Z0-9]+\)", "", threading.current_thread().name.replace("Thread-", "T").replace(" ", "").replace("MainThread", "MT")),
+        pname=multiprocessing.current_process().name.replace("Process-", "P").replace("MainProcess", "MP"),
     )
 
 def Debug(*message):
@@ -54,11 +60,15 @@ def Debug(*message):
         messages.append(msg)
     
     logger.opt(ansi=True).debug(
-        "<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
+        "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
         message=jstr.join(messages), 
-        function=p.function,
+        function=p.function.replace("<module>", "None"),
         line=p.lineno,
         filename=os.path.basename(p.filename),
+        # tid=threading.get_native_id()
+        # tid=threading.get_ident(),
+        tname=re.sub("\([a-zA-Z0-9]+\)", "", threading.current_thread().name.replace("Thread-", "T").replace(" ", "").replace("MainThread", "MT")),
+        pname=multiprocessing.current_process().name.replace("Process-", "P").replace("MainProcess", "MP"),
     )
 
 def Info(*message):
@@ -75,11 +85,15 @@ def Info(*message):
         messages.append(msg)
     
     logger.opt(ansi=True).info(
-        "<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
+        "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
         message=jstr.join(messages), 
-        function=p.function,
+        function=p.function.replace("<module>", "None"),
         line=p.lineno,
         filename=os.path.basename(p.filename),
+        # tid=threading.get_native_id()
+        # tid=threading.get_ident(),
+        tname=re.sub("\([a-zA-Z0-9]+\)", "", threading.current_thread().name.replace("Thread-", "T").replace(" ", "").replace("MainThread", "MT")),
+        pname=multiprocessing.current_process().name.replace("Process-", "P").replace("MainProcess", "MP"),
     )
 
 def Warn(*message):
@@ -96,11 +110,15 @@ def Warn(*message):
         messages.append(msg)
     
     logger.opt(ansi=True).warning(
-        "<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
+        "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
         message=jstr.join(messages), 
-        function=p.function,
+        function=p.function.replace("<module>", "None"),
         line=p.lineno,
         filename=os.path.basename(p.filename),
+        # tid=threading.get_native_id()
+        # tid=threading.get_ident(),
+        tname=re.sub("\([a-zA-Z0-9]+\)", "", threading.current_thread().name.replace("Thread-", "T").replace(" ", "").replace("MainThread", "MT")),
+        pname=multiprocessing.current_process().name.replace("Process-", "P").replace("MainProcess", "MP"),
     )
 
 def Error(*message):
@@ -117,11 +135,15 @@ def Error(*message):
         messages.append(msg)
     
     logger.opt(ansi=True).error(
-        "<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
+        "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
         message=jstr.join(messages), 
-        function=p.function,
+        function=p.function.replace("<module>", "None"),
         line=p.lineno,
         filename=os.path.basename(p.filename),
+        # tid=threading.get_native_id()
+        # tid=threading.get_ident(),
+        tname=re.sub("\([a-zA-Z0-9]+\)", "", threading.current_thread().name.replace("Thread-", "T").replace(" ", "").replace("MainThread", "MT")),
+        pname=multiprocessing.current_process().name.replace("Process-", "P").replace("MainProcess", "MP"),
     )
 
 def SetLevel(level: str):
@@ -158,6 +180,20 @@ def SetFile(path: str, size: int, during: int, color:bool=True, json:bool=False)
         serialize=json,
     )
 
+# import time 
+
+# def ff():    
+#     def f():
+#         while True:
+#             time.sleep(1)
+#             Trace(time.time())
+
+#     t = threading.Thread(target=f)
+#     t.daemon = True 
+#     t.start()
+
+#     time.sleep(99999)
+
 if __name__ == "__main__":
     # SetLevel("info")
     # SetFile("test.log", 1, 1, json=True)
@@ -169,3 +205,11 @@ if __name__ == "__main__":
     Debug("text debug message", [ ['spam', 'eggs', 'lumberjack', 'knights', 'ni'], 'spam', 'eggs', 'lumberjack', 'knights', 'ni'])
     Debug("first", "second", "third")
     Trace("初始化实例", 1)
+
+
+    
+    p = multiprocessing.Process(target=ff)
+    #p.daemon = True 
+    p.start()
+
+    time.sleep(99999)

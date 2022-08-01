@@ -136,3 +136,8 @@ pip3 install bagbag --upgrade
       * First() -> map
       * Get() -> list
       * Columns() -> list[map]
+
+其它的
+
+* Thread(func, *args:Any) -> threading.Thread # 启动线程, daemon=True
+* Process(func, *args:Any) -> multiprocessing.Process # 启动进程, daemon=True
