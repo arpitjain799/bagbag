@@ -15,3 +15,10 @@ from . import Hash
 from . import Http
 from .Thread import Thread
 
+# import re
+# import forbiddenfruit
+
+# def __hasChinese(self) -> bool:
+#     return len(re.findall(r'[\u4e00-\u9fff]+', self)) != 0
+
+# forbiddenfruit.curse(str, "HasChinese", __hasChinese)
