@@ -257,6 +257,9 @@ class MySQLSQLiteBase():
             for k in i:
                 res.append(i[k])
         return res
+    
+    def Close(self):
+        self.db.disconnect()
 
 # > This class is a wrapper for the orator library, which is a wrapper for the mysqlclient library,
 # which is a wrapper for the MySQL C API
@@ -314,15 +317,22 @@ class SQLite(MySQLSQLiteBase):
         self.driver = "sqlite"
 
 if __name__ == "__main__":
-    db = MySQL("127.0.0.1", 3306, "root", "r", "test")
-    # tbl = db.Table("test_tbl").AddColumn("string", "string").AddColumn("int", "string").AddIndex("int")
-    #tbl.Data({"string":"string2", "int": 2}).Insert()
-    
-    for row in db.Table("__queue__name__name").Get():
-        print(row)
+    db = SQLite("data.db")
+    tbl = db.Table("test_tbl").AddColumn("string", "string").AddColumn("int", "string").AddIndex("int")
+    tbl.Data({"string":"string2", "int": 2}).Insert()
+    c = tbl.Where("string", "=", "string2").Count()
+    print(c)
+
+    db.Close()
+
+    import os 
+    os.unlink("data.db")
 
     # print(db.Table("test_tbl").First())
 
-    print(db.Table("__queue__name__name").Columns())
+    # db = MySQL("127.0.0.1", 3306, "root", "r", "test")
+    
+    # for row in db.Table("__queue__name__name").Get():
+    #     print(row)
 
-    # table.increments('id').unsigned()
+    # print(db.Table("__queue__name__name").Columns())
