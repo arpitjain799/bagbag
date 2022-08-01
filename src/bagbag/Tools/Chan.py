@@ -15,7 +15,7 @@ class NoNewItem(ChannelException):
 
 # > A `Chan` is a thread-safe queue with a `Size` method
 class Chan(Generic[_T]):
-    def __init__(self, size=0) -> None:
+    def __init__(self, size=1) -> None:
         self.q = queue.Queue(maxsize=size)
         self.closed = False 
     
