@@ -17,8 +17,8 @@ class MySQLSQLiteTable():
         """
         self.db = db
         self.schema = schema
-        self.tbname = tbname
-        self.table = self.db.db.table(tbname)
+        self.tbname = ''.join(list(map(lambda x: x if x in "_qazwsxedcrfvtgbyhnujmikolopQAZWSXEDCRFVTGBYHNUJMIKOLP0123456789" else "_", tbname)))
+        self.table = self.db.db.table(self.tbname)
         self.data = {}
 
     def AddColumn(self, colname: str, coltype: str, default=None, nullable:bool = True) -> MySQLSQLiteTable:
