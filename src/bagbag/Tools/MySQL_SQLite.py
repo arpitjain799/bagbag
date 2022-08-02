@@ -56,7 +56,7 @@ class MySQLSQLiteTable():
                     col.change()
         else:
             with self.schema.create(self.tbname) as table:
-                table.increments('id').unsigned()
+                table.increments('id')
 
                 if coltype == "int":
                     col = table.big_integer(colname)
