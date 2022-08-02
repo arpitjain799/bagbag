@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from turtle import listen
 import orator
 
 class MySQLSQLiteTable():
