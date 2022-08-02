@@ -18,12 +18,12 @@ class Response():
     Render = render_template
 
 class RequestArgs():
-    def Get(self, *args, **kwargs) -> str | None:
-        return request.args.get(*args, **kwargs)
+    def Get(self, name:str, default:str="") -> str | None:
+        return request.args.get(name, default)
 
 class RequestForm():
-    def Get(self, *args, **kwargs) -> str | None:
-        return request.form.get(*args, **kwargs)
+    def Get(self, name:str, default:str="") -> str | None:
+        return request.form.get(name, default)
 
 class Request():
     Args = RequestArgs()
