@@ -38,7 +38,7 @@ class Request():
     def Data(self) -> str:
         return request.get_data().decode("utf-8")
 
-class Web():
+class WebServer():
     def __init__(self, name:str=__name__):
         self.app = Flask(name)
         
@@ -53,7 +53,7 @@ class Web():
             Thread(self.app.run, host, port, True)
 
 if __name__ == "__main__":
-    w = Web()
+    w = WebServer()
 
     @w.Route("/")
     def index():

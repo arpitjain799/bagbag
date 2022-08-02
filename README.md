@@ -49,7 +49,7 @@ pip3 install bagbag --upgrade
   * PutRaw(url:str, Data:str, Timeout:str=None, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False, Debug:bool=False)
   * PutJson(url:str, Json:dict, Timeout:str=None, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False)
 * Tools 一些工具
-  * Web(name:str=\_\_name\_\_) # 例子见源码文件Web.py的后半部分
+  * WebServer(name:str=\_\_name\_\_) # 例子见源码文件Web.py的后半部分
     * Run(self, host:str, port:int, block:bool=True) # 监听HTTP服务
     * Route: (path:str, methods:list=["GET", "HEAD", "OPTIONS"]) # 例子见Web.py文件, 是一个装饰器
     * Request()

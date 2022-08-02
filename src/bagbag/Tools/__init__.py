@@ -11,4 +11,4 @@ from .PrometheusMetricServer import PrometheusMetricServer
 from .URL import URL
 from .Ratelimit import RateLimit
 from .Chan import Chan
-from .Web import Web
+from .WebServer import WebServer
