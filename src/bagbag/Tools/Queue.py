@@ -25,6 +25,8 @@ class Queue():
         self.db = db 
     
     def New(self, queueName="__queue__empty__name__") -> NamedQueue:
+        queueName = ''.join(list(map(lambda x: x if x in "qazwsxedcrfvtgbyhnujmikolopQAZWSXEDCRFVTGBYHNUJMIKOLP0123456789" else "_", queueName)))
+        
         if queueName != "__queue__empty__name__":
             queueName = "__queue__name__" + queueName
         
@@ -35,6 +37,8 @@ class Queue():
         
 class NamedQueue():
     def __init__(self, db:MySQL|SQLite, name:str, tq:Queue) -> None:
+        name = ''.join(list(map(lambda x: x if x in "qazwsxedcrfvtgbyhnujmikolopQAZWSXEDCRFVTGBYHNUJMIKOLP0123456789" else "_", name)))
+
         self.db = db 
         self.name = name 
         self.tq = tq 
