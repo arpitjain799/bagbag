@@ -46,11 +46,27 @@ class WebServer():
         self.Request = Request()
         self.Response = Response()
         
-    def Run(self, host:str, port:int, block:bool=True):
+    def Run(self, host:str, port:int, block:bool=True, debug:bool=False):
+        """
+        Runs the Flask app on the specified host and port, optionally in a separate thread
+        If block is False then debug will always be False
+        
+        :param host: The hostname to listen on. Set this to '0.0.0.0' to have the server available
+        externally as well. Defaults to '127.0.0.1' or 'localhost'
+        :type host: str
+        :param port: The port to run the server on
+        :type port: int
+        :param block: If True, the server will run in the main thread. If False, it will run in a
+        separate thread, defaults to True
+        :type block: bool (optional)
+        :param debug: If True, the server will reload itself on code changes, and it will also provide a
+        helpful debugger if things go wrong, defaults to False
+        :type debug: bool (optional)
+        """
         if block:
-            self.app.run(host, port, True)
+            self.app.run(host, port, debug)
         else:
-            Thread(self.app.run, host, port, True)
+            Thread(self.app.run, host, port, False)
 
 if __name__ == "__main__":
     w = WebServer()
@@ -91,4 +107,7 @@ if __name__ == "__main__":
     def postData():
         return w.Request.Data()
 
-    w.Run("0.0.0.0", 8080)
+    w.Run("0.0.0.0", 8080, block=False, debug=False)
+
+    import time
+    time.sleep(8888)
