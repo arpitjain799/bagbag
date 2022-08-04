@@ -51,9 +51,10 @@ class Chan(Generic[_T]):
             else:
                 while True:
                     try:
-                        item = self.q.get(block=False, timeout=0.1)
+                        item = self.q.get(block=False)
                         return item 
                     except queue.Empty:
+                        time.sleep(0.1)
                         pass 
                     if self.q.qsize() == 0 and self.closed:
                         raise ChannelClosed("Channel已关闭")
@@ -89,7 +90,11 @@ class Chan(Generic[_T]):
 
 if __name__ == "__main__":
     # 声明Queue里面内容的类型
-    q:Chan[str] = Chan()
+    q:Chan[str] = Chan(10)
+
+    for _ in q:
+        print(_)
+
     q.Put("0")
     s = q.Get() # (variable) s: str
     print(s)
@@ -120,5 +125,8 @@ if __name__ == "__main__":
 
     import time
     time.sleep(1)
+
+    for _ in q:
+        print(_)
 
     q.Close()
