@@ -27,13 +27,16 @@ def Trace(*message):
     for msg in message:
         if type(msg) == int or type(msg) == float:
             msg = str(msg)
-        if type(msg) != str:
+        if type(msg) in [list, dict, set]:
             msg = "\n" + pformat(msg, indent=4)
-        p = inspect.stack()[1]
+        else:
+            msg = str(msg)
         if message.count("\n") != 0 and jstr == " ":
             jstr = "\n"
         messages.append(msg)
     
+    p = inspect.stack()[1]
+
     logger.opt(ansi=True).trace(
         "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
         message=jstr.join(messages), 
@@ -52,12 +55,15 @@ def Debug(*message):
     for msg in message:
         if type(msg) == int or type(msg) == float:
             msg = str(msg)
-        if type(msg) != str:
+        if type(msg) in [list, dict, set]:
             msg = "\n" + pformat(msg, indent=4)
-        p = inspect.stack()[1]
+        else:
+            msg = str(msg)
         if message.count("\n") != 0 and jstr == " ":
             jstr = "\n"
         messages.append(msg)
+    
+    p = inspect.stack()[1]
     
     logger.opt(ansi=True).debug(
         "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
@@ -77,12 +83,15 @@ def Info(*message):
     for msg in message:
         if type(msg) == int or type(msg) == float:
             msg = str(msg)
-        if type(msg) != str:
+        if type(msg) in [list, dict, set]:
             msg = "\n" + pformat(msg, indent=4)
-        p = inspect.stack()[1]
+        else:
+            msg = str(msg)
         if message.count("\n") != 0 and jstr == " ":
             jstr = "\n"
         messages.append(msg)
+    
+    p = inspect.stack()[1]
     
     logger.opt(ansi=True).info(
         "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
@@ -102,12 +111,15 @@ def Warn(*message):
     for msg in message:
         if type(msg) == int or type(msg) == float:
             msg = str(msg)
-        if type(msg) != str:
+        if type(msg) in [list, dict, set]:
             msg = "\n" + pformat(msg, indent=4)
-        p = inspect.stack()[1]
+        else:
+            msg = str(msg)
         if message.count("\n") != 0 and jstr == " ":
             jstr = "\n"
         messages.append(msg)
+    
+    p = inspect.stack()[1]
     
     logger.opt(ansi=True).warning(
         "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
@@ -127,12 +139,15 @@ def Error(*message):
     for msg in message:
         if type(msg) == int or type(msg) == float:
             msg = str(msg)
-        if type(msg) != str:
+        if type(msg) in [list, dict, set]:
             msg = "\n" + pformat(msg, indent=4)
-        p = inspect.stack()[1]
+        else:
+            msg = str(msg)
         if message.count("\n") != 0 and jstr == " ":
             jstr = "\n"
         messages.append(msg)
+    
+    p = inspect.stack()[1]
     
     logger.opt(ansi=True).error(
         "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
@@ -197,10 +212,12 @@ def SetFile(path: str, size: int, during: int, color:bool=True, json:bool=False)
 if __name__ == "__main__":
     # SetLevel("info")
     # SetFile("test.log", 1, 1, json=True)
+    Trace(True)
     Trace("trace")
     Debug("debug")
     Info("info")
     Warn("warn")
+    Warn(False)
     Error("error")
     Debug("text debug message", [ ['spam', 'eggs', 'lumberjack', 'knights', 'ni'], 'spam', 'eggs', 'lumberjack', 'knights', 'ni'])
     Debug("first", "second", "third")
@@ -208,8 +225,8 @@ if __name__ == "__main__":
 
 
     
-    p = multiprocessing.Process(target=ff)
-    #p.daemon = True 
-    p.start()
+    # p = multiprocessing.Process(target=ff)
+    # #p.daemon = True 
+    # p.start()
 
-    time.sleep(99999)
+    # time.sleep(99999)
