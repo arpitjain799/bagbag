@@ -4,3 +4,4 @@ dist
 requirements.txt
 *.ident
 event_log.txt
+src/test.py

@@ -144,23 +144,53 @@ class MySQLSQLiteTable():
         return self 
 
     def Insert(self):
-        self.table.insert(self.data)
+        try:
+            self.table.insert(self.data)
+        except orator.exceptions.query.QueryException as e:
+            if self.db.driver == "mysql":
+                self.db.db.reconnect()
+                self.table.insert(self.data)
+            else:
+                raise e
+
         self.data = {}
 
         self.table = self.db.db.table(self.tbname)
 
     def Update(self):
-        self.table.update(self.data)
+        try:
+            self.table.update(self.data)
+        except orator.exceptions.query.QueryException as e:
+            if self.db.driver == "mysql":
+                self.db.db.reconnect()
+                self.table.update(self.data)
+            else:
+                raise e
 
         self.table = self.db.db.table(self.tbname) 
 
     def Delete(self):
-        self.table.delete()
+        try:
+            self.table.delete()
+        except orator.exceptions.query.QueryException as e:
+            if self.db.driver == "mysql":
+                self.db.db.reconnect()
+                self.table.delete()
+            else:
+                raise e
 
         self.table = self.db.db.table(self.tbname)
 
     def InsertGetID(self) -> int:
-        id = self.table.insert_get_id(self.data)
+        try:
+            id = self.table.insert_get_id(self.data)
+        except orator.exceptions.query.QueryException as e:
+            if self.db.driver == "mysql":
+                self.db.db.reconnect()
+                id = self.table.insert_get_id(self.data)
+            else:
+                raise e
+
         self.data = {}
 
         self.table = self.db.db.table(self.tbname)
@@ -169,27 +199,49 @@ class MySQLSQLiteTable():
 
     def Exists(self) -> bool: 
         exists = False
-        if self.table.first():
+        if self.First():
             exists = True
 
-        self.table = self.db.db.table(self.tbname) 
         return exists
 
     def Count(self) -> int:
-        count = self.table.count()
+        try:
+            count = self.table.count()
+        except orator.exceptions.query.QueryException as e:
+            if self.db.driver == "mysql":
+                self.db.db.reconnect()
+                count = self.table.count()
+            else:
+                raise e
 
         self.table = self.db.db.table(self.tbname)
         return count
 
     def Find(self, id:int) -> map:
-        res = self.db.db.table(self.tbname).where('id', "=", id).first()
+        try:
+            res = self.db.db.table(self.tbname).where('id', "=", id).first()
+        except orator.exceptions.query.QueryException as e:
+            if self.db.driver == "mysql":
+                self.db.db.reconnect()
+                res = self.db.db.table(self.tbname).where('id', "=", id).first()
+            else:
+                raise e
+        
         return res
 
     def First(self) -> map: 
         """
         :return: A map of the first row in the table. Return None if the table is empty. 
         """
-        res = self.table.first()
+        try:
+            res = self.table.first()
+        except orator.exceptions.query.QueryException as e:
+            if self.db.driver == "mysql":
+                self.db.db.reconnect()
+                res = self.table.first()
+            else:
+                raise e
+
         self.table = self.db.db.table(self.tbname)
         return res
 
@@ -200,7 +252,15 @@ class MySQLSQLiteTable():
 
         :return: A list of dictionaries.
         """
-        res = self.table.get()
+        try:
+            res = self.table.get()
+        except orator.exceptions.query.QueryException as e:
+            if self.db.driver == "mysql":
+                self.db.db.reconnect()
+                res = self.table.get()
+            else:
+                raise e
+
         self.table = self.db.db.table(self.tbname)
         return res
 
@@ -212,7 +272,7 @@ class MySQLSQLiteTable():
         """
         res = []
         if self.db.driver == "mysql":
-            for i in self.db.db.select("SHOW COLUMNS FROM `"+self.tbname+"`"):
+            for i in self.db.Execute("SHOW COLUMNS FROM `"+self.tbname+"`"):
                 res.append({'name': i["Field"], 'type': i["Type"]})
         elif self.db.driver == "sqlite":
             for i in self.db.db.select("PRAGMA table_info(`"+self.tbname+"`);"):
@@ -231,16 +291,33 @@ class MySQLSQLiteBase():
         """
         action = sql.split()[0].lower() 
 
-        if action == "insert":
-            return self.db.insert(sql)
-        elif action in ["select", "show"]:
-            return self.db.select(sql)
-        elif action == "update":
-            return self.db.update(sql)
-        elif action == "delete":
-            return self.db.delete(sql)
-        else:
-            return self.db.statement(sql)
+        try:
+            if action == "insert":
+                res = self.db.insert(sql)
+            elif action in ["select", "show"]:
+                res = self.db.select(sql)
+            elif action == "update":
+                res = self.db.update(sql)
+            elif action == "delete":
+                res = self.db.delete(sql)
+            else:
+                res = self.db.statement(sql)
+        except orator.exceptions.query.QueryException as e:
+            if self.db.driver == "mysql":
+                if action == "insert":
+                    res = self.db.insert(sql)
+                elif action in ["select", "show"]:
+                    res = self.db.select(sql)
+                elif action == "update":
+                    res = self.db.update(sql)
+                elif action == "delete":
+                    res = self.db.delete(sql)
+                else:
+                    res = self.db.statement(sql)
+            else:
+                raise e
+                
+        return res
 
     def Tables(self) -> list:
         """

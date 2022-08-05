@@ -129,7 +129,7 @@ pip3 install bagbag --upgrade
     * Lock(key:str) -> RedisLock
       * Acquire()
       * Release()
-  * MySQL(host: str, port: int, user: str, password: str, database: str, prefix:str = "") # 跟5.7兼容. 因为orator跟5.7兼容, 跟8.0会有小问题, 作者很久不更新, 有空换掉这个orm. 
+  * MySQL(host: str, port: int, user: str, password: str, database: str, prefix:str = "") # 跟5.7兼容. 因为orator跟5.7兼容, 跟8.0会有小问题, 作者很久不更新, 有空换掉这个orm. **注意, Python的MySQL操作不支持多线程, 需要每个线程连接一次MySQL**
   * SQLite(path: str, prefix:str = "")
     * Execute(sql: str) -> (bool | int | list)
     * Tables() -> list
