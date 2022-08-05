@@ -2,8 +2,12 @@ import socket
 
 import sys 
 sys.path.append("..")
-from Tools import Chan
-from Thread import Thread 
+try:
+    from .Tools import Chan
+    from .Thread import Thread 
+except:
+    from Tools import Chan
+    from Thread import Thread 
 
 class TCPPeerAddress():
     def __init__(self, host:str, port:int):
