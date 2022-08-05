@@ -3,11 +3,11 @@ import socket
 import sys 
 sys.path.append("..")
 try:
-    from .Tools import Chan
-    from .Thread import Thread 
+    from bagbag.Tools import Chan
+    from bagbag.Thread import Thread 
 except:
     from Tools import Chan
-    from Thread import Thread 
+    from Thread import Thread
 
 class TCPPeerAddress():
     def __init__(self, host:str, port:int):
