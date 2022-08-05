@@ -28,7 +28,9 @@ def Trace(*message):
         if type(msg) == int or type(msg) == float:
             msg = str(msg)
         if type(msg) in [list, dict, set]:
-            msg = "\n" + pformat(msg, indent=4)
+            msg = pformat(msg, indent=4)
+            if msg.count("\n") != 0 and jstr == " ":
+                jstr = "\n"
         else:
             msg = str(msg)
         if message.count("\n") != 0 and jstr == " ":
@@ -38,7 +40,7 @@ def Trace(*message):
     p = inspect.stack()[1]
 
     logger.opt(ansi=True).trace(
-        "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
+        "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
         message=jstr.join(messages), 
         function=p.function.replace("<module>", "None"),
         line=p.lineno,
@@ -56,7 +58,9 @@ def Debug(*message):
         if type(msg) == int or type(msg) == float:
             msg = str(msg)
         if type(msg) in [list, dict, set]:
-            msg = "\n" + pformat(msg, indent=4)
+            msg = pformat(msg, indent=4)
+            if msg.count("\n") != 0 and jstr == " ":
+                jstr = "\n"
         else:
             msg = str(msg)
         if message.count("\n") != 0 and jstr == " ":
@@ -66,7 +70,7 @@ def Debug(*message):
     p = inspect.stack()[1]
     
     logger.opt(ansi=True).debug(
-        "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
+        "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
         message=jstr.join(messages), 
         function=p.function.replace("<module>", "None"),
         line=p.lineno,
@@ -84,7 +88,9 @@ def Info(*message):
         if type(msg) == int or type(msg) == float:
             msg = str(msg)
         if type(msg) in [list, dict, set]:
-            msg = "\n" + pformat(msg, indent=4)
+            msg = pformat(msg, indent=4)
+            if msg.count("\n") != 0 and jstr == " ":
+                jstr = "\n"
         else:
             msg = str(msg)
         if message.count("\n") != 0 and jstr == " ":
@@ -94,7 +100,7 @@ def Info(*message):
     p = inspect.stack()[1]
     
     logger.opt(ansi=True).info(
-        "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
+        "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
         message=jstr.join(messages), 
         function=p.function.replace("<module>", "None"),
         line=p.lineno,
@@ -112,7 +118,9 @@ def Warn(*message):
         if type(msg) == int or type(msg) == float:
             msg = str(msg)
         if type(msg) in [list, dict, set]:
-            msg = "\n" + pformat(msg, indent=4)
+            msg = pformat(msg, indent=4)
+            if msg.count("\n") != 0 and jstr == " ":
+                jstr = "\n"
         else:
             msg = str(msg)
         if message.count("\n") != 0 and jstr == " ":
@@ -122,7 +130,7 @@ def Warn(*message):
     p = inspect.stack()[1]
     
     logger.opt(ansi=True).warning(
-        "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
+        "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
         message=jstr.join(messages), 
         function=p.function.replace("<module>", "None"),
         line=p.lineno,
@@ -140,7 +148,9 @@ def Error(*message):
         if type(msg) == int or type(msg) == float:
             msg = str(msg)
         if type(msg) in [list, dict, set]:
-            msg = "\n" + pformat(msg, indent=4)
+            msg = pformat(msg, indent=4)
+            if msg.count("\n") != 0 and jstr == " ":
+                jstr = "\n"
         else:
             msg = str(msg)
         if message.count("\n") != 0 and jstr == " ":
@@ -150,7 +160,7 @@ def Error(*message):
     p = inspect.stack()[1]
     
     logger.opt(ansi=True).error(
-        "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
+        "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
         message=jstr.join(messages), 
         function=p.function.replace("<module>", "None"),
         line=p.lineno,
