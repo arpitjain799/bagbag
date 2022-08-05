@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import telebot 
+import telebot # https://github.com/eternnoir/pyTelegramBotAPI
 
 class TelegramBot():
     def __init__(self, token:str):
