@@ -1,8 +1,15 @@
 import time
 import datetime
+import tqdm
 
-Sleep = time.sleep
 Now = time.time 
+
+def Sleep(num:int, bar:bool=False):
+    if bar:
+        for _ in tqdm.tqdm(range(num), total=num):
+            time.sleep(1)
+    else:
+        time.sleep(num)
 
 def Strftime(format:str, timestamp:float|int) -> str:
     """
