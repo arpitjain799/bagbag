@@ -220,6 +220,7 @@ if __name__ == "__main__":
     Warn(False)
     Error("error")
     Debug("text debug message", [ ['spam', 'eggs', 'lumberjack', 'knights', 'ni'], 'spam', 'eggs', 'lumberjack', 'knights', 'ni'])
+    Trace("text debug message", [ ['spam', 'eggs', 'lumberjack', 'knights', 'ni'], 'spam', 'eggs', 'lumberjack', 'knights', 'ni'])
     Debug("first", "second", "third")
     Trace("初始化实例", 1)
 
