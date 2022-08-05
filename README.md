@@ -121,7 +121,7 @@ pip3 install bagbag --upgrade
     * ResolvePeerByUsername(username:str) -> TelegramPeer
       * History(limit:int=100, offset:int=0) -> list
       * Resolve() # 如果手动根据ID初始化一个TelegramPeer实例, 调用这个函数可以补全这个ID对应的Peer的信息
-  * ProgressBar(iterable_obj, startfrom=0, total=None, title=None, leave=False)
+  * ProgressBar(iterable_obj, total=None, title=None, leave=False)
   * Redis(host: str, port: int = 6379, database: int = 0, password: str = "")
     * Set(key:str, value:str, ttl:int=None) -> (bool | None)
     * Get(key:str) -> (str | None)
