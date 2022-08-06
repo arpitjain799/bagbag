@@ -9,6 +9,9 @@ except:
     from Tools import Chan
     from Thread import Thread
 
+class StreamClosedError(Exception):
+    pass
+
 class TCPPeerAddress():
     def __init__(self, host:str, port:int):
         self.Host = host 
@@ -30,16 +33,23 @@ class StreamConnection():
         return TCPPeerAddress(self.host, self.port)
     
     def Send(self, data:str):
-        self.ss.sendall(data.encode('utf-8'))
+        self.SendBytes(data.encode('utf-8'))
 
     def SendBytes(self, data:bytes):
-        self.ss.sendall(data) 
+        try:
+            self.ss.sendall(data) 
+        except BrokenPipeError:
+            raise StreamClosedError("发送数据出错")
 
     def Recv(self, length:int) -> str:
-        return self.ss.recv(length).decode('utf-8')
+        return self.RecvBytes(length).decode('utf-8')
 
     def RecvBytes(self, length:int) -> bytes:
-        return self.ss.recv(length)
+        buf = self.ss.recv(length)
+        if buf:
+            return buf 
+        else:
+            raise StreamClosedError("接收数据出错")
     
     def Close(self):
         self.ss.close()
@@ -75,28 +85,39 @@ def Connect(host:str, port:int) -> StreamConnection:
     return StreamConnection(s, host, port)
 
 if __name__ == "__main__":
-    def server():
-        print("listen on: ", "127.0.0.1", 22222)
-        l = Listen("127.0.0.1", 22222)
-        for s in l.Accept():
-            print("Connect from:",s.PeerAddress())
-            print("Receive:",s.Recv(512))
-            print("Close on server side")
-            s.Close()
-        
-    Thread(server)
-
     import time 
-    time.sleep(2)
 
-    def client():
-        print("connect to", "127.0.0.1", 22222)
-        s = Connect("127.0.0.1", 22222)
-        s.Send(str(int(time.time())))
-        time.sleep(1)
-        print("Close on client side")
-        s.Close()
+    def test1():
+        def server():
+            print("listen on: ", "127.0.0.1", 22222)
+            l = Listen("127.0.0.1", 22222)
+            for s in l.Accept():
+                print("Connect from:",s.PeerAddress())
+                print("Receive:",s.Recv(512))
+                print("Close on server side")
+                s.Close()
+            
+        Thread(server)
 
-    for _ in range(10):
-        client()
+        time.sleep(2)
+
+        def client():
+            print("connect to", "127.0.0.1", 22222)
+            s = Connect("127.0.0.1", 22222)
+            s.Send(str(int(time.time())))
+            time.sleep(1)
+            print("Close on client side")
+            s.Close()
+
+        for _ in range(10):
+            client()
+            time.sleep(1)
+    # test1()
+
+    l = Listen("127.0.0.1", 22222)
+    s = l.AcceptOne()
+
+    while True:
+        # print(type(s.RecvBytes(1024)))
         time.sleep(1)
+        s.Send(str(time.time()))
