@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import orator
+from . import orator
 
 class MySQLSQLiteTable():
     def __init__(self, db: MySQLSQLiteBase, schema: orator.Schema, tbname: str):

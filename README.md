@@ -68,6 +68,7 @@ pip3 install bagbag --upgrade
   * Wget(url:str, dest:str=None, override=True)
   * IP2Int(ip:str) -> int
   * Int2IP(intip:int) -> str
+  * ResizeImage(src:str, dst:str, width:int, quality:int=95)
 * Tools 一些工具
   * WebServer(name:str=\_\_name\_\_) # 例子见源码文件Web.py的后半部分
     * Run(host:str, port:int, block:bool=True) # 监听HTTP服务

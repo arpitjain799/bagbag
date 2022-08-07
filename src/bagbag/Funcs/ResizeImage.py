@@ -5,22 +5,25 @@ def ResizeImage(src:str, dst:str, width:int, quality:int=95):
 
     w, h = img.size
     # print('Befor resize (w,h): ' + str((w,h)))
-    w  = float(w)
-    h = float(h)
-    width = float(width)
-    if w > h:
-        precent = width / h
-        w = precent * w
-        h = precent * h
-    else:
-        precent = width / w
-        h = precent * h
-        w = precent * w
-    w = int(w)
-    h = int(h)
-    # print 'After resize (w,h): ' + str((w,h))
-    img = img.resize((w, h), Image.Resampling.LANCZOS)
-    # print 'Saving to ' + dst
+
+    if w > width:
+        w  = float(w)
+        h = float(h)
+        width = float(width)
+        if w > h:
+            precent = width / h
+            w = precent * w
+            h = precent * h
+        else:
+            precent = width / w
+            h = precent * h
+            w = precent * w
+        w = int(w)
+        h = int(h)
+        # print 'After resize (w,h): ' + str((w,h))
+        img = img.resize((w, h), Image.Resampling.LANCZOS)
+        # print 'Saving to ' + dst
+        
     if dst.lower().endswith(".jpg") or dst.lower().endswith("jpeg"):
         img = img.convert('RGB')
         img.save(dst, "JPEG", quality = quality)
@@ -32,3 +35,4 @@ def ResizeImage(src:str, dst:str, width:int, quality:int=95):
 if __name__ == "__main__":
     ResizeImage("/Users/darren/Downloads/IMG_2560.JPG", "/Users/darren/Downloads/IMG_2560_Resized.JPG", 1920)
     ResizeImage("/Users/darren/Downloads/IMG_2560.JPG", "/Users/darren/Downloads/IMG_2560_Resized.PNG", 1920)
+
