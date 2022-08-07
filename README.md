@@ -8,20 +8,28 @@ An all in one python library
 pip3 install bagbag --upgrade
 ```
 
+# Docker 
+
+```bash
+docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bagbag:latest
+```
+
 # Library
 
 * Lg 日志模块
   * Lg.SetLevel(level:日志级别:str)
   * Lg.SetFile(path:日志路径:str, size:文件大小，MB:int, during:日志保留时间，天:int, color:是否带ANSI颜色:bool=True, json:是否格式化为json:bool=False):
-  * Lg.Debug(message:日志内容)
-  * Lg.Trace(message:日志内容)
-  * Lg.Info(message:日志内容)
-  * Lg.Warn(message:日志内容)
-  * Lg.Error(message:日志内容)
+  * Lg.Debug(message:str)
+  * Lg.Trace(message:str)
+  * Lg.Info(message:str)
+  * Lg.Warn(message:str)
+  * Lg.Error(message:str)
 * String(string:str) 一些字符串处理函数
   * HasChinese() -> bool 是否包含中文
   * Language() -> str 语言
   * Repr() -> str
+  * SimplifiedChineseToTraditional() -> str
+  * TraditionalChineseToSimplified() -> str
 * Time 时间
   * Strftime(format:str, timestamp:float|int) -> str
   * Strptime(format:str, timestring:str) -> int

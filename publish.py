@@ -34,6 +34,8 @@ set -ex
 rm dist/* -rfv
 python3 -m build 
 twine upload dist/* -u"""+u+""" -p'"""+p+"""'
+docker buildx build --platform linux/amd64,linux/arm64 . -t darren2046/bagbag:"""+nfversion+""" --push 
+docker buildx build --platform linux/amd64,linux/arm64 . -t darren2046/bagbag:latest --push 
 """) != 0:
     sys.exit(0)
 
