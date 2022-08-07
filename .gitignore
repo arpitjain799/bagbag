@@ -1,7 +1,6 @@
 __pycache__
 ident
 dist
-requirements.txt
 *.ident
 event_log.txt
 src/test.py
