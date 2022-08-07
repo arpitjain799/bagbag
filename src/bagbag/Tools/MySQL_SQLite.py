@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from . import orator
+from .Lock import Lock
+import bagbag
 
 class MySQLSQLiteTable():
     def __init__(self, db: MySQLSQLiteBase, schema: orator.Schema, tbname: str):
@@ -93,6 +95,27 @@ class MySQLSQLiteTable():
 
         return self
     
+    def wrap(func): # func是被包装的函数
+        def ware(self, *args, **kwargs): # self是类的实例
+            if self.db.driver == "mysql":
+                try:
+                    res = func(self, *args, **kwargs)
+                except bagbag.Tools.orator.exceptions.query.QueryException as e:
+                    # MySQL驱动默认不允许一个连接跨多个线程, 重连就行
+                    self.db.db.reconnect()
+                    res = func(self, *args, **kwargs)
+
+            elif self.db.driver == "sqlite":
+                # SQLite驱动默认不允许一个连接跨多个线程
+                # 在连接的时候禁止了同线程的检测, 所以自己这里要保证同时只有一个线程在操作数据库
+                self.db.lock.Acquire()
+                res = func(self, *args, **kwargs)
+                self.db.lock.Release()
+
+            return res
+
+        return ware
+    
     def Fields(self, *cols: str) -> MySQLSQLiteTable:
         self.table = self.table.select(*cols)
         return self
@@ -143,56 +166,26 @@ class MySQLSQLiteTable():
         self.table = self.table.offset(num)
         return self 
 
+    @wrap
     def Insert(self):
-        try:
-            self.table.insert(self.data)
-        except orator.exceptions.query.QueryException as e:
-            if self.db.driver == "mysql":
-                self.db.db.reconnect()
-                self.table.insert(self.data)
-            else:
-                raise e
-
+        self.table.insert(self.data)
         self.data = {}
-
         self.table = self.db.db.table(self.tbname)
 
+    @wrap
     def Update(self):
-        try:
-            self.table.update(self.data)
-        except orator.exceptions.query.QueryException as e:
-            if self.db.driver == "mysql":
-                self.db.db.reconnect()
-                self.table.update(self.data)
-            else:
-                raise e
-
+        self.table.update(self.data)
         self.table = self.db.db.table(self.tbname) 
 
+    @wrap
     def Delete(self):
-        try:
-            self.table.delete()
-        except orator.exceptions.query.QueryException as e:
-            if self.db.driver == "mysql":
-                self.db.db.reconnect()
-                self.table.delete()
-            else:
-                raise e
-
+        self.table.delete()
         self.table = self.db.db.table(self.tbname)
 
+    @wrap
     def InsertGetID(self) -> int:
-        try:
-            id = self.table.insert_get_id(self.data)
-        except orator.exceptions.query.QueryException as e:
-            if self.db.driver == "mysql":
-                self.db.db.reconnect()
-                id = self.table.insert_get_id(self.data)
-            else:
-                raise e
-
+        id = self.table.insert_get_id(self.data)
         self.data = {}
-
         self.table = self.db.db.table(self.tbname)
 
         return id
@@ -204,47 +197,28 @@ class MySQLSQLiteTable():
 
         return exists
 
+    @wrap
     def Count(self) -> int:
-        try:
-            count = self.table.count()
-        except orator.exceptions.query.QueryException as e:
-            if self.db.driver == "mysql":
-                self.db.db.reconnect()
-                count = self.table.count()
-            else:
-                raise e
-
+        count = self.table.count()
         self.table = self.db.db.table(self.tbname)
         return count
 
+    @wrap
     def Find(self, id:int) -> map:
-        try:
-            res = self.db.db.table(self.tbname).where('id', "=", id).first()
-        except orator.exceptions.query.QueryException as e:
-            if self.db.driver == "mysql":
-                self.db.db.reconnect()
-                res = self.db.db.table(self.tbname).where('id', "=", id).first()
-            else:
-                raise e
+        res = self.db.db.table(self.tbname).where('id', "=", id).first()
         
         return res
 
+    @wrap
     def First(self) -> map: 
         """
         :return: A map of the first row in the table. Return None if the table is empty. 
         """
-        try:
-            res = self.table.first()
-        except orator.exceptions.query.QueryException as e:
-            if self.db.driver == "mysql":
-                self.db.db.reconnect()
-                res = self.table.first()
-            else:
-                raise e
-
+        res = self.table.first()
         self.table = self.db.db.table(self.tbname)
         return res
 
+    @wrap
     def Get(self) -> list:
         """
         It gets the data from the table and then resets the table
@@ -252,15 +226,7 @@ class MySQLSQLiteTable():
 
         :return: A list of dictionaries.
         """
-        try:
-            res = self.table.get()
-        except orator.exceptions.query.QueryException as e:
-            if self.db.driver == "mysql":
-                self.db.db.reconnect()
-                res = self.table.get()
-            else:
-                raise e
-
+        res = self.table.get()
         self.table = self.db.db.table(self.tbname)
         return res
 
@@ -374,7 +340,7 @@ class MySQL(MySQLSQLiteBase):
     
 # > This class is a wrapper for the orator library, which is a wrapper for the sqlite3 library
 class SQLite(MySQLSQLiteBase):
-    def __init__(self, path: str, prefix:str = ""):
+    def __init__(self, path:str=":memory:", prefix:str = ""):
         """
         :param path: The path to the database file
         :type path: str
@@ -385,12 +351,14 @@ class SQLite(MySQLSQLiteBase):
             'sqlite': {
                 'driver': 'sqlite',
                 'database': path,
-                'prefix': ''
+                'prefix': '',
+                'check_same_thread': False, # 会被传入到SQLite的驱动作为参数
             }
         }
         self.db = orator.DatabaseManager(config)
         self.schema = orator.Schema(self.db)
         self.driver = "sqlite"
+        self.lock = Lock()
 
 if __name__ == "__main__":
     db = SQLite("data.db")
