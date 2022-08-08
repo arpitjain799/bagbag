@@ -11,8 +11,9 @@ import time
 # > The SeleniumElement class is a wrapper for the selenium.webdriver.remote.webelement.WebElement
 # class
 class SeleniumElement():
-    def __init__(self, element:selenium.webdriver.remote.webelement.WebElement):
+    def __init__(self, element:selenium.webdriver.remote.webelement.WebElement, driver:selenium.WebDriver):
         self.element = element
+        self.driver = driver
     
     def Clear(self) -> SeleniumElement:
         """
@@ -68,6 +69,10 @@ class SeleniumElement():
         """
         self.element.send_keys(Keys.ENTER)
         return self
+    
+    def ScrollIntoElement(self) -> SeleniumElement:
+        self.driver.execute_script("arguments[0].scrollIntoView(true);", self.element)
+        return self
 
 class Selenium():
     def __init__(self, seleniumServer:str=None, disableLoadImage=False, sessionID=None):
@@ -117,7 +122,7 @@ class Selenium():
         while True:
             try:
                 el = self.driver.find_element(By.XPATH, xpath)
-                return SeleniumElement(el)
+                return SeleniumElement(el, self.driver)
             except selenium.common.exceptions.NoSuchElementException as e: 
                 if waiting:
                     time.sleep(1)

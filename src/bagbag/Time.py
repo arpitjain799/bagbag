@@ -6,7 +6,7 @@ Now = time.time
 
 def Sleep(num:int, bar:bool=False):
     if bar:
-        for _ in tqdm.tqdm(range(num), total=num):
+        for _ in tqdm.tqdm(range(num), total=num, leave=False):
             time.sleep(1)
     else:
         time.sleep(num)

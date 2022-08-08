@@ -1,6 +1,7 @@
 import ipdb
 import traceback
 import sys
+import selenium
 
 from . import Lg
 from . import Tools

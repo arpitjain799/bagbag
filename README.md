@@ -126,13 +126,14 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
     * Title() -> str
     * Close()
     * Find(xpath:str, waiting=True) -> SeleniumElement
-      * Clear()
-      * Click()
+      * Clear() -> SeleniumElement
+      * Click() -> SeleniumElement
       * Text() -> str
       * Attribute(name:str) -> str
-      * Input(string:str)
-      * Submit()
-      * PressEnter()
+      * Input(string:str) -> SeleniumElement
+      * Submit() -> SeleniumElement
+      * PressEnter() -> SeleniumElement
+      * ScrollIntoElement() -> SeleniumElement
   * Telegram(appid:str, apphash:str, sessionString:str=None)
     * SessionString() -> str
     * ResolvePeerByUsername(username:str) -> TelegramPeer
@@ -147,7 +148,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
       * Acquire()
       * Release()
   * MySQL(host: str, port: int, user: str, password: str, database: str, prefix:str = "") # 跟5.7兼容. 因为orator跟5.7兼容, 跟8.0会有小问题, 作者很久不更新, 有空换掉这个orm. **注意, Python的MySQL操作不支持多线程, 需要每个线程连接一次MySQL, 不过这个是自动的, 在Get, Update等操作的时候如果链接异常就重连**
-  * SQLite(path: str, prefix:str = "")
+  * SQLite(path: str, prefix:str = "") **由于SQLite每次只能一个线程进行操作, 所以这里默认会有一个锁, 线程安全**
     * Execute(sql: str) -> (bool | int | list)
     * Tables() -> list
     * Table(tbname: str) -> MySQLSQLiteTable
