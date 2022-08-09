@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from pendulum import Pendulum, Date
+from pendulum import Date
+try:
+    from pendulum import DateTime as Pendulum # 2.X
+except ImportError:
+    from pendulum import Pendulum # 1.X
 
 try:
     import sqlite3

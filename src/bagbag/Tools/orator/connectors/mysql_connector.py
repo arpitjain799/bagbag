@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import re
-from pendulum import Pendulum, Date
+
+from pendulum import Date
+try:
+    from pendulum import DateTime as Pendulum
+except ImportError:
+    from pendulum import Pendulum
 
 try:
     import MySQLdb as mysql

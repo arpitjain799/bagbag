@@ -5,6 +5,7 @@ from typing import List
 from selenium.webdriver.common.by import By
 import selenium
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.firefox.options import Options
 
 import time
 
@@ -75,59 +76,73 @@ class SeleniumElement():
         return self
 
 class Selenium():
-    def __init__(self, seleniumServer:str=None, disableLoadImage=False, sessionID=None):
+    def __init__(self, seleniumServer:str=None, PACFileURL:str=None, sessionID:str=None):
         """
-        If the seleniumServer is not None, then the driver is a Remote WebDriver, otherwise it's a
-        Chrome WebDriver
+        If a PAC file URL is provided, set the proxy type to 2 (automatically detect settings) and set
+        the PAC file URL. If a Selenium server URL is provided, create a remote webdriver with the
+        Selenium server URL and the options. If no Selenium server URL is provided, create a local
+        webdriver with the options. If a session ID is provided, close the current session and set the
+        session ID to the provided session ID
         
         :param seleniumServer: The URL of the Selenium server. If you're running Selenium locally, this
-        will be http://localhost:4444/wd/hub
+        will be http://localhost:4444/wd/hub. If you're running Selenium on a remote server, this will be
+        the URL of that server
         :type seleniumServer: str
-        :param disableLoadImage: If set to True, the browser will not load images, defaults to False
-        (optional)
+        :param PACFileURL: The URL of the PAC file
+        :type PACFileURL: str
         :param sessionID: If you already have a session ID, you can pass it in here
+        :type sessionID: str
         """
-        chrome_options = webdriver.ChromeOptions()
-
-        if disableLoadImage:
-            prefs = {"profile.managed_default_content_settings.images": 2}
-            chrome_options.add_experimental_option("prefs", prefs)
+        options = Options()
+        if PACFileURL:
+            print("Set proxy")
+            options.set_preference("network.proxy.type", 2)
+            options.set_preference("network.proxy.autoconfig_url", PACFileURL)
 
         if seleniumServer:
             if not seleniumServer.endswith("/wd/hub"):
                 seleniumServer = seleniumServer + "/wd/hub"
             self.driver = webdriver.Remote(
                 command_executor=seleniumServer,
-                options=chrome_options
+                options=options,
             )
         else:
-            self.driver = webdriver.Chrome(
-                options=chrome_options,
-            )
+            self.driver = webdriver.Firefox(options=options)
         
         if sessionID:
             self.Close()
             self.driver.session_id = sessionID
     
-    def Find(self, xpath:str, waiting=True) -> SeleniumElement|None:
+    def Find(self, xpath:str, timeout:int=8, scrollIntoElement:bool=True) -> SeleniumElement|None:
         """
-        It will keep trying to find the element until it finds it or keep waiting
+        > Finds an element by xpath, waits for it to appear, and returns it
         
         :param xpath: The xpath of the element you want to find
         :type xpath: str
-        :param waiting: If True, the function will wait until the element is found. If False, it will
-        raise an exception if the element is not found, defaults to True (optional)
+        :param timeout: , defaults to 8 second
+        :type timeout: int (optional)
+        :param scrollIntoElement: If True, the element will be scrolled into view before returning it,
+        defaults to True
+        :type scrollIntoElement: bool (optional)
         :return: SeleniumElement
         """
+        waited = 0
         while True:
             try:
                 el = self.driver.find_element(By.XPATH, xpath)
+                if scrollIntoElement:
+                    self.driver.execute_script("arguments[0].scrollIntoView(true);", el)
                 return SeleniumElement(el, self.driver)
             except selenium.common.exceptions.NoSuchElementException as e: 
-                if waiting:
+                if timeout == 0:
+                    return None 
+                elif timeout == -1:
                     time.sleep(1)
-                else:
-                    return None
+                elif timeout > 0:
+                    time.sleep(1)
+                    waited += 1
+                    if waited > timeout:
+                        return None 
 
         # import ipdb
         # ipdb.set_trace()
@@ -248,12 +263,48 @@ class Selenium():
         self.driver.quit()
 
 if __name__ == "__main__":
+    # Local 
     # se = Selenium()
-    se = Selenium("http://127.0.0.1:4444")
+
+    # Remote 
+    #se = Selenium("http://127.0.0.1:4444")
+
+    # With PAC 
+    se = Selenium(PACFileURL="http://192.168.1.135:8000/pac")
+    # se = Selenium("http://127.0.0.1:4444", PACFileURL="http://192.168.1.135:8000/pac")
+
+    # Example of PAC file
+    # function FindProxyForURL(url, host)
+    # {
+    #     if (shExpMatch(host, "*.onion"))
+    #     {
+    #         return "SOCKS5 192.168.1.135:9150";
+    #     }
+    #     if (shExpMatch(host, "ipinfo.io"))
+    #     {
+    #         return "SOCKS5 192.168.1.135:7070";
+    #     }
+    #     return "DIRECT";
+    # }
+    
+    # PAC test 
+    se.Get("http://ipinfo.io/ip")
+    print(se.PageSource())
+
+    se.Get("https://ifconfig.me/ip")
+    print(se.PageSource())
+    
+    se.Get("http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/")
+    print(se.PageSource())
+
+    # Function test
     se.Get("https://find-and-update.company-information.service.gov.uk/")
     inputBar = se.Find("/html/body/div[1]/main/div[3]/div/form/div/div/input")
     inputBar.Input("ade")
-    button = se.Find("/html/body/div[1]/main/div[3]/div/form/div/div/button")
-    button.Click()
+    button = se.Find('//*[@id="search-submit"]').Click()
+    
+    print(se.PageSource())
+
     se.Close()
 
+    

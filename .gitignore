@@ -4,3 +4,4 @@ dist
 *.ident
 event_log.txt
 src/test.py
+src/bagbag/Tools/geckodriver.log
