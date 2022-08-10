@@ -1,9 +1,9 @@
 import threading 
 from typing import Any
 
-def Thread(func, *args:Any) -> threading.Thread:
+def Thread(func, *args:Any, daemon:bool=True) -> threading.Thread:
     t = threading.Thread(target=func, args=args)
-    t.daemon = True 
+    t.daemon = daemon 
     t.start()
 
     return t 

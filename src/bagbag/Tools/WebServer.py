@@ -5,6 +5,13 @@ from flask import abort, redirect
 from flask import render_template
 
 try:
+    from ..Random import String as randstr
+except:
+    import sys 
+    sys.path.append("..")
+    from Random import String as randstr
+
+try:
     from ..Thread import Thread
 except:
     import sys 
@@ -39,14 +46,16 @@ class Request():
         return request.get_data().decode("utf-8")
 
 class WebServer():
-    def __init__(self, name:str=__name__):
+    def __init__(self, name:str=None):
+        if not name:
+            name = randstr()
+
         self.app = Flask(name)
-        
         self.Route = self.app.route 
         self.Request = Request()
         self.Response = Response()
         
-    def Run(self, host:str, port:int, block:bool=True, debug:bool=False):
+    def Run(self, host:str, port:int, block:bool=True):
         """
         Runs the Flask app on the specified host and port, optionally in a separate thread
         If block is False then debug will always be False
@@ -59,12 +68,9 @@ class WebServer():
         :param block: If True, the server will run in the main thread. If False, it will run in a
         separate thread, defaults to True
         :type block: bool (optional)
-        :param debug: If True, the server will reload itself on code changes, and it will also provide a
-        helpful debugger if things go wrong, defaults to False
-        :type debug: bool (optional)
         """
         if block:
-            self.app.run(host, port, debug)
+            self.app.run(host, port, False)
         else:
             Thread(self.app.run, host, port, False)
 
@@ -107,7 +113,12 @@ if __name__ == "__main__":
     def postData():
         return w.Request.Data()
 
-    w.Run("0.0.0.0", 8080, block=False, debug=False)
+    w.Run("0.0.0.0", 8080, block=False)
 
-    import time
-    time.sleep(8888)
+    w2 = WebServer()
+
+    @w2.Route("/")
+    def index2():
+        return "Hello World 2!"
+    
+    w2.Run("0.0.0.0", 8081) # Block here

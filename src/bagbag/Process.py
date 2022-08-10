@@ -1,9 +1,9 @@
 import multiprocessing 
 from typing import Any
 
-def Process(func, *args:Any) -> multiprocessing.Process:
+def Process(func, *args:Any, daemon:bool=True) -> multiprocessing.Process:
     p = multiprocessing.Process(target=func, args=args)
-    p.daemon = True 
+    p.daemon = daemon 
     p.start()
 
     return p 

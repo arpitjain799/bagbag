@@ -7,7 +7,7 @@ def Int(min:int, max:int) -> int:
 def Choice(obj:list|str) -> Any:
     return random.choice(obj)
 
-def String(length:int, charset:str="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") -> str:
+def String(length:int=8, charset:str="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") -> str:
     res = []
     while len(res) < length:
         res.append(random.choice(charset))

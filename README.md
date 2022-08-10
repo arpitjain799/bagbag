@@ -78,7 +78,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * Int2IP(intip:int) -> str
   * ResizeImage(src:str, dst:str, width:int, quality:int=95)
 * Tools 一些工具
-  * WebServer(name:str=\_\_name\_\_) # 例子见源码文件Web.py的后半部分
+  * WebServer(name:str=None) # 例子见源码文件Web.py的后半部分
     * Run(host:str, port:int, block:bool=True) # 监听HTTP服务
     * Route: (path:str, methods:list=["GET", "HEAD", "OPTIONS"]) # 例子见Web.py文件, 是一个装饰器
     * Request()
@@ -180,5 +180,5 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
 
 其它的
 
-* Thread(func, *args:Any) -> threading.Thread # 启动线程, daemon=True
-* Process(func, *args:Any) -> multiprocessing.Process # 启动进程, daemon=True
+* Thread(func, *args:Any, daemon:bool=True) -> threading.Thread # 启动线程, daemon=True
+* Process(func, *args:Any, daemon:bool=True) -> multiprocessing.Process # 启动进程, daemon=True
