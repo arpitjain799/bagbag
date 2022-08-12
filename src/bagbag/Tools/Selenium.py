@@ -227,6 +227,7 @@ class seleniumBase():
 class Firefox(seleniumBase):
     def __init__(self, seleniumServer:str=None, PACFileURL:str=None, sessionID:str=None):
         options = firefoxoptions()
+
         if PACFileURL:
             options.set_preference("network.proxy.type", 2)
             options.set_preference("network.proxy.autoconfig_url", PACFileURL)
@@ -247,20 +248,24 @@ class Firefox(seleniumBase):
 
 class Chrome(seleniumBase):
     def __init__(self, seleniumServer:str=None, sessionID=None):
-        chrome_options = webdriver.ChromeOptions()
+        options = webdriver.ChromeOptions()
 
+        # 防止通过navigator.webdriver来检测是否是被selenium操作
+        options.add_argument("--disable-blink-features")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        
         if seleniumServer:
             if not seleniumServer.endswith("/wd/hub"):
                 seleniumServer = seleniumServer + "/wd/hub"
             self.driver = webdriver.Remote(
                 command_executor=seleniumServer,
-                options=chrome_options
+                options=options
             )
         else:
             self.driver = webdriver.Chrome(
-                options=chrome_options,
+                options=options,
             )
-        
+
         if sessionID:
             self.Close()
             self.driver.session_id = sessionID
