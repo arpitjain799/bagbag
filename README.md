@@ -110,30 +110,32 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
       * Size() -> int
       * Get(waiting=True) -> str|None
       * Put(string:str)
-  * Selenium(SeleniumServer:str=None)
-    * ResizeWindow(width:int, height:int)
-    * ScrollRight(pixel:int)
-    * ScrollLeft(pixel:int)
-    * ScrollUp(pixel:int)
-    * ScrollDown(pixel:int)
-    * Url() -> str
-    * Cookie() -> List[dict]
-    * SetCookie(cookie_dict:dict)
-    * Refresh()
-    * GetSession() -> str
-    * Get(url:str)
-    * PageSource() -> str
-    * Title() -> str
-    * Close()
-    * Find(xpath:str, waiting=True) -> SeleniumElement
-      * Clear() -> SeleniumElement
-      * Click() -> SeleniumElement
-      * Text() -> str
-      * Attribute(name:str) -> str
-      * Input(string:str) -> SeleniumElement
-      * Submit() -> SeleniumElement
-      * PressEnter() -> SeleniumElement
-      * ScrollIntoElement() -> SeleniumElement
+  * Selenium
+    * Firefox(seleniumServer:str=None, PACFileURL:str=None, sessionID:str=None)
+    * Chrome(seleniumServer:str=None, sessionID=None)
+      * ResizeWindow(width:int, height:int)
+      * ScrollRight(pixel:int)
+      * ScrollLeft(pixel:int)
+      * ScrollUp(pixel:int)
+      * ScrollDown(pixel:int)
+      * Url() -> str
+      * Cookie() -> list[dict]
+      * SetCookie(cookie_dict:dict)
+      * Refresh()
+      * GetSession() -> str
+      * Get(url:str)
+      * PageSource() -> str
+      * Title() -> str
+      * Close()
+      * Find(xpath:str, waiting=True) -> SeleniumElement
+        * Clear() -> SeleniumElement
+        * Click() -> SeleniumElement
+        * Text() -> str
+        * Attribute(name:str) -> str
+        * Input(string:str) -> SeleniumElement
+        * Submit() -> SeleniumElement
+        * PressEnter() -> SeleniumElement
+        * ScrollIntoElement() -> SeleniumElement
   * Telegram(appid:str, apphash:str, sessionString:str=None)
     * SessionString() -> str
     * ResolvePeerByUsername(username:str) -> TelegramPeer

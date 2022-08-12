@@ -1,29 +1,28 @@
 from __future__ import annotations
 
 from selenium import webdriver
-from typing import List
-from selenium.webdriver.common.by import By
+from selenium.webdriver.common.by import By as webby
 import selenium
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.common.keys import Keys as webkeys
+from selenium.webdriver.firefox.options import Options as firefoxoptions
 
 import time
 
-# > The SeleniumElement class is a wrapper for the selenium.webdriver.remote.webelement.WebElement
+# > The seleniumElement class is a wrapper for the selenium.webdriver.remote.webelement.WebElement
 # class
-class SeleniumElement():
+class seleniumElement():
     def __init__(self, element:selenium.webdriver.remote.webelement.WebElement, driver:selenium.WebDriver):
         self.element = element
         self.driver = driver
     
-    def Clear(self) -> SeleniumElement:
+    def Clear(self) -> seleniumElement:
         """
         Clear() clears the text if it's a text entry element
         """
         self.element.clear()
         return self
     
-    def Click(self) -> SeleniumElement:
+    def Click(self) -> seleniumElement:
         """
         Click() is a function that clicks on an element
         """
@@ -47,7 +46,7 @@ class SeleniumElement():
         """
         return self.element.get_attribute(name)
     
-    def Input(self, string:str) -> SeleniumElement:
+    def Input(self, string:str) -> seleniumElement:
         """
         The function Input() takes in a string and sends it to the element
         
@@ -57,63 +56,26 @@ class SeleniumElement():
         self.element.send_keys(string)
         return self
     
-    def Submit(self) -> SeleniumElement:
+    def Submit(self) -> seleniumElement:
         """
         Submit() is a function that submits the form that the element belongs to
         """
         self.element.submit()
         return self
     
-    def PressEnter(self) -> SeleniumElement:
+    def PressEnter(self) -> seleniumElement:
         """
         It takes the element that you want to press enter on and sends the enter key to it
         """
-        self.element.send_keys(Keys.ENTER)
+        self.element.send_keys(webkeys.ENTER)
         return self
     
-    def ScrollIntoElement(self) -> SeleniumElement:
+    def ScrollIntoElement(self) -> seleniumElement:
         self.driver.execute_script("arguments[0].scrollIntoView(true);", self.element)
         return self
 
-class Selenium():
-    def __init__(self, seleniumServer:str=None, PACFileURL:str=None, sessionID:str=None):
-        """
-        If a PAC file URL is provided, set the proxy type to 2 (automatically detect settings) and set
-        the PAC file URL. If a Selenium server URL is provided, create a remote webdriver with the
-        Selenium server URL and the options. If no Selenium server URL is provided, create a local
-        webdriver with the options. If a session ID is provided, close the current session and set the
-        session ID to the provided session ID
-        
-        :param seleniumServer: The URL of the Selenium server. If you're running Selenium locally, this
-        will be http://localhost:4444/wd/hub. If you're running Selenium on a remote server, this will be
-        the URL of that server
-        :type seleniumServer: str
-        :param PACFileURL: The URL of the PAC file
-        :type PACFileURL: str
-        :param sessionID: If you already have a session ID, you can pass it in here
-        :type sessionID: str
-        """
-        options = Options()
-        if PACFileURL:
-            print("Set proxy")
-            options.set_preference("network.proxy.type", 2)
-            options.set_preference("network.proxy.autoconfig_url", PACFileURL)
-
-        if seleniumServer:
-            if not seleniumServer.endswith("/wd/hub"):
-                seleniumServer = seleniumServer + "/wd/hub"
-            self.driver = webdriver.Remote(
-                command_executor=seleniumServer,
-                options=options,
-            )
-        else:
-            self.driver = webdriver.Firefox(options=options)
-        
-        if sessionID:
-            self.Close()
-            self.driver.session_id = sessionID
-    
-    def Find(self, xpath:str, timeout:int=8, scrollIntoElement:bool=True) -> SeleniumElement|None:
+class seleniumBase():
+    def Find(self, xpath:str, timeout:int=8, scrollIntoElement:bool=True) -> seleniumElement|None:
         """
         > Finds an element by xpath, waits for it to appear, and returns it
         
@@ -124,15 +86,15 @@ class Selenium():
         :param scrollIntoElement: If True, the element will be scrolled into view before returning it,
         defaults to True
         :type scrollIntoElement: bool (optional)
-        :return: SeleniumElement
+        :return: seleniumElement
         """
         waited = 0
         while True:
             try:
-                el = self.driver.find_element(By.XPATH, xpath)
+                el = self.driver.find_element(webby.XPATH, xpath)
                 if scrollIntoElement:
                     self.driver.execute_script("arguments[0].scrollIntoView(true);", el)
-                return SeleniumElement(el, self.driver)
+                return seleniumElement(el, self.driver)
             except selenium.common.exceptions.NoSuchElementException as e: 
                 if timeout == 0:
                     return None 
@@ -203,7 +165,7 @@ class Selenium():
         """
         return self.driver.current_url
     
-    def Cookie(self) -> List[dict]:
+    def Cookie(self) -> list[dict]:
         """
         This function gets the cookies from the driver and returns them as a list of dictionaries
         """
@@ -262,15 +224,56 @@ class Selenium():
         self.driver.close()
         self.driver.quit()
 
+class Firefox(seleniumBase):
+    def __init__(self, seleniumServer:str=None, PACFileURL:str=None, sessionID:str=None):
+        options = firefoxoptions()
+        if PACFileURL:
+            options.set_preference("network.proxy.type", 2)
+            options.set_preference("network.proxy.autoconfig_url", PACFileURL)
+
+        if seleniumServer:
+            if not seleniumServer.endswith("/wd/hub"):
+                seleniumServer = seleniumServer + "/wd/hub"
+            self.driver = webdriver.Remote(
+                command_executor=seleniumServer,
+                options=options,
+            )
+        else:
+            self.driver = webdriver.Firefox(options=options)
+        
+        if sessionID:
+            self.Close()
+            self.driver.session_id = sessionID
+
+class Chrome(seleniumBase):
+    def __init__(self, seleniumServer:str=None, sessionID=None):
+        chrome_options = webdriver.ChromeOptions()
+
+        if seleniumServer:
+            if not seleniumServer.endswith("/wd/hub"):
+                seleniumServer = seleniumServer + "/wd/hub"
+            self.driver = webdriver.Remote(
+                command_executor=seleniumServer,
+                options=chrome_options
+            )
+        else:
+            self.driver = webdriver.Chrome(
+                options=chrome_options,
+            )
+        
+        if sessionID:
+            self.Close()
+            self.driver.session_id = sessionID
+
 if __name__ == "__main__":
     # Local 
-    # se = Selenium()
+    se = Chrome()
 
     # Remote 
-    #se = Selenium("http://127.0.0.1:4444")
+    # se = Selenium("http://127.0.0.1:4444")
 
     # With PAC 
-    se = Selenium(PACFileURL="http://192.168.1.135:8000/pac")
+    # se = Firefox(PACFileURL="http://192.168.1.135:8000/pac")
     # se = Selenium("http://127.0.0.1:4444", PACFileURL="http://192.168.1.135:8000/pac")
 
     # Example of PAC file
@@ -291,11 +294,11 @@ if __name__ == "__main__":
     se.Get("http://ipinfo.io/ip")
     print(se.PageSource())
 
-    se.Get("https://ifconfig.me/ip")
-    print(se.PageSource())
+    # se.Get("https://ifconfig.me/ip")
+    # print(se.PageSource())
     
-    se.Get("http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/")
-    print(se.PageSource())
+    # se.Get("http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/")
+    # print(se.PageSource())
 
     # Function test
     se.Get("https://find-and-update.company-information.service.gov.uk/")

@@ -5,3 +5,4 @@ dist
 event_log.txt
 src/test.py
 src/bagbag/Tools/geckodriver.log
+*.csv

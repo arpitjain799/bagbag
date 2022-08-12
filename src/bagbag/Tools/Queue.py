@@ -14,11 +14,13 @@ import time
 try:
     from ..Base64 import Encode as b64encode
     from ..Base64 import Decode as b64decode
+    from ..Hash import Md5sum as md5sum
 except:
     import sys 
     sys.path.append("..")
     from Base64 import Encode as b64encode
     from Base64 import Decode as b64decode
+    from Hash import Md5sum as md5sum
 
 class Queue():  
     def __init__(self, db:MySQL|SQLite):
@@ -27,6 +29,9 @@ class Queue():
     def New(self, queueName="_queue_empty_name_") -> NamedQueue:
         queueName = ''.join(list(map(lambda x: x if x in "qazwsxedcrfvtgbyhnujmikolopQAZWSXEDCRFVTGBYHNUJMIKOLP0123456789" else "_", queueName)))
         
+        if len(queueName) > 55:
+            queueName = md5sum(queueName)
+
         if queueName != "_queue_empty_name_":
             queueName = "_queue_" + queueName
         
@@ -37,8 +42,6 @@ class Queue():
         
 class NamedQueue():
     def __init__(self, db:MySQL|SQLite, name:str, tq:Queue) -> None:
-        name = ''.join(list(map(lambda x: x if x in "qazwsxedcrfvtgbyhnujmikolopQAZWSXEDCRFVTGBYHNUJMIKOLP0123456789" else "_", name)))
-
         self.db = db 
         self.name = name 
         self.tq = tq 
