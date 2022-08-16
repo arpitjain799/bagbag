@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bagbag"
-version = "0.30.3"
+version = "0.30.11"
 description = "An all in one python library"
 
 license = "MIT"
@@ -43,6 +43,7 @@ pyTelegramBotAPI = ">=4.6.1"
 Pillow = ">=9.2.0"
 OpenCC = ">=0.2"
 windows-curses = { version = ">=2.3.0", platform = "win32" }
+random-user-agent = ">=1.0.1"
 
 # orator 
 # Fix bug in mysql8.0: https://github.com/sdispater/orator/issues/361

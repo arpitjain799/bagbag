@@ -3,7 +3,7 @@ FROM python:3
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt; \
     apt update; \
-    apt install opencc -y; \
+    apt install opencc vim -y; \
     apt clean
 
 COPY dist/bagbag-*.whl /tmp/

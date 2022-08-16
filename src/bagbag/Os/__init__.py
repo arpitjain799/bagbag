@@ -14,3 +14,10 @@ def ListDir(path:str) -> list[str]:
     return os.listdir(path)
 
 Args = sys.argv 
+
+def Getenv(varname:str, defaultValue:str=None) -> str | None:
+    v = os.environ.get(varname)
+    if not v:
+        return defaultValue
+    else:
+        return v

@@ -11,9 +11,10 @@ import time
 # > The seleniumElement class is a wrapper for the selenium.webdriver.remote.webelement.WebElement
 # class
 class seleniumElement():
-    def __init__(self, element:selenium.webdriver.remote.webelement.WebElement, driver:selenium.WebDriver):
+    def __init__(self, element:selenium.webdriver.remote.webelement.WebElement, se:seleniumBase):
         self.element = element
-        self.driver = driver
+        self.se = se
+        self.driver = self.se.driver
     
     def Clear(self) -> seleniumElement:
         """
@@ -27,6 +28,10 @@ class seleniumElement():
         Click() is a function that clicks on an element
         """
         self.element.click()
+        # 如果载入页面失败, 有个Reload的按钮
+        while self.Find("/html/body/div[1]/div[2]/div/button[1]", False):
+            self.Refresh()
+            time.sleep(3)
         return self
     
     def Text(self) -> str:
@@ -61,6 +66,10 @@ class seleniumElement():
         Submit() is a function that submits the form that the element belongs to
         """
         self.element.submit()
+        # 如果载入页面失败, 有个Reload的按钮
+        while self.Find("/html/body/div[1]/div[2]/div/button[1]", False):
+            self.Refresh()
+            time.sleep(3)
         return self
     
     def PressEnter(self) -> seleniumElement:
@@ -68,6 +77,10 @@ class seleniumElement():
         It takes the element that you want to press enter on and sends the enter key to it
         """
         self.element.send_keys(webkeys.ENTER)
+        # 如果载入页面失败, 有个Reload的按钮
+        while self.Find("/html/body/div[1]/div[2]/div/button[1]", False):
+            self.Refresh()
+            time.sleep(3)
         return self
     
     def ScrollIntoElement(self) -> seleniumElement:
@@ -202,6 +215,10 @@ class seleniumBase():
         :type url: str
         """
         self.driver.get(url)
+        # 如果载入页面失败, 有个Reload的按钮
+        while self.Find("/html/body/div[1]/div[2]/div/button[1]", False):
+            self.Refresh()
+            time.sleep(3)
     
     def PageSource(self) -> str:
         """
@@ -253,6 +270,8 @@ class Chrome(seleniumBase):
         # 防止通过navigator.webdriver来检测是否是被selenium操作
         options.add_argument("--disable-blink-features")
         options.add_argument("--disable-blink-features=AutomationControlled")
+
+        options.add_argument("--disable-web-security")
         
         if seleniumServer:
             if not seleniumServer.endswith("/wd/hub"):

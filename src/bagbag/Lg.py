@@ -141,7 +141,13 @@ def Warn(*message):
         pname=multiprocessing.current_process().name.replace("Process-", "P").replace("MainProcess", "MP"),
     )
 
-def Error(*message):
+def Error(*message, exc:bool=False):
+    """
+    It logs the error message with the file name, line number, thread name, and process name.
+    
+    :param exc: If True, the exception will be logged, defaults to False
+    :type exc: bool (optional)
+    """
     messages = []
     jstr = " "
     for msg in message:
@@ -159,17 +165,30 @@ def Error(*message):
     
     p = inspect.stack()[1]
     
-    logger.opt(ansi=True).error(
-        "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
-        message=jstr.join(messages), 
-        function=p.function.replace("<module>", "None"),
-        line=p.lineno,
-        filename=os.path.basename(p.filename),
-        # tid=threading.get_native_id()
-        # tid=threading.get_ident(),
-        tname=re.sub("\([a-zA-Z0-9]+\)", "", threading.current_thread().name.replace("Thread-", "T").replace(" ", "").replace("MainThread", "MT")),
-        pname=multiprocessing.current_process().name.replace("Process-", "P").replace("MainProcess", "MP"),
-    )
+    if exc:
+        logger.opt(ansi=True).exception(
+            "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
+            message=jstr.join(messages), 
+            function=p.function.replace("<module>", "None"),
+            line=p.lineno,
+            filename=os.path.basename(p.filename),
+            # tid=threading.get_native_id()
+            # tid=threading.get_ident(),
+            tname=re.sub("\([a-zA-Z0-9]+\)", "", threading.current_thread().name.replace("Thread-", "T").replace(" ", "").replace("MainThread", "MT")),
+            pname=multiprocessing.current_process().name.replace("Process-", "P").replace("MainProcess", "MP"),
+        )
+    else:
+        logger.opt(ansi=True).error(
+            "<cyan>{pname}</cyan>:<cyan>{tname}</cyan>:<cyan>{filename}</cyan>:<cyan>{line}</cyan> <level>{message}</level>", 
+            message=jstr.join(messages), 
+            function=p.function.replace("<module>", "None"),
+            line=p.lineno,
+            filename=os.path.basename(p.filename),
+            # tid=threading.get_native_id()
+            # tid=threading.get_ident(),
+            tname=re.sub("\([a-zA-Z0-9]+\)", "", threading.current_thread().name.replace("Thread-", "T").replace(" ", "").replace("MainThread", "MT")),
+            pname=multiprocessing.current_process().name.replace("Process-", "P").replace("MainProcess", "MP"),
+        )
 
 def SetLevel(level: str):
     """
@@ -196,6 +215,9 @@ def SetFile(path: str, size: int, during: int, color:bool=True, json:bool=False)
     :param json: If True, the log records will be serialized to JSON, defaults to False
     :type json: bool (optional)
     """
+    if '/' in path.strip("/") and not os.path.exists(os.path.dirname(path)):
+        os.makedirs(os.path.dirname(path.strip('/')))
+
     logger.add(
         path, 
         rotation=str(size)+" MB", 
@@ -203,6 +225,7 @@ def SetFile(path: str, size: int, during: int, color:bool=True, json:bool=False)
         format=__config['handlers'][0]['format'], 
         colorize=color,
         serialize=json,
+        level="TRACE"
     )
 
 # import time 
@@ -233,7 +256,10 @@ if __name__ == "__main__":
     Trace("text debug message", [ ['spam', 'eggs', 'lumberjack', 'knights', 'ni'], 'spam', 'eggs', 'lumberjack', 'knights', 'ni'])
     Debug("first", "second", "third")
     Trace("初始化实例", 1)
-
+    try:
+        int("2.3")
+    except:
+        Error("转换错误:", True)
 
     
     # p = multiprocessing.Process(target=ff)
