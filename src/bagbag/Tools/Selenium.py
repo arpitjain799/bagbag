@@ -8,6 +8,15 @@ from selenium.webdriver.firefox.options import Options as firefoxoptions
 
 import time
 
+import random
+
+try:
+    from ..Http import useragents 
+except:
+    import sys 
+    sys.path.append("..")
+    from Http import useragents 
+
 # > The seleniumElement class is a wrapper for the selenium.webdriver.remote.webelement.WebElement
 # class
 class seleniumElement():
@@ -27,10 +36,14 @@ class seleniumElement():
         """
         Click() is a function that clicks on an element
         """
+        if self.se.browserName == "chrome" and not self.se.browserRemote:
+            self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": random.choice(useragents)['user_agent']})
+
         self.element.click()
+
         # 如果载入页面失败, 有个Reload的按钮
-        while self.Find("/html/body/div[1]/div[2]/div/button[1]", False):
-            self.Refresh()
+        while self.se.Find("/html/body/div[1]/div[2]/div/button[1]", False):
+            self.se.Refresh()
             time.sleep(3)
         return self
     
@@ -65,10 +78,14 @@ class seleniumElement():
         """
         Submit() is a function that submits the form that the element belongs to
         """
+        if self.se.browserName == "chrome" and not self.se.browserRemote:
+            self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": random.choice(useragents)['user_agent']})
+        
         self.element.submit()
+
         # 如果载入页面失败, 有个Reload的按钮
-        while self.Find("/html/body/div[1]/div[2]/div/button[1]", False):
-            self.Refresh()
+        while self.se.Find("/html/body/div[1]/div[2]/div/button[1]", False):
+            self.se.Refresh()
             time.sleep(3)
         return self
     
@@ -76,10 +93,15 @@ class seleniumElement():
         """
         It takes the element that you want to press enter on and sends the enter key to it
         """
+
+        if self.se.browserName == "chrome" and not self.se.browserRemote:
+            self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": random.choice(useragents)['user_agent']})
+        
         self.element.send_keys(webkeys.ENTER)
+
         # 如果载入页面失败, 有个Reload的按钮
-        while self.Find("/html/body/div[1]/div[2]/div/button[1]", False):
-            self.Refresh()
+        while self.se.Find("/html/body/div[1]/div[2]/div/button[1]", False):
+            self.se.Refresh()
             time.sleep(3)
         return self
     
@@ -107,7 +129,7 @@ class seleniumBase():
                 el = self.driver.find_element(webby.XPATH, xpath)
                 if scrollIntoElement:
                     self.driver.execute_script("arguments[0].scrollIntoView(true);", el)
-                return seleniumElement(el, self.driver)
+                return seleniumElement(el, self)
             except selenium.common.exceptions.NoSuchElementException as e: 
                 if timeout == 0:
                     return None 
@@ -214,6 +236,11 @@ class seleniumBase():
         :param url: The URL of the page you want to open
         :type url: str
         """
+
+        if self.browserName == "chrome":
+            if not self.browserRemote:
+                self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": random.choice(useragents)['user_agent']})
+
         self.driver.get(url)
         # 如果载入页面失败, 有个Reload的按钮
         while self.Find("/html/body/div[1]/div[2]/div/button[1]", False):
@@ -240,6 +267,15 @@ class seleniumBase():
         """
         self.driver.close()
         self.driver.quit()
+    
+    def ClearIdent(self):
+        if self.browserName == "chrome":
+            self.driver.delete_all_cookies()
+            self.driver.execute_script("localStorage.clear();")
+            self.driver.execute_script("sessionStorage.clear();")
+            self.driver.execute_script("const dbs = await window.indexedDB.databases();dbs.forEach(db => { window.indexedDB.deleteDatabase(db.name)});")
+        else:
+            raise Exception("未实现")
 
 class Firefox(seleniumBase):
     def __init__(self, seleniumServer:str=None, PACFileURL:str=None, sessionID:str=None):
@@ -262,6 +298,9 @@ class Firefox(seleniumBase):
         if sessionID:
             self.Close()
             self.driver.session_id = sessionID
+        
+        self.browserName = "firefox"
+        self.browserRemote = seleniumServer != None 
 
 class Chrome(seleniumBase):
     def __init__(self, seleniumServer:str=None, sessionID=None):
@@ -271,8 +310,8 @@ class Chrome(seleniumBase):
         options.add_argument("--disable-blink-features")
         options.add_argument("--disable-blink-features=AutomationControlled")
 
-        options.add_argument("--disable-web-security")
-        
+        options.add_argument('--user-agent=' + random.choice(useragents)['user_agent'] + '')
+
         if seleniumServer:
             if not seleniumServer.endswith("/wd/hub"):
                 seleniumServer = seleniumServer + "/wd/hub"
@@ -288,6 +327,9 @@ class Chrome(seleniumBase):
         if sessionID:
             self.Close()
             self.driver.session_id = sessionID
+        
+        self.browserName = "chrome"
+        self.browserRemote = seleniumServer != None 
 
 if __name__ == "__main__":
     # Local 

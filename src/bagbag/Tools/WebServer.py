@@ -5,18 +5,29 @@ from flask import abort, redirect
 from flask import render_template
 
 try:
-    from ..Random import String as randstr
-except:
-    import sys 
-    sys.path.append("..")
-    from Random import String as randstr
-
-try:
+    from .. import Random
     from ..Thread import Thread
+    from .. import Lg
 except:
     import sys 
     sys.path.append("..")
+    import Random
     from Thread import Thread
+    import Lg
+    
+class LoggingMiddleware(object):
+    def __init__(self, app):
+        self._app = app
+
+    def __call__(self, env, resp):
+        errorlog = env['wsgi.errors']
+        Lg.Trace('REQUEST', env)
+
+        def log_response(status, headers, *args):
+            Lg.Trace('RESPONSE', status, headers)
+            return resp(status, headers, *args)
+
+        return self._app(env, log_response)
 
 class Response():
     Make = make_response
@@ -46,16 +57,19 @@ class Request():
         return request.get_data().decode("utf-8")
 
 class WebServer():
-    def __init__(self, name:str=None):
+    def __init__(self, debug:bool=False, name:str=None):
         if not name:
-            name = randstr()
+            name = Random.String()
 
         self.app = Flask(name)
         self.Route = self.app.route 
         self.Request = Request()
         self.Response = Response()
         
-    def Run(self, host:str, port:int, block:bool=True):
+        if debug:
+            self.app.wsgi_app = LoggingMiddleware(self.app.wsgi_app)
+        
+    def Run(self, host:str="0.0.0.0", port:int=None, block:bool=True):
         """
         Runs the Flask app on the specified host and port, optionally in a separate thread
         If block is False then debug will always be False
@@ -69,6 +83,9 @@ class WebServer():
         separate thread, defaults to True
         :type block: bool (optional)
         """
+        if not port:
+            port = Random.Int(10000, 60000)
+            
         if block:
             self.app.run(host, port, False)
         else:

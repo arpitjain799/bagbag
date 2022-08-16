@@ -1,11 +1,12 @@
 import sys as __sys
 from loguru import logger
-from pprint import pformat
 import inspect
 import os
 import threading 
 import multiprocessing
 import re
+
+pformat = (lambda a:lambda v,t="    ",n="\n",i=0:a(a,v,t,n,i))(lambda f,v,t,n,i:"{%s%s%s}"%(",".join(["%s%s%s: %s"%(n,t*(i+1),repr(k),f(f,v[k],t,n,i+1))for k in v]),n,(t*i)) if type(v)in[dict] else (type(v)in[list]and"[%s%s%s]"or"(%s%s%s)")%(",".join(["%s%s%s"%(n,t*(i+1),f(f,k,t,n,i+1))for k in v]),n,(t*i)) if type(v)in[list,tuple] else repr(v))
 
 __config = {
     "handlers": [
@@ -28,7 +29,7 @@ def Trace(*message):
         if type(msg) == int or type(msg) == float:
             msg = str(msg)
         if type(msg) in [list, dict, set]:
-            msg = pformat(msg, indent=4)
+            msg = pformat(msg)
             if msg.count("\n") != 0 and jstr == " ":
                 jstr = "\n"
         else:
@@ -58,7 +59,7 @@ def Debug(*message):
         if type(msg) == int or type(msg) == float:
             msg = str(msg)
         if type(msg) in [list, dict, set]:
-            msg = pformat(msg, indent=4)
+            msg = pformat(msg)
             if msg.count("\n") != 0 and jstr == " ":
                 jstr = "\n"
         else:
@@ -88,7 +89,7 @@ def Info(*message):
         if type(msg) == int or type(msg) == float:
             msg = str(msg)
         if type(msg) in [list, dict, set]:
-            msg = pformat(msg, indent=4)
+            msg = pformat(msg)
             if msg.count("\n") != 0 and jstr == " ":
                 jstr = "\n"
         else:
@@ -118,7 +119,7 @@ def Warn(*message):
         if type(msg) == int or type(msg) == float:
             msg = str(msg)
         if type(msg) in [list, dict, set]:
-            msg = pformat(msg, indent=4)
+            msg = pformat(msg)
             if msg.count("\n") != 0 and jstr == " ":
                 jstr = "\n"
         else:
@@ -154,7 +155,7 @@ def Error(*message, exc:bool=False):
         if type(msg) == int or type(msg) == float:
             msg = str(msg)
         if type(msg) in [list, dict, set]:
-            msg = pformat(msg, indent=4)
+            msg = pformat(msg)
             if msg.count("\n") != 0 and jstr == " ":
                 jstr = "\n"
         else:
