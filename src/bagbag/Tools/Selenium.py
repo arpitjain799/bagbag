@@ -7,15 +7,18 @@ from selenium.webdriver.common.keys import Keys as webkeys
 from selenium.webdriver.firefox.options import Options as firefoxoptions
 
 import time
-
 import random
 
 try:
     from ..Http import useragents 
+    from .. import Lg
+    from ..Thread import Thread
 except:
     import sys 
     sys.path.append("..")
     from Http import useragents 
+    import Lg 
+    from Thread import Thread
 
 # > The seleniumElement class is a wrapper for the selenium.webdriver.remote.webelement.WebElement
 # class
@@ -41,10 +44,6 @@ class seleniumElement():
 
         self.element.click()
 
-        # 如果载入页面失败, 有个Reload的按钮
-        while self.se.Find("/html/body/div[1]/div[2]/div/button[1]", False):
-            self.se.Refresh()
-            time.sleep(3)
         return self
     
     def Text(self) -> str:
@@ -83,10 +82,6 @@ class seleniumElement():
         
         self.element.submit()
 
-        # 如果载入页面失败, 有个Reload的按钮
-        while self.se.Find("/html/body/div[1]/div[2]/div/button[1]", False):
-            self.se.Refresh()
-            time.sleep(3)
         return self
     
     def PressEnter(self) -> seleniumElement:
@@ -99,10 +94,6 @@ class seleniumElement():
         
         self.element.send_keys(webkeys.ENTER)
 
-        # 如果载入页面失败, 有个Reload的按钮
-        while self.se.Find("/html/body/div[1]/div[2]/div/button[1]", False):
-            self.se.Refresh()
-            time.sleep(3)
         return self
     
     def ScrollIntoElement(self) -> seleniumElement:
@@ -206,14 +197,19 @@ class seleniumBase():
         """
         return self.driver.get_cookies()
     
-    def SetCookie(self, cookie_dict:dict):
+    def SetCookie(self, cookie:dict|list[dict]):
         """
-        This function takes a dictionary of cookie key-value pairs and adds them to the current session
+        If the cookie is a dictionary, add it to the driver. If it's a list of dictionaries, add each
+        dictionary to the driver
         
-        :param cookie_dict: A dictionary object, with mandatory keys as follows:
-        :type cookie_dict: dict
+        :param cookie: dict|list[dict]
+        :type cookie: dict|list[dict]
         """
-        self.driver.add_cookie(cookie_dict)
+        if type(cookie) == dict:
+            self.driver.add_cookie(cookie)
+        else:
+            for i in cookie:
+                self.driver.add_cookie(i)
     
     def Refresh(self):
         """
@@ -242,10 +238,6 @@ class seleniumBase():
                 self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": random.choice(useragents)['user_agent']})
 
         self.driver.get(url)
-        # 如果载入页面失败, 有个Reload的按钮
-        while self.Find("/html/body/div[1]/div[2]/div/button[1]", False):
-            self.Refresh()
-            time.sleep(3)
     
     def PageSource(self) -> str:
         """
@@ -265,6 +257,7 @@ class seleniumBase():
         """
         The function closes the browser window and quits the driver
         """
+        self.closed = True
         self.driver.close()
         self.driver.quit()
     
@@ -276,6 +269,31 @@ class seleniumBase():
             self.driver.execute_script("const dbs = await window.indexedDB.databases();dbs.forEach(db => { window.indexedDB.deleteDatabase(db.name)});")
         else:
             raise Exception("未实现")
+    
+    def Except(self, *xpath:str, timeout:int=30) -> int | None:
+        """
+        It waits for some certain elements to appear on the screen.
+        
+        :param : xpath:str - The xpaths of the element you want to find
+        :type : str
+        :param timeout: The number of seconds to wait for the element to appear, defaults to 30
+        :type timeout: int (optional)
+        :return: The index of the xpath that is found.
+        """
+        for _ in range(timeout*2):
+            for x in range(len(xpath)):
+                if self.Find(x, False):
+                    return x
+            time.sleep(0.5)
+    
+    def __enter__(self):
+        return self 
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+            self.Close()
+        except:
+            pass
 
 class Firefox(seleniumBase):
     def __init__(self, seleniumServer:str=None, PACFileURL:str=None, sessionID:str=None):
@@ -303,7 +321,7 @@ class Firefox(seleniumBase):
         self.browserRemote = seleniumServer != None 
 
 class Chrome(seleniumBase):
-    def __init__(self, seleniumServer:str=None, sessionID=None):
+    def __init__(self, seleniumServer:str=None, httpProxy:str=None, sessionID=None):
         options = webdriver.ChromeOptions()
 
         # 防止通过navigator.webdriver来检测是否是被selenium操作
@@ -311,6 +329,11 @@ class Chrome(seleniumBase):
         options.add_argument("--disable-blink-features=AutomationControlled")
 
         options.add_argument('--user-agent=' + random.choice(useragents)['user_agent'] + '')
+
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+
+        if httpProxy:
+            options.add_argument('--proxy-server=' + httpProxy)
 
         if seleniumServer:
             if not seleniumServer.endswith("/wd/hub"):
@@ -330,17 +353,36 @@ class Chrome(seleniumBase):
         
         self.browserName = "chrome"
         self.browserRemote = seleniumServer != None 
+        self.closed = False
+
+        Thread(self.autoRealodOnErrorChrome)
+    
+    def autoRealodOnErrorChrome(self):
+        # 如果载入页面失败, 有个Reload的按钮
+        while True:
+            #Lg.Trace("查找")
+            try:
+                if self.Find("/html/body/div[1]/div[2]/div/button[1]", 1):
+                    if self.Find("/html/body/div[1]/div[2]/div/button[1]").Text() == "Reload":
+                        #Lg.Trace("Refresh")
+                        self.Refresh()
+                        time.sleep(10)
+            except:
+                if self.closed:
+                    break
+                else:
+                    Lg.Error("查找页面加载失败的Reload按钮出错", exc=True)
+            time.sleep(1)
 
 if __name__ == "__main__":
     # Local 
-    se = Chrome()
-
+    with Chrome() as se:
     # Remote 
-    # se = Selenium("http://127.0.0.1:4444")
+    # with Chrome("http://127.0.0.1:4444") as se:
 
     # With PAC 
-    # se = Firefox(PACFileURL="http://192.168.1.135:8000/pac")
-    # se = Selenium("http://127.0.0.1:4444", PACFileURL="http://192.168.1.135:8000/pac")
+    # with Firefox(PACFileURL="http://192.168.1.135:8000/pac") as se:
+    # with Chrome("http://127.0.0.1:4444", PACFileURL="http://192.168.1.135:8000/pac") as se:
 
     # Example of PAC file
     # function FindProxyForURL(url, host)
@@ -355,25 +397,26 @@ if __name__ == "__main__":
     #     }
     #     return "DIRECT";
     # }
-    
-    # PAC test 
-    se.Get("http://ipinfo.io/ip")
-    print(se.PageSource())
 
-    # se.Get("https://ifconfig.me/ip")
-    # print(se.PageSource())
-    
-    # se.Get("http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/")
-    # print(se.PageSource())
+    # With Proxy
+    # with Chrome("http://192.168.1.229:4444", httpProxy="http://192.168.168.54:8899") as se:
+        
+        # PAC test 
+        se.Get("http://ipinfo.io/ip")
+        print(se.PageSource())
 
-    # Function test
-    se.Get("https://find-and-update.company-information.service.gov.uk/")
-    inputBar = se.Find("/html/body/div[1]/main/div[3]/div/form/div/div/input")
-    inputBar.Input("ade")
-    button = se.Find('//*[@id="search-submit"]').Click()
-    
-    print(se.PageSource())
+        # se.Get("https://ifconfig.me/ip")
+        # print(se.PageSource())
+        
+        # se.Get("http://juhanurmihxlp77nkq76byazcldy2hlmovfu2epvl5ankdibsot4csyd.onion/")
+        # print(se.PageSource())
 
-    se.Close()
+        # Function test
+        # se.Get("https://find-and-update.company-information.service.gov.uk/")
+        # inputBar = se.Find("/html/body/div[1]/main/div[3]/div/form/div/div/input")
+        # inputBar.Input("ade")
+        # button = se.Find('//*[@id="search-submit"]').Click()
+        # print(se.PageSource())
+
 
     

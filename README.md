@@ -122,7 +122,8 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
       * Put(string:str)
   * Selenium
     * Firefox(seleniumServer:str=None, PACFileURL:str=None, sessionID:str=None)
-    * Chrome(seleniumServer:str=None, sessionID=None)
+    * Chrome(seleniumServer:str=None, httpProxy:str=None, sessionID=None)
+      * Except(*xpath:str, timeout:int=30) -> int | None
       * ResizeWindow(width:int, height:int)
       * ScrollRight(pixel:int)
       * ScrollLeft(pixel:int)
