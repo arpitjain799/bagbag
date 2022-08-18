@@ -26,3 +26,4 @@ simplejson >= 3.10
 six >= 1.10
 wrapt >= 1.10
 OpenCC >= 0.2
+random-user-agent >=1.0.1

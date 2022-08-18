@@ -46,6 +46,8 @@ class RequestForm():
 class Request():
     Args = RequestArgs()
     Form = RequestForm()
+    def Headers(self) -> dict:
+        return dict(request.headers)
 
     def Method(self) -> str:
         return request.method
@@ -136,6 +138,7 @@ if __name__ == "__main__":
 
     @w2.Route("/")
     def index2():
-        return "Hello World 2!"
+        # print(w.Request.Headers())
+        return "Hello World 2!" 
     
     w2.Run("0.0.0.0", 8081) # Block here
