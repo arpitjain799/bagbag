@@ -1,7 +1,12 @@
 from __future__ import annotations
 
-from . import orator
-from .Lock import Lock
+try:
+    from . import orator
+    from .Lock import Lock
+except:
+    import orator
+    from Lock import Lock
+
 import bagbag
 
 class MySQLSQLiteTable():
@@ -36,13 +41,13 @@ class MySQLSQLiteTable():
             with self.schema.table(self.tbname) as table:
                 exists = self.schema.has_column(self.tbname, colname)
         
-                if coltype == "int":
+                if coltype in ["int", "integer"]:
                     col = table.big_integer(colname)
-                elif coltype == "string":
+                elif coltype in ["string", "str", "varchar"] :
                     col = table.string(colname, 256)
-                elif coltype == "float":
+                elif coltype in ["float", "double"]:
                     col = table.double(colname)
-                elif coltype == "text":
+                elif coltype in ["text", "longtext"]:
                     col = table.long_text(colname)
                 else:
                     raise Exception("列的类型可选为: int, string, float, text")
@@ -204,13 +209,13 @@ class MySQLSQLiteTable():
         return count
 
     @wrap
-    def Find(self, id:int) -> map:
+    def Find(self, id:int) -> dict | None:
         res = self.db.db.table(self.tbname).where('id', "=", id).first()
         
         return res
 
     @wrap
-    def First(self) -> map: 
+    def First(self) -> dict | None: 
         """
         :return: A map of the first row in the table. Return None if the table is empty. 
         """
@@ -230,7 +235,7 @@ class MySQLSQLiteTable():
         self.table = self.db.db.table(self.tbname)
         return res
 
-    def Columns(self) -> list[map]:
+    def Columns(self) -> list[dict]:
         """
         It returns a list of dictionaries, each dictionary containing the name and type of a column in a
         table

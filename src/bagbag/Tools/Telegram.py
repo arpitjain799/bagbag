@@ -1,6 +1,19 @@
+from re import I
 from telethon.sync import TelegramClient
 from telethon.sessions import StringSession
 import telethon
+from telethon import utils
+from telethon import types
+import time
+
+try:
+    from .. import Os
+    from .MySQL_SQLite import SQLite
+except:
+    import sys 
+    sys.path.append("..")
+    import Os
+    from MySQL_SQLite import SQLite
 
 class TelegramGeo():
     def __init__(self):
@@ -42,16 +55,31 @@ class TelegramFile():
 class TelegramMessage():
     def __init__(self, client:TelegramClient):
         self.client = client
-        self.PeerType = None 
+        self.message = None
+        self.PeerType:str = None 
         self.Chat = TelegramPeer(client=self.client)
-        self.ID = None 
-        self.Time = None 
-        self.Action = None 
-        self.File = None
-        self.Photo = None
-        self.Geo = None
-        self.Message = None
-        self.User = None
+        self.ID:int = None 
+        self.Time:int = None 
+        self.Action:str = None 
+        self.File:TelegramFile = None
+        self.Photo:TelegramPhoto = None
+        self.Geo:TelegramGeo = None
+        self.Message:str = None
+        self.User:TelegramPeer = None
+    
+    def DownloadMedia(self, SavePath:str=None) -> str | None:
+        if not SavePath:
+            if self.File:
+                SavePath = self.File.Name
+            elif self.Photo:
+                SavePath = "photo.jpg"
+        
+        SavePath = Os.Path.Uniquify(SavePath)
+
+        if not Os.Path.Exists(Os.Path.Basedir(SavePath)):
+            Os.Mkdir(Os.Path.Basedir(SavePath))
+
+        self.client.download_media(self.message)
     
     def __repr__(self):
         return f"TelegramMessage(PeerType={self.PeerType}, Chat={self.Chat}, ID={self.ID}, Time={self.Time}, Action={self.Action}, File={self.File}, Photo={self.Photo}, Message={self.Message}, User={self.User})"
@@ -88,6 +116,48 @@ class TelegramPeer():
         self.Resolved = False # 是否已解析. 只设置一个ID, 解析之后就补上其它的字段.
         self.client = client # telethon.sync.TelegramClient
     
+    def Message(self, id:str) -> TelegramMessage:
+        message = self.client.get_messages(self.ID, ids=id)
+        return self.__wrapMsg(message)
+    
+    def __wrapMsg(self, message) -> TelegramMessage:
+        msg = TelegramMessage(self.client)
+        msg.message = message
+        msg.PeerType = self.Type 
+        msg.Chat = self 
+        msg.ID = message.id 
+        msg.Time = int(message.date.timestamp())
+        if message.action:
+            msg.Action = message.action.to_dict()["_"]
+        if message.media:
+            if message.document:
+                msg.File = TelegramFile()
+                msg.File.ID = message.document.id 
+                msg.File.AccessHash = message.document.access_hash
+                msg.File.Size = message.document.size 
+                for attr in message.media.document.attributes:
+                    if attr.to_dict()['_'] == "DocumentAttributeFilename":
+                        msg.File.Name = attr.to_dict()['file_name']
+            elif message.photo:
+                msg.Photo = TelegramPhoto()
+                msg.Photo.ID = message.photo.id
+                msg.Photo.AccessHash = message.photo.access_hash
+            elif message.geo:
+                msg.Geo = TelegramGeo()
+                msg.Geo.AccessHash = message.geo.access_hash
+                msg.Geo.Lat = message.geo.lat 
+                msg.Geo.Long = message.geo.long
+            # else: 
+            #     import ipdb 
+            #     ipdb.set_trace()
+            #     print(message)
+        if message.message:
+            msg.Message = message.message
+        if message.from_id:
+            msg.User = TelegramPeer(ID=message.from_id.user_id, client=self.client)
+
+        return msg
+    
     def History(self, limit:int=100, offset:int=0) -> list:
         """
         It takes a chat object, and returns a list of messages in that chat.
@@ -101,42 +171,7 @@ class TelegramPeer():
         res = []
         getmessage = self.client.get_messages(self.ID, limit=limit, offset_id=offset)
         for message in getmessage:
-            # if message.id == 5:
-            #     import ipdb
-            #     ipdb.set_trace()
-            msg = TelegramMessage(self.client)
-            msg.PeerType = self.Type 
-            msg.Chat = self 
-            msg.ID = message.id 
-            msg.Time = int(message.date.timestamp())
-            if message.action:
-                msg.Action = message.action.to_dict()["_"]
-            if message.media:
-                if message.document:
-                    msg.File = TelegramFile()
-                    msg.File.ID = message.document.id 
-                    msg.File.AccessHash = message.document.access_hash
-                    msg.File.Size = message.document.size 
-                    for attr in message.media.document.attributes:
-                        if attr.to_dict()['_'] == "DocumentAttributeFilename":
-                            msg.File.Name = attr.to_dict()['file_name']
-                elif message.photo:
-                    msg.Photo = TelegramPhoto()
-                    msg.Photo.ID = message.photo.id
-                    msg.Photo.AccessHash = message.photo.access_hash
-                elif message.geo:
-                    msg.Geo = TelegramGeo()
-                    msg.Geo.AccessHash = message.geo.access_hash
-                    msg.Geo.Lat = message.geo.lat 
-                    msg.Geo.Long = message.geo.long
-                # else: 
-                #     import ipdb 
-                #     ipdb.set_trace()
-                #     print(message)
-            if message.message:
-                msg.Message = message.message
-            if message.from_id:
-                msg.User = TelegramPeer(ID=message.from_id.user_id, client=self.client)
+            msg = self.__wrapMsg(message)
             res.append(msg)
         return res
 
@@ -167,22 +202,14 @@ class TelegramPeer():
 
 # It's a wrapper for the `telethon` library that allows you to use it in a more Pythonic way
 class Telegram():
-    def __init__(self, appid:str, apphash:str, sessionString:str=None):
-        """
-        __init__(self, appid:str, apphash:str, sessionString:str=None):
-        
-        :param appid: Your app's APP ID
-        :type appid: str
-        :param apphash: This is a hash that is generated by Telegram when you register your app
-        :type apphash: str
-        :param sessionString: This is the session string that you get from the Telegram API
-        :type sessionString: str
-        """
-        self.client = TelegramClient(StringSession(sessionString), appid, apphash)
+    def __init__(self, appid:str, apphash:str, sessionfile:str):
+        self.client = TelegramClient(sessionfile, appid, apphash) 
+        # self.client = TelegramClient(StringSession(sessionString), appid, apphash)
         self.client.start()
 
-        me = self.client.get_me()
-        print(me.stringify())
+        # me = self.client.get_me()
+        # print(me.stringify())
+        self.sessionfile = sessionfile + ".session"
 
     def SessionString(self) -> str:
         """
@@ -191,17 +218,22 @@ class Telegram():
         """
         return self.client.session.save()
     
-    def ResolvePeerByUsername(self, username:str) -> TelegramPeer:
+    def PeerByUsername(self, username:str) -> TelegramPeer:
         """
-        It resolves a username to a TelegramPeer object.
+        根据Username解析一个Peer, 有速率限制
         
-        :param username: The username of the peer you want to resolve
+        :param username: The username of the user/channel you want to send the message to
         :type username: str
-        :return: A TelegramPeer object.
         """
         tp = TelegramPeer()
 
-        obj = self.client.get_entity(username)
+        tp.client = self.client
+
+        try:
+            obj = self.client.get_entity(username)
+        except (ValueError, TypeError):
+            time.sleep(1)
+            obj = self.client.get_entity(username)
         if type(obj) == telethon.tl.types.Channel:
             tp.Type = "channel"
             tp.Name = obj.title
@@ -213,21 +245,63 @@ class Telegram():
         tp.Username = obj.username 
         tp.ID = obj.id
 
-        tp.client = self.client
+        self.client.session.save()
 
         return tp
+    
+    def PeerByIDAndHash(self, ID:int, Hash:int, Type:str="channel") -> TelegramPeer:
+        """
+        根据ID和Hash返回一个Peer
+        
+        :param ID: The ID of the user or group
+        :type ID: int
+        :param Hash: The hash value of the peer, which can be obtained by calling the GetPeerHash method
+        of the TelegramPeer object
+        :type Hash: int
+        :param Type: The type of the peer, which can be "channel", "group", or "user", defaults to
+        channel
+        :type Type: str (optional)
+        :return: TelegramPeer
+        """
+        if Type in ["channel", "group"]:
+            tp = types.PeerChannel(ID)
+        elif Type == "user":
+            tp = types.PeerUser(ID)
+        else:
+            raise Exception(f"未知的类型:{Type}")
+        peerid = utils.get_peer_id(tp)
+
+        try:
+            return self.PeerByUsername(peerid)
+        except (ValueError, TypeError):
+            self.client.session.save() # save all data to sqlite database session file to avlide database lock
+            db = SQLite(self.sessionfile)
+            (db.Table("entities").
+                Data({
+                    "id": peerid, 
+                    "hash": Hash,
+                }).Insert())
+            db.Close()
+            try:
+                peer = self.PeerByUsername(peerid)
+            except (ValueError, TypeError):
+                time.sleep(1)
+                peer = self.PeerByUsername(peerid)
+            self.client.session.save() # save the entity we just resolved to the database
+
+            return peer 
 
 if __name__ == "__main__":
     import json 
     ident = json.loads(open("Telegram.ident").read())
     app_id = ident["appid"]
     app_hash = ident["apphash"]
-    sessionString = ident["session"]
-
-    tg = Telegram(app_id, app_hash, sessionString)
-    peer = tg.ResolvePeerByUsername(ident["username"])
+    
+    tg = Telegram(app_id, app_hash, "telegram-session")
+    #peer = tg.ResolvPeer(ident["username"])
+    peer = tg.PeerByIDAndHash(1234567678, -234567678678)
     print(peer)
-  
+
     for i in peer.History():
         if i.User:
             i.User.Resolve()

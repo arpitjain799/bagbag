@@ -6,3 +6,7 @@ event_log.txt
 src/test.py
 *.csv
 *.log
+*.jpg
+*.db
+*.session
+.DS_Store
