@@ -109,7 +109,7 @@ def makeResponse(response:requests.Response, Debug:bool, ReadBodySize:int) -> Re
     
     return resp
 
-def Head(url:str, Timeout:str=None, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
+def Head(url:str, Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
     if "User-Agent" not in Headers:
         Headers["User-Agent"] = random.choice(useragents)['user_agent']
 
@@ -134,7 +134,7 @@ def Head(url:str, Timeout:str=None, Headers:dict={}, ReadBodySize:int=None, Foll
             if TimeoutRetryTimes < timeouttimes:
                 raise e
 
-def Get(url:str, Timeout:str=None, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None,  TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
+def Get(url:str, Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None,  TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
     if "User-Agent" not in Headers:
         Headers["User-Agent"] = random.choice(useragents)['user_agent']
 
@@ -160,7 +160,7 @@ def Get(url:str, Timeout:str=None, Headers:dict={}, ReadBodySize:int=None, Follo
             if TimeoutRetryTimes < timeouttimes:
                 raise e
 
-def PostRaw(url:str, Data:str, Timeout:str=None, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
+def PostRaw(url:str, Data:str, Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
     if "User-Agent" not in Headers:
         Headers["User-Agent"] = random.choice(useragents)['user_agent']
 
@@ -187,7 +187,7 @@ def PostRaw(url:str, Data:str, Timeout:str=None, Headers:dict={}, ReadBodySize:i
             if TimeoutRetryTimes < timeouttimes:
                 raise e
 
-def PostJson(url:str, Json:dict,Timeout:str=None, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
+def PostJson(url:str, Json:dict,Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
     if "User-Agent" not in Headers:
         Headers["User-Agent"] = random.choice(useragents)['user_agent']
 
@@ -214,7 +214,7 @@ def PostJson(url:str, Json:dict,Timeout:str=None, Headers:dict={}, ReadBodySize:
             if TimeoutRetryTimes < timeouttimes:
                 raise e
 
-def PostForm(url:str, Data:dict, Timeout:str=None, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
+def PostForm(url:str, Data:dict, Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
     if "User-Agent" not in Headers:
         Headers["User-Agent"] = random.choice(useragents)['user_agent']
 
@@ -241,7 +241,7 @@ def PostForm(url:str, Data:dict, Timeout:str=None, Headers:dict={}, ReadBodySize
             if TimeoutRetryTimes < timeouttimes:
                 raise e
 
-def Delete(url:str, Timeout:str=None, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
+def Delete(url:str, Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
     if "User-Agent" not in Headers:
         Headers["User-Agent"] = random.choice(useragents)['user_agent']
 
@@ -267,7 +267,7 @@ def Delete(url:str, Timeout:str=None, Headers:dict={}, ReadBodySize:int=None, Fo
             if TimeoutRetryTimes < timeouttimes:
                 raise e
 
-def PutForm(url:str, Data:dict,Timeout:str=None, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
+def PutForm(url:str, Data:dict,Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
     if "User-Agent" not in Headers:
         Headers["User-Agent"] = random.choice(useragents)['user_agent']
 
@@ -294,7 +294,7 @@ def PutForm(url:str, Data:dict,Timeout:str=None, Headers:dict={}, ReadBodySize:i
             if TimeoutRetryTimes < timeouttimes:
                 raise e
 
-def PutRaw(url:str, Data:str, Timeout:str=None, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False, Debug:bool=False):
+def PutRaw(url:str, Data:str, Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False, Debug:bool=False):
     if "User-Agent" not in Headers:
         Headers["User-Agent"] = random.choice(useragents)['user_agent']
 
@@ -321,7 +321,7 @@ def PutRaw(url:str, Data:str, Timeout:str=None, Headers:dict={}, ReadBodySize:in
             if TimeoutRetryTimes < timeouttimes:
                 raise e
 
-def PutJson(url:str, Json:dict, Timeout:str=None, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
+def PutJson(url:str, Json:dict, Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
     if "User-Agent" not in Headers:
         Headers["User-Agent"] = random.choice(useragents)['user_agent']
 

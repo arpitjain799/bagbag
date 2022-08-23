@@ -95,7 +95,7 @@ class MySQLSQLiteTable():
             with self.schema.table(self.tbname) as table:
                 table.index(*cols)
         except Exception as e:
-            if "Duplicate key name" not in str(e):
+            if "Duplicate key name" not in str(e) and "already exists" not in str(e):
                 raise e
 
         return self
@@ -366,22 +366,24 @@ class SQLite(MySQLSQLiteBase):
         self.lock = Lock()
 
 if __name__ == "__main__":
-    # db = SQLite("data.db")
-    # tbl = db.Table("test_tbl").AddColumn("string", "string").AddColumn("int", "string").AddIndex("int")
-    # tbl.Data({"string":"string2", "int": 2}).Insert()
-    # c = tbl.Where("string", "=", "string2").Count()
-    # print(c)
+    db = SQLite("data.db")
+    tbl = db.Table("test_tbl").AddColumn("string", "string").AddColumn("int", "string").AddIndex("int")
+    tbl.Data({"string":"string2", "int": 2}).Insert()
+    c = tbl.Where("string", "=", "string2").Count()
+    print(c)
 
-    # db.Close()
+    print("exists:", tbl.Where("string", "=", "string555").Exists())
 
-    # import os 
-    # os.unlink("data.db")
+    db.Close()
+
+    import os 
+    os.unlink("data.db")
 
     # print(db.Table("test_tbl").First())
 
-    db = MySQL("192.168.168.5", 3306, "root", "r", "test")
+    # db = MySQL("192.168.168.5", 3306, "root", "r", "test")
 
-    for row in db.Table("__queue__name__name").Get():
-        print(row)
+    # for row in db.Table("__queue__name__name").Get():
+    #     print(row)
 
-    print(db.Table("__queue__name__name").Columns())
+    # print(db.Table("__queue__name__name").Columns())
