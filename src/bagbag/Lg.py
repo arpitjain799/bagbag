@@ -142,7 +142,7 @@ def Warn(*message):
         pname=multiprocessing.current_process().name.replace("Process-", "P").replace("MainProcess", "MP"),
     )
 
-def Error(*message, exc:bool=False):
+def Error(*message, exc:bool=True):
     """
     It logs the error message with the file name, line number, thread name, and process name.
     

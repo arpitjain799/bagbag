@@ -10,3 +10,4 @@ src/test.py
 *.db
 *.session
 .DS_Store
+*.zip

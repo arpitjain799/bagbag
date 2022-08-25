@@ -4,7 +4,26 @@ import tqdm
 
 Now = time.time 
 
-def Sleep(num:int, bar:bool=False):
+def Sleep(num:int, bar:bool=None):
+    """
+    Sleep(num:int, bar:bool=None)
+    
+    The first argument is an integer, and the second argument is a boolean. The second argument is
+    optional, and if it is not provided, it will be set to True if the first argument is greater than 5,
+    and False otherwise
+    
+    :param num: The number of seconds to sleep
+    :type num: int
+    :param bar: If True, a progress bar will be displayed. If False, no progress bar will be displayed.
+    If None, a progress bar will be displayed if the number of seconds is greater than 5
+    :type bar: bool
+    """
+    if bar == None:
+        if num > 5:
+            bar = True 
+        else:
+            bar = False
+
     if bar:
         for _ in tqdm.tqdm(range(num), total=num, leave=False):
             time.sleep(1)

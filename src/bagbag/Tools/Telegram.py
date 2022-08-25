@@ -158,7 +158,7 @@ class TelegramPeer():
 
         return msg
     
-    def History(self, limit:int=100, offset:int=0) -> list:
+    def Messages(self, limit:int=100, offset:int=0) -> list[TelegramMessage]:
         """
         It takes a chat object, and returns a list of messages in that chat.
         
@@ -203,7 +203,7 @@ class TelegramPeer():
 # It's a wrapper for the `telethon` library that allows you to use it in a more Pythonic way
 class Telegram():
     def __init__(self, appid:str, apphash:str, sessionfile:str):
-        self.client = TelegramClient(sessionfile, appid, apphash) 
+        self.client = TelegramClient(sessionfile, appid, apphash, device_model="Samsung S22 Ultra", system_version="Android 10.0.0", app_version="4.0.2") 
         # self.client = TelegramClient(StringSession(sessionString), appid, apphash)
         self.client.start()
 
@@ -298,9 +298,12 @@ if __name__ == "__main__":
     app_hash = ident["apphash"]
     
     tg = Telegram(app_id, app_hash, "telegram-session")
-    #peer = tg.ResolvPeer(ident["username"])
-    peer = tg.PeerByIDAndHash(1234567678, -234567678678)
+    peer = tg.PeerByUsername(ident["username"])
+    # peer = tg.PeerByIDAndHash(1234567678, -234567678678)
     print(peer)
+
+    import ipdb
+    ipdb.set_trace()
 
     for i in peer.History():
         if i.User:
