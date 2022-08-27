@@ -274,7 +274,7 @@ class MySQLSQLiteBase():
             else:
                 res = self.db.statement(sql)
         except orator.exceptions.query.QueryException as e:
-            if self.db.driver == "mysql":
+            if self.driver == "mysql":
                 if action == "insert":
                     res = self.db.insert(sql)
                 elif action in ["select", "show"]:
@@ -387,3 +387,14 @@ if __name__ == "__main__":
     #     print(row)
 
     # print(db.Table("__queue__name__name").Columns())
+
+    # 执行SQL语句
+    # In [4]: db.Execute("select distinct(`Column1`) from `table1`")
+    # Out[4]: ({'Column1': '1'}, {'Column1': '2'}, {'Column1': '3'}, {'Column1': '4'})
+    # 
+    # In [3]: db.Execute("select count(`id`) as `count`, `data` from `table` group by `data`")
+    # Out[3]: 
+    # ({'count': 2, 'data': '1'},
+    # {'count': 1, 'data': '2'},
+    # {'count': 1, 'data': '3'},
+    # {'count': 1, 'data': '4'})

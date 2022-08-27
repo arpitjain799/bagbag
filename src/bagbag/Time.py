@@ -25,6 +25,7 @@ def Sleep(num:int, bar:bool=None):
             bar = False
 
     if bar:
+        num = int(num)
         for _ in tqdm.tqdm(range(num), total=num, leave=False):
             time.sleep(1)
     else:
