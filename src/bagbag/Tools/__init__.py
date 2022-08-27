@@ -14,4 +14,4 @@ from .Chan import Chan
 from .WebServer import WebServer
 from .TelegramBot import TelegramBot
 from . import CSV
-from .Argparser import Argparse
+from .Argparser import Argparser

@@ -2,27 +2,48 @@ from __future__ import annotations
 
 import argparse
 
-class Argparse():
+class Argparser():
     def __init__(self, description:str=None) -> None:
         self.parser = argparse.ArgumentParser(description=description)
 
-    def Add(self, arg:str, default:str=None, help:str=None) -> Argparse:
-        return self.AddString(arg, default, help)
+    def Add(self, arg:str, help:str=None) -> Argparser:
+        return self.AddString(arg, help)
     
-    def AddString(self, arg:str, default:str=None, help:str=None) -> Argparse:
-        self.parser.add_argument(arg, default=default, help=help, type=str)
+    def AddOpt(self, arg:str, default:str=None, help:str=None) -> Argparser:
+        return self.AddOptString(arg, default, help)
+    
+    def AddStr(self, arg:str, help:str=None) -> Argparser:
+        return self.AddString(arg, help)
+    
+    def AddOptStr(self, arg:str, default:str=None, help:str=None) -> Argparser:
+        return self.AddOptString("--" + arg, default, help)
+    
+    def AddString(self, arg:str, help:str=None) -> Argparser:
+        self.parser.add_argument(arg, help=help, type=str)
         return self
     
-    def AddBool(self, arg:str, default:bool=False, help:str=None) -> Argparse:
-        self.parser.add_argument(arg, default=default, help=help, action='store_true')
+    def AddOptString(self, arg:str, default:str=None, help:str=None) -> Argparser:
+        self.parser.add_argument("--" + arg, default=default, help=help, type=str)
+        return self
+
+    def AddOptBool(self, arg:str, default:bool=False, help:str=None) -> Argparser:
+        self.parser.add_argument("--" + arg, default=default, help=help, action='store_true')
         return self
     
-    def AddInt(self, arg:str, default:bool=None, help:str=None) -> Argparse:
-        self.parser.add_argument(arg, default=default, help=help, type=int)
+    def AddInt(self, arg:str, help:str=None) -> Argparser:
+        self.parser.add_argument(arg, help=help, type=int)
         return self
     
-    def AddFloat(self, arg:str, default:bool=None, help:str=None) -> Argparse:
-        self.parser.add_argument(arg, default=default, help=help, type=float)
+    def AddOptInt(self, arg:str, default:bool=None, help:str=None) -> Argparser:
+        self.parser.add_argument("--" + arg, default=default, help=help, type=int)
+        return self
+    
+    def AddFloat(self, arg:str, help:str=None) -> Argparser:
+        self.parser.add_argument(arg, help=help, type=float)
+        return self
+    
+    def AddOptFloat(self, arg:str, default:bool=None, help:str=None) -> Argparser:
+        self.parser.add_argument("--" + arg, default=default, help=help, type=float)
         return self
     
     def Get(self):
@@ -30,15 +51,15 @@ class Argparse():
 
 if __name__ == "__main__":
     args = (
-        Argparse().
-        AddBool("--arg1").
+        Argparser().
+        AddOptBool("arg1").
         AddString("arg2"). 
         Add("arg3", "help string 3"). 
-        Add("--optionArgs4"). 
-        Add("--optionArgs5", "defaultValue5").
-        Add("--optionArgs6", "defaultValue6", "help string 6"). 
+        AddOpt("optionArgs4"). 
+        AddOpt("optionArgs5", "defaultValue5").
+        AddOpt("optionArgs6", "defaultValue6", "help string 6"). 
         AddInt("intKey"). 
-        AddFloat("--floatKey").
+        AddOptFloat("floatKey").
         Get()
     )
     print(args.arg3)

@@ -1,6 +1,7 @@
 import os
 import sys 
 from . import Path
+import shutil
 
 def Exit(num:int=0):
     sys.exit(num)
@@ -21,3 +22,6 @@ def Getenv(varname:str, defaultValue:str=None) -> str | None:
         return defaultValue
     else:
         return v
+
+def Unlink(path:str):
+    shutil.rmtree(path)
