@@ -28,7 +28,8 @@ def Getenv(varname:str, defaultValue:str=None) -> str | None:
         return v
 
 def Unlink(path:str):
-    shutil.rmtree(path)
+    if os.path.exists(path):
+        shutil.rmtree(path)
 
 def Move(src:str, dst:str, force:bool=True):
     if os.path.exists(dst):
