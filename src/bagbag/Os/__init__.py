@@ -1,6 +1,10 @@
 import os
 import sys 
-from . import Path
+try:
+    from . import Path
+except:
+    import Path
+
 import shutil
 
 def Exit(num:int=0):
@@ -25,3 +29,42 @@ def Getenv(varname:str, defaultValue:str=None) -> str | None:
 
 def Unlink(path:str):
     shutil.rmtree(path)
+
+def Move(src:str, dst:str, force:bool=True):
+    if os.path.exists(dst):
+        if not os.path.isdir(dst):
+            if not force:
+                raise Exception("目标已存在")
+            else:
+                os.unlink(dst)
+        else:
+            dst = os.path.join(dst, os.path.basename(src))
+
+    ddir = os.path.dirname(dst)
+    if ddir != "":
+        if not os.path.exists(ddir):
+            Mkdir(ddir)
+    
+    shutil.move(src, dst)
+
+def Copy(src:str, dst:str, force:bool=True):
+    if os.path.exists(dst):
+        if not os.path.isdir(dst):
+            if not force:
+                raise Exception("目标已存在")
+            else:
+                os.unlink(dst)
+        else:
+            dst = os.path.join(dst, os.path.basename(src))
+    
+    ddir = os.path.dirname(dst)
+    if ddir != "":
+        if not os.path.exists(ddir):
+            Mkdir(ddir)
+    
+    shutil.copy2(src, dst)
+
+if __name__ == "__main__":
+    # Move("a", "b") # 移动当前目录的a到b
+    # Move("b", "c/d/e") # 移动b到c/d/e, 会先递归创建目录c/d
+    Move("c/d/e", "d") # 移动c/d/e文件到d目录, 没有指定文件名就自动使用原来的文件名

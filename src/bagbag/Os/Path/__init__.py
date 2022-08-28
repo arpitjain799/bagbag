@@ -26,5 +26,11 @@ def Uniquify(path:str) -> str:
 
     return path
 
+def IsDir(path:str) -> bool:
+    return os.path.isdir(path)
+
+def Basename(path:str) -> str:
+    return os.path.basename(path)
+
 if __name__ == "__main__":
     print(Join("a", "b"))
