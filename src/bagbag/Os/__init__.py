@@ -1,10 +1,5 @@
 import os
 import sys 
-try:
-    from . import Path
-except:
-    import Path
-
 import shutil
 
 def Exit(num:int=0):

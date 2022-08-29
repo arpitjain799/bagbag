@@ -29,14 +29,21 @@ class TelegramBot():
     def SendLocation(self, latitude:float, longitude:float):
         self.tb.send_location(self.chatid, latitude, longitude)
 
-    def SendMsg(self, msg:str):
-        if len(msg) <= 4096:
-            self.tb.send_message(self.chatid, msg) 
+    def SendMsg(self, msg:str, *tags:str):
+        if len(tags) != 0:
+            tag = '\n\n' + ' '.join(['#' + t for t in tags])
         else:
-            for m in telebot.util.smart_split(msg, 4096):
-                self.tb.send_message(self.chatid, m) 
+            tag = ""
+        
+        if len(msg) <= 4096 - len(tag):
+            self.tb.send_message(self.chatid, msg.strip() + tag) 
+        else:
+            for m in telebot.util.smart_split(msg, 4096 - len(tag)):
+                self.tb.send_message(self.chatid, m.strip() + tag) 
 
 if __name__ == "__main__":
     token, chatid = open("TelegramBot.ident").read().strip().split("\n")
     t = TelegramBot(token).SetChatID(int(chatid))
+    # t.SendMsg(open("Telegram.py").read(), "tag1", "tag2")
     t.SendMsg("test")
+    # t.SendFile("URL.py")

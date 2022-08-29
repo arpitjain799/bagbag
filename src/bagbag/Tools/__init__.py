@@ -3,7 +3,7 @@ from .MySQL_SQLite import MySQL
 from .MySQL_SQLite import SQLite
 from .ProgressBar import ProgressBar
 from .Telegram import Telegram
-from .Telegram import TelegramPeer # 手动组装Peer需要用到
+# from .Telegram import TelegramPeer # 手动组装Peer需要用到
 from . import Selenium
 from .Lock import Lock
 from .Queue import Queue 
