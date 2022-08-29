@@ -47,6 +47,17 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * Exit(num:int=0)
   * Mkdir(path:str)
   * Getenv(varname:str, defaultValue:str=None) -> str | None
+  * ListDir(path:str) -> list[str]
+  * Unlink(path:str)
+  * Move(src:str, dst:str, force:bool=True)
+  * Copy(src:str, dst:str, force:bool=True)
+  * Path
+    * def Basedir(path:str) -> str
+    * Join(*path) -> str
+    * Exists(path:str) -> bool
+    * Uniquify(path:str) -> str
+    * IsDir(path:str) -> bool
+    * Basename(path:str) -> str
 * Http
   * Head(url:str, Timeout:str=None, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False)
   * Get(url:str, Timeout:str=None, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None,  TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False)

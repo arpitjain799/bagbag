@@ -1,3 +1,10 @@
+try:
+    from . import Path
+except:
+    import Path
+
+# 以上是作为包给其它程序调用的时候要的, 例如Os.Path.Exists()
+
 import os
 import sys 
 import shutil
