@@ -34,6 +34,14 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * Strftime(format:str, timestamp:float|int) -> str
   * Strptime(format:str, timestring:str) -> int
 * Re 正则
+  """
+  If the message is too long, split it into chunks of 4096 characters and send them one by one
+  
+  :param msg: the message to be sent
+  :type msg: str
+  :param : `chatid` - the chat ID of the chat you want to send messages to
+  :type : str
+  """
   * FindAll(pattern: str | Pattern[str], string: str, flags: _FlagsType = ...) -> list
 * Base64
   * Encode(s:str) -> str
@@ -90,6 +98,13 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * Int2IP(intip:int) -> str
   * ResizeImage(src:str, dst:str, width:int, quality:int=95)
 * Tools 一些工具
+  * Elasticsearch(url:str)
+    * Delete(IndexName:str)
+    * Collection(IndexName:str)
+      * Index(id:int, data:dict, refresh:bool=False, Timeout:int=15)
+      * Refresh(Timeout:int=15)
+      * Delete(id:int)
+      * Search(key:str, value:str, page:int=1, pagesize:int=50, OrderByKey:str=None, OrderByOrder:str="ase", Highlight:str=None, mustIncludeAllWords:bool=True)
   * CSV
     * Reader(fpath:str)
       * Read() -> dict
@@ -149,6 +164,10 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
       * PageSource() -> str
       * Title() -> str
       * Close()
+      * SwitchTabByID(number:int)
+      * SwitchTabByIdent(ident:str)
+      * Tabs() -> list[str]
+      * NewTab() -> str
       * Find(xpath:str, waiting=True) -> SeleniumElement
         * Clear() -> SeleniumElement
         * Click() -> SeleniumElement
@@ -161,8 +180,20 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * Telegram(appid:str, apphash:str, sessionString:str=None)
     * SessionString() -> str
     * ResolvePeerByUsername(username:str) -> TelegramPeer
-      * History(limit:int=100, offset:int=0) -> list
+    * PeerByIDAndHash(ID:int, Hash:int, Type:str="channel") -> TelegramPeer
+      * Messages(limit:int=100, offset:int=0) -> list[TelegramMessage]
+      * Message(id:str) -> TelegramMessage
       * Resolve() # 如果手动根据ID初始化一个TelegramPeer实例, 调用这个函数可以补全这个ID对应的Peer的信息
+  * TelegramBot(token:str)
+    * GetMe() -> telebot.types.User
+    * SetChatID(chatid:int) -> TelegramBot
+    * SetTags(*tags:str) -> TelegramBot
+    * SendFile(path:str)
+    * SendImage(path:str)
+    * SendVideo(path:str)
+    * SendAudio(path:str)
+    * SendLocation(latitude:float, longitude:float)
+    * SendMsg(msg:str, *tags:str)
   * ProgressBar(iterable_obj, total=None, title=None, leave=False)
   * Redis(host: str, port: int = 6379, database: int = 0, password: str = "")
     * Set(key:str, value:str, ttl:int=None) -> (bool | None)

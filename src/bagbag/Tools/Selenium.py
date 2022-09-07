@@ -233,7 +233,7 @@ class seleniumBase():
         :type url: str
         """
 
-        if self.browserName == "chrome":
+        if self.browserName == "chrome" and self.randomUA:
             if not self.browserRemote:
                 self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": random.choice(useragents)['user_agent']})
 
@@ -286,6 +286,32 @@ class seleniumBase():
                     return x
             time.sleep(0.5)
     
+    def SwitchTabByID(self, number:int):
+        """
+        SwitchTabByID(self, number:int) switches to the tab with the given ID, start from 0
+        
+        :param number: The number of the tab you want to switch to
+        :type number: int
+        """
+        self.driver.switch_to.window(self.driver.window_handles[number])
+    
+    def SwitchTabByIdent(self, ident:str):
+        self.driver.switch_to.window(ident)
+
+    def Tabs(self) -> list[str]:
+        return self.driver.window_handles
+    
+    def NewTab(self) -> str:
+        """
+        It opens a new tab, and returns the ident of the new tab
+        :return: The new tab's ident.
+        """
+        tabs = self.driver.window_handles
+        self.driver.execute_script('''window.open();''')
+        for i in self.driver.window_handles:
+            if i not in tabs:
+                return i
+    
     def __enter__(self):
         return self 
     
@@ -316,23 +342,27 @@ class Firefox(seleniumBase):
         if sessionID:
             self.Close()
             self.driver.session_id = sessionID
-        
+
         self.browserName = "firefox"
         self.browserRemote = seleniumServer != None 
 
 class Chrome(seleniumBase):
-    def __init__(self, seleniumServer:str=None, httpProxy:str=None, sessionID=None):
+    def __init__(self, seleniumServer:str=None, PACFileURL:str=None, httpProxy:str=None, sessionID=None, randomUA:bool=True):
         options = webdriver.ChromeOptions()
 
         # 防止通过navigator.webdriver来检测是否是被selenium操作
         options.add_argument("--disable-blink-features")
         options.add_argument("--disable-blink-features=AutomationControlled")
 
-        options.add_argument('--user-agent=' + random.choice(useragents)['user_agent'] + '')
+        if randomUA:
+            options.add_argument('--user-agent=' + random.choice(useragents)['user_agent'] + '')
+        self.randomUA = randomUA
 
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
 
-        if httpProxy:
+        if PACFileURL:
+            options.add_argument("--proxy-pac-url=" + PACFileURL)
+        elif httpProxy:
             options.add_argument('--proxy-server=' + httpProxy)
 
         if seleniumServer:

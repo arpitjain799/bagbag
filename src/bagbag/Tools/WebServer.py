@@ -1,6 +1,6 @@
 from flask import Flask
 from flask import request
-from flask import make_response
+import flask
 from flask import abort, redirect
 from flask import render_template
 
@@ -30,7 +30,9 @@ class LoggingMiddleware(object):
         return self._app(env, log_response)
 
 class Response():
-    Make = make_response
+    def Make(self, body:str) -> flask.Response:
+        return flask.Response(body)
+
     Abort = abort
     Redirect = redirect
     Render = render_template
@@ -46,7 +48,7 @@ class RequestForm():
 class Request():
     Args = RequestArgs()
     Form = RequestForm()
-    def Headers(self) -> dict:
+    def Headers(self) -> dict[str, str]:
         return dict(request.headers)
 
     def Method(self) -> str:

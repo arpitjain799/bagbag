@@ -6,6 +6,7 @@ class TelegramBot():
     def __init__(self, token:str):
         self.token = token 
         self.tb = telebot.TeleBot(self.token)
+        self.tags:list[str] = []
     
     def GetMe(self) -> telebot.types.User:
         return self.tb.get_me()
@@ -28,12 +29,27 @@ class TelegramBot():
 
     def SendLocation(self, latitude:float, longitude:float):
         self.tb.send_location(self.chatid, latitude, longitude)
+    
+    def SetTags(self, *tags:str) -> TelegramBot:
+        self.tags = tags
+        return self 
 
     def SendMsg(self, msg:str, *tags:str):
+        """
+        It sends a message to a chat, and if there are tags, it adds them to the end of the message
+        
+        :param msg: The message to be sent
+        :type msg: str
+        :param : chatid: the chat id of the chat you want to send the message to
+        :type : str
+        """
         if len(tags) != 0:
             tag = '\n\n' + ' '.join(['#' + t for t in tags])
         else:
-            tag = ""
+            if len(self.tags) != 0:
+                tag = '\n\n' + ' '.join(['#' + t for t in self.tags])
+            else:
+                tag = ""
         
         if len(msg) <= 4096 - len(tag):
             self.tb.send_message(self.chatid, msg.strip() + tag) 
