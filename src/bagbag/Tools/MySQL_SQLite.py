@@ -224,7 +224,7 @@ class MySQLSQLiteTable():
         return res
 
     @wrap
-    def Get(self) -> list:
+    def Get(self) -> list[dict]:
         """
         It gets the data from the table and then resets the table
         len(result) == 0 if the result set is empty.

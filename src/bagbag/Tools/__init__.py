@@ -16,3 +16,4 @@ from .TelegramBot import TelegramBot
 from . import CSV
 from .Argparser import Argparser
 from .Elasticsearch import Elasticsearch
+from .File import File
