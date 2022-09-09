@@ -9,16 +9,124 @@ from selenium.webdriver.firefox.options import Options as firefoxoptions
 import time
 import random
 
+
 try:
     from ..Http import useragents 
     from .. import Lg
     from ..Thread import Thread
+    from .URL import URL
 except:
     import sys 
     sys.path.append("..")
     from Http import useragents 
     import Lg 
     from Thread import Thread
+    from URL import URL
+
+def retryOnError(func):
+    def ware(self, *args, **kwargs): # self是类的实例
+        if self.browserName == "chrome":
+            while True:
+                try:
+                    res = func(self, *args, **kwargs)
+
+                    try:
+                        NeedRefresh = False
+                        # 如果载入页面失败, 有个Reload的按钮
+                        if hasattr(self, "Find"):
+                            if self.Find("/html/body/div[1]/div[2]/div/button[1]", 0):
+                                if self.Find("/html/body/div[1]/div[2]/div/button[1]").Text() == "Reload":
+                                    NeedRefresh = True
+                        elif hasattr(self, "se") and hasattr(self.se, "Find"):
+                            if self.se.Find("/html/body/div[1]/div[2]/div/button[1]", 0):
+                                if self.se.Find("/html/body/div[1]/div[2]/div/button[1]").Text() == "Reload":
+                                    NeedRefresh = True
+
+                        if hasattr(self, "PageSource"):
+                            page = self.PageSource()
+                        elif hasattr(self, "se") and hasattr(self.se, "PageSource"):
+                            page = self.se.PageSource()
+                        
+                        if hasattr(self, "Url"):
+                            url = self.Url()
+                        elif hasattr(self, "se") and hasattr(self.se, "Url"):
+                            url = self.se.Url()
+
+                        chklists = [
+                            [
+                                'This page isn’t working',
+                                'ERR_EMPTY_RESPONSE',
+                                'didn’t send any data',
+                                URL(url).Parse().Host,
+                            ],
+                            [
+                                'This site can’t be reached',
+                                'unexpectedly closed the connection',
+                                'ERR_CONNECTION_CLOSED',
+                                URL(url).Parse().Host,
+                            ],
+                            [
+                                "This site can’t be reached",
+                                "took too long to respond",
+                                "ERR_TIMED_OUT",
+                                URL(url).Parse().Host,
+                            ],
+                            [
+                                "No internet",
+                                "There is something wrong with the proxy server, or the address is incorrect",
+                                "ERR_PROXY_CONNECTION_FAILED",
+                            ],
+                            [
+                                'ERR_CONNECTION_RESET',
+                                'This site can’t be reached',
+                                'The connection was reset',
+                                URL(url).Parse().Host,
+                            ]
+                        ]
+                        for chklist in chklists:
+                            if False not in map(lambda x: x in page, chklist):
+                                NeedRefresh = True 
+                        
+                        if NeedRefresh:
+                            if hasattr(self, "Refresh"):
+                                self.Refresh()
+                            elif hasattr(self, "se") and hasattr(self.se, "Refresh"):
+                                self.se.Refresh()
+                            time.sleep(5)
+                        else:
+                            return res
+
+                    except Exception as e:
+                        if hasattr(self, "closed") and self.closed:
+                            break 
+                        elif hasattr(self, "se") and hasattr(self.se, "closed") and self.se.closed:
+                            break
+                        else:
+                            raise e
+                    time.sleep(1)
+                except Exception as e:
+                    chklist = [
+                        'ERR_CONNECTION_CLOSED',
+                        'ERR_EMPTY_RESPONSE',
+                        'ERR_TIMED_OUT',
+                        'ERR_PROXY_CONNECTION_FAILED',
+                        'ERR_CONNECTION_RESET',
+                    ]
+                    if True in map(lambda x: x in str(e), chklist):
+                        Lg.Trace("有错误, 自动刷新")
+                        if hasattr(self, "Refresh"):
+                            self.Refresh()
+                        elif hasattr(self, "se") and hasattr(self.se, "Refresh"):
+                            self.se.Refresh()
+                        time.sleep(5)
+                    else:
+                        raise e
+
+        elif self.browserName == "firefox":
+            res = func(self, *args, **kwargs)
+            return 
+
+    return ware
 
 # > The seleniumElement class is a wrapper for the selenium.webdriver.remote.webelement.WebElement
 # class
@@ -27,6 +135,8 @@ class seleniumElement():
         self.element = element
         self.se = se
         self.driver = self.se.driver
+        self.browserName = self.se.browserName
+        self.browserRemote = self.se.browserRemote
     
     def Clear(self) -> seleniumElement:
         """
@@ -35,11 +145,12 @@ class seleniumElement():
         self.element.clear()
         return self
     
+    @retryOnError
     def Click(self) -> seleniumElement:
         """
         Click() is a function that clicks on an element
         """
-        if self.se.browserName == "chrome" and not self.se.browserRemote:
+        if self.browserName == "chrome" and not self.browserName:
             self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": random.choice(useragents)['user_agent']})
 
         self.element.click()
@@ -73,23 +184,25 @@ class seleniumElement():
         self.element.send_keys(string)
         return self
     
+    @retryOnError
     def Submit(self) -> seleniumElement:
         """
         Submit() is a function that submits the form that the element belongs to
         """
-        if self.se.browserName == "chrome" and not self.se.browserRemote:
+        if self.browserName == "chrome" and not self.browserName:
             self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": random.choice(useragents)['user_agent']})
         
         self.element.submit()
 
         return self
     
+    @retryOnError
     def PressEnter(self) -> seleniumElement:
         """
         It takes the element that you want to press enter on and sends the enter key to it
         """
 
-        if self.se.browserName == "chrome" and not self.se.browserRemote:
+        if self.browserName == "chrome" and not self.browserName:
             self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": random.choice(useragents)['user_agent']})
         
         self.element.send_keys(webkeys.ENTER)
@@ -101,7 +214,7 @@ class seleniumElement():
         return self
 
 class seleniumBase():
-    def Find(self, xpath:str, timeout:int=8, scrollIntoElement:bool=True) -> seleniumElement|None:
+    def Find(self, xpath:str, timeout:int=60, scrollIntoElement:bool=True) -> seleniumElement|None:
         """
         > Finds an element by xpath, waits for it to appear, and returns it
         
@@ -224,6 +337,7 @@ class seleniumBase():
         """
         return self.driver.session_id
     
+    @retryOnError
     def Get(self, url:str):
         """
         The function Get() takes a string as an argument and uses the driver object to navigate to the
@@ -263,10 +377,22 @@ class seleniumBase():
     
     def ClearIdent(self):
         if self.browserName == "chrome":
-            self.driver.delete_all_cookies()
-            self.driver.execute_script("localStorage.clear();")
-            self.driver.execute_script("sessionStorage.clear();")
-            self.driver.execute_script("const dbs = await window.indexedDB.databases();dbs.forEach(db => { window.indexedDB.deleteDatabase(db.name)});")
+            try:
+                self.driver.delete_all_cookies()
+            except:
+                pass 
+            try:
+                self.driver.execute_script("localStorage.clear();")
+            except:
+                pass 
+            try:
+                self.driver.execute_script("sessionStorage.clear();")
+            except:
+                pass 
+            try:
+                self.driver.execute_script("const dbs = await window.indexedDB.databases();dbs.forEach(db => { window.indexedDB.deleteDatabase(db.name)});")
+            except:
+                pass
         else:
             raise Exception("未实现")
     
@@ -385,28 +511,9 @@ class Chrome(seleniumBase):
         self.browserRemote = seleniumServer != None 
         self.closed = False
 
-        Thread(self.autoRealodOnErrorChrome)
-    
-    def autoRealodOnErrorChrome(self):
-        # 如果载入页面失败, 有个Reload的按钮
-        while True:
-            #Lg.Trace("查找")
-            try:
-                if self.Find("/html/body/div[1]/div[2]/div/button[1]", 1):
-                    if self.Find("/html/body/div[1]/div[2]/div/button[1]").Text() == "Reload":
-                        #Lg.Trace("Refresh")
-                        self.Refresh()
-                        time.sleep(10)
-            except:
-                if self.closed:
-                    break
-                else:
-                    Lg.Error("查找页面加载失败的Reload按钮出错", exc=True)
-            time.sleep(1)
-
 if __name__ == "__main__":
     # Local 
-    with Chrome() as se:
+    # with Chrome() as se:
     # Remote 
     # with Chrome("http://127.0.0.1:4444") as se:
 
@@ -432,8 +539,8 @@ if __name__ == "__main__":
     # with Chrome("http://192.168.1.229:4444", httpProxy="http://192.168.168.54:8899") as se:
         
         # PAC test 
-        se.Get("http://ipinfo.io/ip")
-        print(se.PageSource())
+        # se.Get("http://ipinfo.io/ip")
+        # print(se.PageSource())
 
         # se.Get("https://ifconfig.me/ip")
         # print(se.PageSource())
@@ -448,5 +555,8 @@ if __name__ == "__main__":
         # button = se.Find('//*[@id="search-submit"]').Click()
         # print(se.PageSource())
 
-
+    with Chrome(httpProxy="http://192.168.1.186:8899") as se:
+        se.Get("http://ifconfig.me")
+        import ipdb
+        ipdb.set_trace()
     

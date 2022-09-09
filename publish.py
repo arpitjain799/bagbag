@@ -6,7 +6,7 @@ import time
 import subprocess 
 
 if os.path.exists("version"):
-    fversion = open("version").read()
+    fversion = open("version").read().strip()
 else:
     fversion = subprocess.getoutput("pythonPackage=bagbag;curl -Ls https://pypi.org/pypi/$pythonPackage/json | jq -r .info.version").strip()
 print("current version:",fversion)
