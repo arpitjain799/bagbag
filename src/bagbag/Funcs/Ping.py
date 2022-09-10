@@ -1,6 +1,8 @@
 from pythonping import ping
 
-from bagbag import *
+from ..Tools import Chan
+from .. import Re 
+from ..Thread import Thread
 
 class filelike():
     def __init__(self, c):
@@ -12,10 +14,10 @@ class filelike():
             if 'timed out' in msg:
                 self.c.Put("timeout")
             else:
-                self.c.Put(Re.FindAll("Reply from .+?, .+? bytes in (.+)ms", msg)[0][0])
+                self.c.Put(float(Re.FindAll("Reply from .+?, .+? bytes in (.+)ms", msg)[0][0]))
 
 def Ping(host, timeout:int=3, count:int=None, interval:int=1):
-    c = Tools.Chan(0)
+    c = Chan(0)
     fd = filelike(c)
     def run():
         if count:
