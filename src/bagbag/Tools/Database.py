@@ -23,9 +23,21 @@ class MySQLSQLiteTable():
         """
         self.db = db
         self.schema = schema
-        self.tbname = ''.join(list(map(lambda x: x if x in "_qazwsxedcrfvtgbyhnujmikolopQAZWSXEDCRFVTGBYHNUJMIKOLP0123456789" else "_", tbname)))
+        self.tbname = self.filterTableName(tbname)
         self.table = self.db.db.table(self.tbname)
         self.data = {}
+    
+    def filterTableName(self, tbname: str) -> str:
+        nl = []
+        for t in tbname:
+            if t in "_qazwsxedcrfvtgbyhnujmikolopQAZWSXEDCRFVTGBYHNUJMIKOLP0123456789":
+                nl.append(t)
+            elif bagbag.String(t).HasChinese():
+                nl.append(t)
+            else:
+                nl.append("_")
+        
+        return ''.join(nl)
 
     def AddColumn(self, colname: str, coltype: str, default=None, nullable:bool = True) -> MySQLSQLiteTable:
         """
@@ -311,7 +323,7 @@ class MySQLSQLiteBase():
 # > This class is a wrapper for the orator library, which is a wrapper for the mysqlclient library,
 # which is a wrapper for the MySQL C API
 class MySQL(MySQLSQLiteBase):
-    def __init__(self, host: str, port: int, user: str, password: str, database: str, prefix:str = ""):
+    def __init__(self, host: str, port: int, user: str, password: str, database: str, prefix:str = "", charset:str="utf8mb4"):
         """
         This function creates a database connection using the orator library
         
@@ -337,6 +349,7 @@ class MySQL(MySQLSQLiteBase):
                 'password': password,
                 'prefix': prefix,
                 'port': port,
+                'charset': charset,
             }
         }
         self.db = orator.DatabaseManager(config)
@@ -366,18 +379,18 @@ class SQLite(MySQLSQLiteBase):
         self.lock = Lock()
 
 if __name__ == "__main__":
-    db = SQLite("data.db")
-    tbl = db.Table("test_tbl").AddColumn("string", "string").AddColumn("int", "string").AddIndex("int")
-    tbl.Data({"string":"string2", "int": 2}).Insert()
-    c = tbl.Where("string", "=", "string2").Count()
-    print(c)
+    # db = SQLite("data.db")
+    # tbl = db.Table("test_tbl").AddColumn("string", "string").AddColumn("int", "string").AddIndex("int")
+    # tbl.Data({"string":"string2", "int": 2}).Insert()
+    # c = tbl.Where("string", "=", "string2").Count()
+    # print(c)
 
-    print("exists:", tbl.Where("string", "=", "string555").Exists())
+    # print("exists:", tbl.Where("string", "=", "string555").Exists())
 
-    db.Close()
+    # db.Close()
 
-    import os 
-    os.unlink("data.db")
+    # import os 
+    # os.unlink("data.db")
 
     # print(db.Table("test_tbl").First())
 
@@ -398,3 +411,19 @@ if __name__ == "__main__":
     # {'count': 1, 'data': '2'},
     # {'count': 1, 'data': '3'},
     # {'count': 1, 'data': '4'})
+
+    db = MySQL("192.168.1.230", 3306, "root", "r", "test")
+
+    # 中文字段
+    # (
+    #     db.Table("俄罗斯号码段"). 
+    #         AddColumn("开始", "int"). 
+    #         AddColumn("结束", "int"). 
+    #         AddColumn("运营商", "string").
+    #         AddColumn("地区", "string")
+    # )
+
+    tb = db.Table("test").AddColumn("col", "string")
+    tb.Data({
+        "col": "😆😆😆😆😆",
+    }).Insert()

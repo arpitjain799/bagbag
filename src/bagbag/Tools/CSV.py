@@ -12,7 +12,10 @@ class Reader():
 
         row = {}
         for idx in range(len(self.headers)):
-            row[self.headers[idx]] = r[idx]
+            try:
+                row[self.headers[idx]] = r[idx]
+            except IndexError:
+                row[self.headers[idx]] = "" 
         
         return row
     

@@ -18,7 +18,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
 
 * Lg 日志模块
   * Lg.SetLevel(level:日志级别:str)
-  * Lg.SetFile(path:日志路径:str, size:文件大小，MB:int, during:日志保留时间，天:int, color:是否带ANSI颜色:bool=True, json:是否格式化为json:bool=False):
+  * Lg.SetFile(path:日志路径:str, size:文件大小，MB:int, during:日志保留时间，天:int, color:是否带ANSI颜色:bool=True, json:是否格式化为json:bool=False)
   * Lg.Debug(message:str)
   * Lg.Trace(message:str)
   * Lg.Info(message:str)
@@ -31,8 +31,8 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * SimplifiedChineseToTraditional() -> str
   * TraditionalChineseToSimplified() -> str
 * Time 时间
-  * Strftime(format:str, timestamp:float|int) -> str
-  * Strptime(format:str, timestring:str) -> int
+  * Strftime(timestamp:float|int, format:str="%Y-%m-%d %H:%M:%S") -> str
+  * Strptime(timestring:str, format:str=None) -> int
 * Re 正则
   """
   If the message is too long, split it into chunks of 4096 characters and send them one by one
@@ -60,7 +60,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * Move(src:str, dst:str, force:bool=True)
   * Copy(src:str, dst:str, force:bool=True)
   * Path
-    * def Basedir(path:str) -> str
+    * Basedir(path:str) -> str
     * Join(*path) -> str
     * Exists(path:str) -> bool
     * Uniquify(path:str) -> str
@@ -98,6 +98,22 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * Int2IP(intip:int) -> str
   * ResizeImage(src:str, dst:str, width:int, quality:int=95)
 * Tools 一些工具
+  * Crontab()
+    * Every(interval: int = 1) -> Crontab
+    * Second() -> Crontab
+    * Minute() -> Crontab
+    * Hour() -> Crontab
+    * Day() -> Crontab
+    * Week() -> Crontab
+    * At(time: str) -> Crontab
+    * Do(job_func, *args, **kwargs)
+    * Monday()
+    * Tuesday()
+    * Wednesday()
+    * Thursday()
+    * Friday()
+    * Saturday()
+    * Sunday()
   * Elasticsearch(url:str)
     * Delete(IndexName:str)
     * Collection(IndexName:str)

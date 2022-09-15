@@ -41,7 +41,7 @@ class ProgressBar():
             raise Exception("可迭代的参数没有传入, 需要传入, 例如Tools.ProgressBar(range(10))")
 
         for obj in self.iterable:
-            print("update")
+            # print("update")
             self.tqdm.update(1)
             yield obj 
 

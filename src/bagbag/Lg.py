@@ -201,7 +201,7 @@ def SetLevel(level: str):
     __config['handlers'][0]['level'] = level.upper()
     logger.configure(**__config)
 
-def SetFile(path: str, size: int, during: int, color:bool=True, json:bool=False):
+def SetFile(path:str, size:int=100, during:int=7, color:bool=True, json:bool=False):
     """
     It sets the file handler for the logger.
     

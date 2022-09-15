@@ -8,7 +8,7 @@ import time
 
 try:
     from .. import Os
-    from .MySQL_SQLite import SQLite
+    from .Database import SQLite
 except:
     import sys 
     sys.path.append("..")

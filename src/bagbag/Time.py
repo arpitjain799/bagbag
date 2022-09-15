@@ -1,6 +1,8 @@
 import time
 import datetime
 import tqdm
+from dateutil.parser import parse as dateparser
+
 
 Now = time.time 
 
@@ -31,7 +33,7 @@ def Sleep(num:int, bar:bool=None):
     else:
         time.sleep(num)
 
-def Strftime(format:str, timestamp:float|int) -> str:
+def Strftime(timestamp:float|int, format:str="%Y-%m-%d %H:%M:%S") -> str:
     """
     It converts a timestamp to a string.
     
@@ -44,7 +46,7 @@ def Strftime(format:str, timestamp:float|int) -> str:
     dobj = datetime.datetime.fromtimestamp(timestamp)
     return dobj.strftime(format)
 
-def Strptime(format:str, timestring:str) -> int:
+def Strptime(timestring:str, format:str=None) -> int:
     """
     It takes a string of a date and time, and a format string, and returns the Unix timestamp of that
     date and time
@@ -55,11 +57,17 @@ def Strptime(format:str, timestring:str) -> int:
     :type timestring: str
     :return: The timestamp of the datetime object.
     """
-    dtime = datetime.datetime.strptime(timestring, format)
+
+    if format:
+        dtime = datetime.datetime.strptime(timestring, format)
+    else:
+        dtime = dateparser(timestring)
+
     dtimestamp = dtime.timestamp()
     return int(round(dtimestamp))
 
 if __name__ == "__main__":
-    print(Strptime("%Y-%m-%d %H:%M:%S", "2022-05-02 23:34:10"))
-    print(Strftime("%Y-%m-%d %H:%M:%S", 1651520050))
-    print(Strftime("%Y-%m-%d %H:%M:%S", Now()))
+    print(Strptime("2022-05-02 23:34:10", "%Y-%m-%d %H:%M:%S"))
+    print(Strftime(1651520050, "%Y-%m-%d %H:%M:%S"))
+    print(Strftime(Now()))
+    print(Strptime("2017-05-16T04:28:13.000000Z"))
