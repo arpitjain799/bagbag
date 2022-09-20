@@ -49,6 +49,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
 * Json
   * Dumps(obj, indent=4, ensure_ascii=False) -> str
   * Loads(s:str) -> list | dict
+  * ExtraValueByKey(obj:list|dict, key:str) -> list
 * Hash
   * Md5sum(string:str) -> str
 * Os

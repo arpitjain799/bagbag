@@ -34,7 +34,7 @@ class Argparser():
         self.parser.add_argument(arg, help=help, type=int)
         return self
     
-    def AddOptInt(self, arg:str, default:bool=None, help:str=None) -> Argparser:
+    def AddOptInt(self, arg:str, default:int=None, help:str=None) -> Argparser:
         self.parser.add_argument("--" + arg, default=default, help=help, type=int)
         return self
     
@@ -42,7 +42,7 @@ class Argparser():
         self.parser.add_argument(arg, help=help, type=float)
         return self
     
-    def AddOptFloat(self, arg:str, default:bool=None, help:str=None) -> Argparser:
+    def AddOptFloat(self, arg:str, default:float=None, help:str=None) -> Argparser:
         self.parser.add_argument("--" + arg, default=default, help=help, type=float)
         return self
     
