@@ -35,10 +35,12 @@ class Writer():
         self.fd = open(self.fpath, mode, newline='')
         self.csvwd = csv.writer(self.fd, delimiter=',', quotechar='"', escapechar='\\', doublequote=False)# , quoting=csv.QUOTE_NONE)
         self.fdmode = mode
-        if self.fdmode == "w":
-            self.headers = None
-        else:
-            self.headers = Reader(fpath).headers
+        self.headers = None
+        if self.fdmode != "w":
+            try:
+                self.headers = Reader(fpath).headers
+            except StopIteration:
+                self.fdmode = "w"
 
     def SetHeaders(self, *headers):
         self.headers = headers
@@ -87,5 +89,10 @@ if __name__ == "__main__":
         # {'h1': '3', 'h2': '"99kkk'}
     
     w = Writer("test.csv", "a")
+    w.Write({"h1": "4", "h2": '5'}) 
+    w.Write({"h1": "6", "h3": '7'}) # 6,
+
+    w = Writer("test1.csv", "a")
+    w.SetHeaders("h1", "h2")
     w.Write({"h1": "4", "h2": '5'}) 
     w.Write({"h1": "6", "h3": '7'}) # 6,
