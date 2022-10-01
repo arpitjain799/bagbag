@@ -406,11 +406,16 @@ class seleniumBase():
         :type timeout: int (optional)
         :return: The index of the xpath that is found.
         """
+        if type(xpath[0]) == list:
+            xpath = xpath[0]
+            
         for _ in range(timeout*2):
             for x in range(len(xpath)):
-                if self.Find(x, False):
+                if self.Find(xpath[x], 0, scrollIntoElement=False):
                     return x
             time.sleep(0.5)
+
+        return None 
     
     def SwitchTabByID(self, number:int):
         """
@@ -555,8 +560,8 @@ if __name__ == "__main__":
         # button = se.Find('//*[@id="search-submit"]').Click()
         # print(se.PageSource())
 
-    with Chrome(httpProxy="http://192.168.1.186:8899") as se:
-        se.Get("http://ifconfig.me")
+    with Chrome(httpProxy="http://192.168.1.186:8899", randomUA=True) as se:
+        se.Get("https://twitter.com/TommyBeFamous/status/1571969221919404032")
         import ipdb
         ipdb.set_trace()
     

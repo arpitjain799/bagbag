@@ -1,20 +1,26 @@
-import csv 
+import openpyxl
+import os
 
 class Reader():
     def __init__(self, fpath:str):
         self.fpath = fpath 
-        self.fd = open(self.fpath)
-        self.csvrd = csv.reader(self.fd, delimiter=',', quotechar='"', escapechar='\\')
-        self.headers = next(self.csvrd)
+        self.wb = openpyxl.load_workbook(filename=fpath)
+        self.ws = self.wb.active
+        self.iws = self.ws.iter_rows()
+        self.headers = [j for j in filter(lambda x: x != None, [i.value for i in next(self.iws)])]
     
     def Read(self) -> dict:
-        r = next(self.csvrd)
+        r = [j for j in filter(lambda x: x != None, [i.value for i in next(self.iws)])]
+
+        if len(r) == 0:
+            raise StopIteration
 
         row = {}
         for idx in range(len(self.headers)):
             try:
                 row[self.headers[idx]] = r[idx]
             except IndexError:
+                self.Close()
                 row[self.headers[idx]] = "" 
         
         return row
@@ -24,30 +30,35 @@ class Reader():
             try:
                 yield self.Read()
             except StopIteration:
-                self.Close()
                 return 
     
     def Close(self):
-        self.fd.close()
-        
+        self.wb.close()
+
 class Writer():
-    def __init__(self, fpath:str, mode:str="w", autoflush:bool=True):
+    def __init__(self, fpath:str, mode:str="w"):
         self.fpath = fpath
-        self.fd = open(self.fpath, mode, newline='')
-        self.csvwd = csv.writer(self.fd, delimiter=',', quotechar='"', escapechar='\\', doublequote=False)# , quoting=csv.QUOTE_NONE)
         self.fdmode = mode
         self.headers = None
+        if mode == "a" and not os.path.exists(fpath):
+            self.fdmode = "w"
+            
         if self.fdmode != "w":
             try:
-                self.headers = Reader(fpath).headers
+                r = Reader(fpath)
+                self.headers = r.headers
+                r.Close()
             except StopIteration:
                 self.fdmode = "w"
-        self.autoflush = autoflush
+            self.wb = openpyxl.load_workbook(filename=fpath)
+        else:
+            self.wb = openpyxl.Workbook()
+        self.ws = self.wb.active
 
     def SetHeaders(self, *headers):
         self.headers = headers
         if self.fdmode == "w":
-            self.csvwd.writerow(headers)
+            self.ws.append(self.headers)
     
     def Write(self, row:dict[str]):
         r = []
@@ -57,18 +68,17 @@ class Writer():
             else:
                 r.append("")
         
-        self.csvwd.writerow(r)
-        if self.autoflush:
-            self.fd.flush()
+        self.ws.append(r)
 
     def Close(self):
-        self.fd.close()
+        self.wb.save(self.fpath)
+        self.wb.close()
     
     def Flush(self):
-        self.fd.flush()
+        self.wb.save(self.fpath)
 
 if __name__ == "__main__":
-    w = Writer("test.csv")
+    w = Writer("test.xlsx")
 
     w.SetHeaders("h1", "h2")
 
@@ -84,7 +94,7 @@ if __name__ == "__main__":
     # "v,1",\"v222
     # 3,\"99kkk
 
-    r = Reader("test.csv")
+    r = Reader("test.xlsx")
     print(r.Read()) # {'h1': 'v1', 'h2': '"v2,kkk|'}
 
     for row in r:
@@ -92,11 +102,14 @@ if __name__ == "__main__":
         # {'h1': 'v,1', 'h2': '"v222'}
         # {'h1': '3', 'h2': '"99kkk'}
     
-    w = Writer("test.csv", "a")
+    w = Writer("test.xlsx", "a")
     w.Write({"h1": "4", "h2": '5'}) 
     w.Write({"h1": "6", "h3": '7'}) # 6,
+    w.Close() # 保存
 
-    w = Writer("test1.csv", "a")
+    w = Writer("test1.xlsx", "a")
     w.SetHeaders("h1", "h2")
     w.Write({"h1": "4", "h2": '5'}) 
     w.Write({"h1": "6", "h3": '7'}) # 6,
+    w.Flush() # 保存
+    w.Close() # 保存, 关闭

@@ -11,3 +11,4 @@ src/test.py
 *.session
 .DS_Store
 *.zip
+*.xlsx

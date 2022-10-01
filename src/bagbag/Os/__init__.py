@@ -31,7 +31,10 @@ def Getenv(varname:str, defaultValue:str=None) -> str | None:
 
 def Unlink(path:str):
     if os.path.exists(path):
-        shutil.rmtree(path)
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.unlink(path)
 
 def Move(src:str, dst:str, force:bool=True):
     if os.path.exists(dst):

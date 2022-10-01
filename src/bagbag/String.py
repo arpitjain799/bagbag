@@ -28,6 +28,20 @@ class String():
     
     def TraditionalChineseToSimplified(self) -> str:
         return opencc.OpenCC('t2s.json').convert(self.string)
+    
+    def Ommit(self, length:int) -> str:
+        """
+        If the length of the string is greater than the length of the argument, return the string up to
+        the length of the argument and add "..." to the end. Otherwise, return the string
+        
+        :param length: The length of the string you want to return
+        :type length: int
+        :return: The string is being returned.
+        """
+        if len(self.string) > length:
+            return self.string[:length] + "..."
+        else:
+            return self.string
 
 if __name__ == "__main__":
     print(1, String("ABC").HasChinese())

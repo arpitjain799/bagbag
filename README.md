@@ -30,6 +30,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * Repr() -> str
   * SimplifiedChineseToTraditional() -> str
   * TraditionalChineseToSimplified() -> str
+  * Ommit(length:int) -> str
 * Time 时间
   * Strftime(timestamp:float|int, format:str="%Y-%m-%d %H:%M:%S") -> str
   * Strptime(timestring:str, format:str=None) -> int
@@ -98,7 +99,24 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * IP2Int(ip:str) -> int
   * Int2IP(intip:int) -> str
   * ResizeImage(src:str, dst:str, width:int, quality:int=95)
+  * UUID() -> str
 * Tools 一些工具
+  * Translater
+    * Baidu(appid:str, secretkey:str)
+      * SetLang(To:str="zh", From:str="auto") -> Baidu
+      * Translate(text:str) -> dict
+    * Google(httpProxy:str=None)
+      * SetLang(To:str="zh-CN", From:str="auto") -> Google 
+      * Translate(text:str, format:str="html") -> str
+  * XPath(html:str)
+    * Find(xpath:str) -> XPath | None
+    * Attribute(name:str) -> str | None
+    * Text() -> str
+    * Html() -> str
+  * WaitGroup()
+    * Add()
+    * Done()
+    * Wait()
   * Crontab()
     * Every(interval: int = 1) -> Crontab
     * Second() -> Crontab
@@ -123,6 +141,15 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
       * Delete(id:int)
       * Search(key:str, value:str, page:int=1, pagesize:int=50, OrderByKey:str=None, OrderByOrder:str="ase", Highlight:str=None, mustIncludeAllWords:bool=True)
   * CSV
+    * Reader(fpath:str)
+      * Read() -> dict
+      * Close()
+    * Writer(fpath:str, mode:str="w")
+      * SetHeaders(*headers)
+      * Write(row:dict[str])
+      * Close()
+      * Flush()
+  * Xlsx
     * Reader(fpath:str)
       * Read() -> dict
       * Close()

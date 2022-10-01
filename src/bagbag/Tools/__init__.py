@@ -18,3 +18,7 @@ from .Argparser import Argparser
 from .Elasticsearch import Elasticsearch
 from .File import File
 from .Crontab import Crontab
+from .WaitGroup import WaitGroup
+from . import Xlsx
+from .XPath import XPath
+from . import Translater

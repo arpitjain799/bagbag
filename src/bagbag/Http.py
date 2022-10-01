@@ -12,8 +12,27 @@ except:
     from String import String
 
 from random_user_agent.user_agent import UserAgent as useragent_generator
+from random_user_agent.params import SoftwareName as useragent_softwarename
+from random_user_agent.params import OperatingSystem as useragent_operatingsystem 
 
-useragents = useragent_generator(5000).get_user_agents()
+useragents = useragent_generator(
+    software_names=[
+        useragent_softwarename.CHROME.value,
+        useragent_softwarename.CHROMIUM.value,
+        useragent_softwarename.EDGE.value,
+        useragent_softwarename.FIREFOX.value,
+        useragent_softwarename.OPERA.value,
+    ], 
+    operating_systems=[
+        useragent_operatingsystem.WINDOWS.value,
+        useragent_operatingsystem.LINUX.value,
+        useragent_operatingsystem.MAC.value,
+        useragent_operatingsystem.MAC_OS_X.value,
+        useragent_operatingsystem.MACOS.value,
+        useragent_operatingsystem.FREEBSD.value,
+    ],
+    limit=50
+).get_user_agents()
 
 import random
 
@@ -134,7 +153,7 @@ def Head(url:str, Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, Follow
             if TimeoutRetryTimes < timeouttimes:
                 raise e
 
-def Get(url:str, Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None,  TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
+def Get(url:str, Params:dict=None, Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None,  TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False, Debug:bool=False):
     if "User-Agent" not in Headers:
         Headers["User-Agent"] = random.choice(useragents)['user_agent']
 
@@ -152,6 +171,7 @@ def Get(url:str, Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowR
                 verify=(not InsecureSkipVerify),
                 stream=True,
                 headers=Headers,
+                params=Params,
             )
 
             return makeResponse(response, Debug, ReadBodySize)

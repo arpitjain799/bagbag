@@ -2,11 +2,16 @@ import time
 import datetime
 import tqdm
 from dateutil.parser import parse as dateparser
+from dateutil.parser import ParserError
 
+try:
+    from . import Re
+except:
+    import Re
 
 Now = time.time 
 
-def Sleep(num:int, bar:bool=None):
+def Sleep(num:int=0, bar:bool=None):
     """
     Sleep(num:int, bar:bool=None)
     
@@ -20,18 +25,22 @@ def Sleep(num:int, bar:bool=None):
     If None, a progress bar will be displayed if the number of seconds is greater than 5
     :type bar: bool
     """
-    if bar == None:
-        if num > 5:
-            bar = True 
-        else:
-            bar = False
-
-    if bar:
-        num = int(num)
-        for _ in tqdm.tqdm(range(num), total=num, leave=False):
-            time.sleep(1)
+    if num == 0:
+        while True:
+            time.sleep(333)
     else:
-        time.sleep(num)
+        if bar == None:
+            if num > 5:
+                bar = True 
+            else:
+                bar = False
+
+        if bar:
+            num = int(num)
+            for _ in tqdm.tqdm(range(num), total=num, leave=False):
+                time.sleep(1)
+        else:
+            time.sleep(num)
 
 def Strftime(timestamp:float|int, format:str="%Y-%m-%d %H:%M:%S") -> str:
     """
@@ -46,6 +55,38 @@ def Strftime(timestamp:float|int, format:str="%Y-%m-%d %H:%M:%S") -> str:
     dobj = datetime.datetime.fromtimestamp(timestamp)
     return dobj.strftime(format)
 
+def parseTimeago(timestring:str) -> int|None:
+    if timestring == "just now":
+        return int(Now())
+
+    formates = [
+        "([0-9]+) %ss{0,1} ago",
+        "in ([0-9]+) %ss{0,1}"
+    ]
+
+    step = {
+        "second": 1,
+        "minute": 60,
+        "hour": 3600,
+        "day": 86400,
+        "week": 604800,
+        "month": 2592000,
+        "year": 31536000.
+    }
+
+    for s in step:
+        for f in formates:
+            f = f % s 
+
+            res = Re.FindAll(f, timestring)
+            if len(res) != 0:
+                duration = step[s]
+                num = int(res[0][1])
+
+                return int(Now()) - duration * num 
+    
+    return None
+
 def Strptime(timestring:str, format:str=None) -> int:
     """
     It takes a string of a date and time, and a format string, and returns the Unix timestamp of that
@@ -59,11 +100,15 @@ def Strptime(timestring:str, format:str=None) -> int:
     """
 
     if format:
-        dtime = datetime.datetime.strptime(timestring, format)
+        dtimestamp = datetime.datetime.strptime(timestring, format).timestamp()
     else:
-        dtime = dateparser(timestring)
+        try:
+            dtimestamp = dateparser(timestring).timestamp()
+        except ParserError as e:
+            dtimestamp = parseTimeago(timestring)
+            if not dtimestamp:
+                raise e
 
-    dtimestamp = dtime.timestamp()
     return int(round(dtimestamp))
 
 if __name__ == "__main__":
@@ -71,3 +116,12 @@ if __name__ == "__main__":
     print(Strftime(1651520050, "%Y-%m-%d %H:%M:%S"))
     print(Strftime(Now()))
     print(Strptime("2017-05-16T04:28:13.000000Z"))
+
+    print(Strptime("6 months ago"))
+    print(Strftime(Strptime("6 months ago")))
+    print(Strptime("just now"))
+    print(Strftime(Strptime("just now")))
+    print(Strptime("1 second ago"))
+    print(Strftime(Strptime("1 second ago")))
+    print(Strptime("in 24 days"))
+    print(Strftime(Strptime("in 24 days")))

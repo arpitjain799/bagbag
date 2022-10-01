@@ -3,9 +3,13 @@ from __future__ import annotations
 try:
     from . import orator
     from .Lock import Lock
+    from .. import Lg
 except:
     import orator
     from Lock import Lock
+    import sys
+    sys.path.append("..")
+    import Lg
 
 import bagbag
 
@@ -41,6 +45,8 @@ class MySQLSQLiteTable():
 
     def AddColumn(self, colname: str, coltype: str, default=None, nullable:bool = True) -> MySQLSQLiteTable:
         """
+        添加一个字段, 如果字段存在就跳过, 不会修改.
+
         :param colname: The name of the column to add
         :type colname: str
         :param coltype: int, string, float, text
@@ -52,7 +58,31 @@ class MySQLSQLiteTable():
         if self.schema.has_table(self.tbname):
             with self.schema.table(self.tbname) as table:
                 exists = self.schema.has_column(self.tbname, colname)
-        
+
+                if not exists:
+                    if coltype in ["int", "integer"]:
+                        col = table.big_integer(colname)
+                    elif coltype in ["string", "str", "varchar"] :
+                        col = table.string(colname, 256)
+                    elif coltype in ["float", "double"]:
+                        col = table.double(colname)
+                    elif coltype in ["text", "longtext"]:
+                        col = table.long_text(colname)
+                    else:
+                        raise Exception("列的类型可选为: int, string, float, text")
+                    
+                    if default:
+                        col.default(default)
+                    
+                    if nullable:
+                        col.nullable()
+                
+                # if exists:
+                #     col.change()
+        else:
+            with self.schema.create(self.tbname) as table:
+                table.increments('id')
+
                 if coltype in ["int", "integer"]:
                     col = table.big_integer(colname)
                 elif coltype in ["string", "str", "varchar"] :
@@ -60,29 +90,6 @@ class MySQLSQLiteTable():
                 elif coltype in ["float", "double"]:
                     col = table.double(colname)
                 elif coltype in ["text", "longtext"]:
-                    col = table.long_text(colname)
-                else:
-                    raise Exception("列的类型可选为: int, string, float, text")
-                
-                if default:
-                    col.default(default)
-                
-                if nullable:
-                    col.nullable()
-                
-                if exists:
-                    col.change()
-        else:
-            with self.schema.create(self.tbname) as table:
-                table.increments('id')
-
-                if coltype == "int":
-                    col = table.big_integer(colname)
-                elif coltype == "string":
-                    col = table.string(colname, 256)
-                elif coltype == "float":
-                    col = table.double(colname)
-                elif coltype == "text":
                     col = table.long_text(colname)
                 else:
                     raise Exception("列的类型可选为: int, string, float, text")
@@ -213,6 +220,13 @@ class MySQLSQLiteTable():
             exists = True
 
         return exists
+    
+    def NotExists(self) -> bool: 
+        notexists = True
+        if self.First():
+            notexists = False
+
+        return notexists
 
     @wrap
     def Count(self) -> int:
@@ -323,7 +337,7 @@ class MySQLSQLiteBase():
 # > This class is a wrapper for the orator library, which is a wrapper for the mysqlclient library,
 # which is a wrapper for the MySQL C API
 class MySQL(MySQLSQLiteBase):
-    def __init__(self, host: str, port: int, user: str, password: str, database: str, prefix:str = "", charset:str="utf8mb4"):
+    def __init__(self, host:str, port:int=3306, user:str="root", password:str="r", database:str="others", prefix:str="", charset:str="utf8mb4"):
         """
         This function creates a database connection using the orator library
         
@@ -412,7 +426,7 @@ if __name__ == "__main__":
     # {'count': 1, 'data': '3'},
     # {'count': 1, 'data': '4'})
 
-    db = MySQL("192.168.1.230", 3306, "root", "r", "test")
+    db = MySQL("192.168.1.230")
 
     # 中文字段
     # (
@@ -423,7 +437,9 @@ if __name__ == "__main__":
     #         AddColumn("地区", "string")
     # )
 
-    tb = db.Table("test").AddColumn("col", "string")
-    tb.Data({
-        "col": "😆😆😆😆😆",
-    }).Insert()
+    # tb = db.Table("test").AddColumn("col", "string")
+    # tb.Data({
+    #     "col": "😆😆😆😆😆",
+    # }).Insert()
+
+    Lg.Trace(db.Table("chainabuse").Columns())
