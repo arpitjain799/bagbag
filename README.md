@@ -16,6 +16,9 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
 
 # Library
 
+* File(path:str)
+  * Write(data:str)
+  * Append(data:str)
 * Lg 日志模块
   * Lg.SetLevel(level:日志级别:str)
   * Lg.SetFile(path:日志路径:str, size:文件大小，MB:int, during:日志保留时间，天:int, color:是否带ANSI颜色:bool=True, json:是否格式化为json:bool=False)
@@ -45,8 +48,8 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   """
   * FindAll(pattern: str | Pattern[str], string: str, flags: _FlagsType = ...) -> list
 * Base64
-  * Encode(s:str) -> str
-  * Decode(s:str) -> str
+  * Encode(s:str|bytes) -> str
+  * Decode(s:str) -> str|bytes
 * Json
   * Dumps(obj, indent=4, ensure_ascii=False) -> str
   * Loads(s:str) -> list | dict
@@ -276,6 +279,11 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
       * First() -> map
       * Get() -> list
       * Columns() -> list[map]
+    * KeyValue(tbname:str)
+      * Get(key:str) -> Any
+      * Set(key:str, value:Any)
+      * Del(key:str)
+      * Keys() -> list[str]
 
 其它的
 

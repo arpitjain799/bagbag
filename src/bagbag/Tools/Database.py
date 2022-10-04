@@ -4,14 +4,21 @@ try:
     from . import orator
     from .Lock import Lock
     from .. import Lg
+    from .. import Base64
+    from .. import Time 
 except:
     import orator
     from Lock import Lock
     import sys
     sys.path.append("..")
     import Lg
+    import Base64
+    import Time 
 
+import pickle
+import typing
 import bagbag
+import MySQLdb
 
 class MySQLSQLiteTable():
     def __init__(self, db: MySQLSQLiteBase, schema: orator.Schema, tbname: str):
@@ -245,7 +252,20 @@ class MySQLSQLiteTable():
         """
         :return: A map of the first row in the table. Return None if the table is empty. 
         """
-        res = self.table.first()
+        lastqueryiserror = False 
+        while True:
+            try:
+                res = self.table.first()
+                if lastqueryiserror and res == None:
+                    Time.Sleep(1)
+                else:
+                    break 
+            except MySQLdb.OperationalError as e:  
+                if e.args[0] == 2003:
+                    lastqueryiserror = True 
+                    Time.Sleep(1)
+                else:
+                    raise e 
         self.table = self.db.db.table(self.tbname)
         return res
 
@@ -276,8 +296,47 @@ class MySQLSQLiteTable():
                 res.append({'name': i["name"], 'type': i["type"]})
         return res
 
+class MySQLSQLiteKeyValueTable():
+    def __init__(self, db:MySQLSQLiteBase, tbname:str) -> None:
+        self.db = db 
+        (
+            self.db.Table(tbname). 
+                AddColumn("key", "string"). 
+                AddColumn("value", "text"). 
+                AddIndex("key")
+        )
+        self.tbname = tbname
+    
+    def Get(self, key:str, default:typing.Any=None) -> typing.Any:
+        tb = self.db.Table(self.tbname)
+        res = tb.Where("key", "=", key).First()
+        return pickle.loads(Base64.Decode(res["value"])) if res != None else default 
+    
+    def Set(self, key:str, value:typing.Any):
+        tb = self.db.Table(self.tbname)
+        if tb.Where("key", "=", key).Exists():
+            tb.Where("key", "=", key).Data({
+                "value": Base64.Encode(pickle.dumps(value)),
+            }).Update()
+        else:
+            tb.Data({
+                "key": key, 
+                "value": Base64.Encode(pickle.dumps(value)),
+            }).Insert()
+    
+    def Del(self, key:str):
+        tb = self.db.Table(self.tbname)
+        tb.Where("key", "=", key).Delete()
+        
+    def Keys(self) -> list[str]:
+        tb = self.db.Table(self.tbname)
+        return [i["key"] for i in tb.Fields("key").Get()]
+
 # > The class is a base class for MySQL and SQLite
 class MySQLSQLiteBase():
+    def __init__(self) -> None:
+        self.db:orator.DatabaseManager = None
+
     def Table(self, tbname: str) -> MySQLSQLiteTable:
         return MySQLSQLiteTable(self, self.schema, tbname)
 
@@ -333,6 +392,9 @@ class MySQLSQLiteBase():
     
     def Close(self):
         self.db.disconnect()
+    
+    def KeyValue(self, tbname:str) -> MySQLSQLiteKeyValueTable:
+        return MySQLSQLiteKeyValueTable(self, tbname)
 
 # > This class is a wrapper for the orator library, which is a wrapper for the mysqlclient library,
 # which is a wrapper for the MySQL C API
@@ -443,3 +505,4 @@ if __name__ == "__main__":
     # }).Insert()
 
     Lg.Trace(db.Table("chainabuse").Columns())
+

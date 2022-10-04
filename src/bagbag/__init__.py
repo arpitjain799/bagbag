@@ -20,6 +20,7 @@ from .Process import Process
 from . import Socket 
 from . import Random
 from . import Math
+from .File import File
 
 # import re
 # import forbiddenfruit
