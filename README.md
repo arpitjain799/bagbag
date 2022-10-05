@@ -261,9 +261,11 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
       * WhereIn(key:str, value: list) -> MySQLSQLiteTable
       * WhereNotIn(key:str, value: list) -> MySQLSQLiteTable
       * WhereNull(key:str) -> MySQLSQLiteTable
-      * WhereNotNull_WillNotImplement(key:str)
+      * WhereNotNull(key:str) -> MySQLSQLiteTable
+      * WhereBetween(self, key:str, start:int|float|str, end:int|float|str) -> MySQLSQLiteTable
+      * WhereNotBetween(self, key:str, start:int|float|str, end:int|float|str) -> MySQLSQLiteTable
       * OrWhere(key:str, opera:str, value:str) -> MySQLSQLiteTable
-      * OrWhereIn_WillNotImplement(key:str, value: list)
+      * OrWhereIn(key:str, value: list) -> MySQLSQLiteTable
       * OrderBy(*key:str) -> MySQLSQLiteTable
       * Limit(num:int) -> MySQLSQLiteTable
       * Paginate(size:int, page:int) -> MySQLSQLiteTable

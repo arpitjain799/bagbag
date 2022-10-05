@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import socket
 
 import sys 
@@ -8,6 +10,9 @@ try:
 except:
     from Tools import Chan
     from Thread import Thread
+
+import typing 
+import pickle
 
 class StreamClosedError(Exception):
     pass
@@ -22,6 +27,27 @@ class TCPPeerAddress():
     
     def __repr__(self) -> str:
         return self.__str__()
+
+class PacketConnection():
+    def __init__(self, sc:StreamConnection) -> None:
+        self.sc = sc 
+
+    def PeerAddress(self) -> TCPPeerAddress:
+        return TCPPeerAddress(self.sc.host, self.sc.port)
+
+    def Close(self):
+        self.sc.Close()
+
+    def Send(self, data:typing.Any):
+        datab = pickle.dumps(data)
+        length = len(datab)
+        lengthb = length.to_bytes(8, "big")
+        self.sc.SendBytes(lengthb + datab)
+
+    def Recv(self) -> typing.Any:
+        length = int.from_bytes(self.sc.RecvBytes(8), "big")
+        datab = self.sc.RecvBytes(length)
+        return pickle.loads(datab)
         
 class StreamConnection():
     def __init__(self, ss:socket, host:str, port:int):
