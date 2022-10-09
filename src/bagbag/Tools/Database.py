@@ -19,6 +19,8 @@ import pickle
 import typing
 import bagbag
 import pymysql
+import threading
+import multiprocessing
 
 class MySQLSQLiteTable():
     def __init__(self, db: MySQLSQLiteBase, schema: orator.Schema, tbname: str):
@@ -35,9 +37,12 @@ class MySQLSQLiteTable():
         self.db = db
         self.schema = schema
         self.tbname = self.filterTableName(tbname)
-        self.table = self.db.db.table(self.tbname)
+        self.table = {}
         self.data = {}
     
+    def _id(self) -> str:
+        return threading.current_thread().name + multiprocessing.current_process().name
+
     def filterTableName(self, tbname: str) -> str:
         nl = []
         for t in tbname:
@@ -126,7 +131,17 @@ class MySQLSQLiteTable():
 
         return self
     
-    def wrap(func): # func是被包装的函数
+    def initTableObj(func):
+        def ware(self, *args, **kwargs):
+            if self._id() not in self.table:
+                self.table[self._id()] = self.db.db.table(self.tbname)
+            
+            res = func(self, *args, **kwargs)
+            return res
+        
+        return ware
+    
+    def avoidError(func): # func是被包装的函数
         def ware(self, *args, **kwargs): # self是类的实例
             if self.db.driver == "mysql":
                 while True:
@@ -153,91 +168,110 @@ class MySQLSQLiteTable():
 
         return ware
     
+    @initTableObj
     def Fields(self, *cols: str) -> MySQLSQLiteTable:
-        self.table = self.table.select(*cols)
+        self.table[self._id()] = self.table[self._id()].select(*cols)
         return self
     
+    @initTableObj
     def Where(self, key:str, opera:str, value:str) -> MySQLSQLiteTable:
-        self.table = self.table.where(key, opera, value)
+        self.table[self._id()] = self.table[self._id()].where(key, opera, value)
         return self
     
+    @initTableObj
     def WhereIn(self, key:str, value: list) -> MySQLSQLiteTable:
-        self.table = self.table.where_in(key, value)
+        self.table[self._id()] = self.table[self._id()].where_in(key, value)
         return self 
 
+    @initTableObj
     def WhereNotIn(self, key:str, value: list) -> MySQLSQLiteTable:
-        self.table = self.table.where_not_in(key, value)
+        self.table[self._id()] = self.table[self._id()].where_not_in(key, value)
         return self
 
+    @initTableObj
     def WhereNull(self, key:str) -> MySQLSQLiteTable:
-        self.table = self.table.where_null(key)
-        return self 
-        
-    def WhereNotNull(self, key:str) -> MySQLSQLiteTable:
-        self.table = self.table.where_null(key)
-        return self
-
-    def WhereBetween(self, key:str, start:int|float|str, end:int|float|str) -> MySQLSQLiteTable:
-        self.table = self.table.where_between(key, [start, end])
+        self.table[self._id()] = self.table[self._id()].where_null(key)
         return self 
     
-    def WhereNotBetween(self, key:str, start:int|float|str, end:int|float|str) -> MySQLSQLiteTable:
-        self.table = self.table.where_not_between(key, [start, end])
-        return self 
-
-    def OrWhere(self, key:str, opera:str, value:str) -> MySQLSQLiteTable:
-        self.table = self.table.or_where(key, opera, value)
-        return self 
-
-    def OrWhereIn(self, key:str, value: list) -> MySQLSQLiteTable:
-        self.table = self.table.or_where_in(key, value)
+    @initTableObj
+    def WhereNotNull(self, key:str) -> MySQLSQLiteTable:
+        self.table[self._id()] = self.table[self._id()].where_null(key)
         return self
 
+    @initTableObj
+    def WhereBetween(self, key:str, start:int|float|str, end:int|float|str) -> MySQLSQLiteTable:
+        self.table[self._id()] = self.table[self._id()].where_between(key, [start, end])
+        return self 
+    
+    @initTableObj
+    def WhereNotBetween(self, key:str, start:int|float|str, end:int|float|str) -> MySQLSQLiteTable:
+        self.table[self._id()] = self.table[self._id()].where_not_between(key, [start, end])
+        return self 
+
+    @initTableObj
+    def OrWhere(self, key:str, opera:str, value:str) -> MySQLSQLiteTable:
+        self.table[self._id()] = self.table[self._id()].or_where(key, opera, value)
+        return self 
+
+    @initTableObj
+    def OrWhereIn(self, key:str, value: list) -> MySQLSQLiteTable:
+        self.table[self._id()] = self.table[self._id()].or_where_in(key, value)
+        return self
+
+    @initTableObj
     def OrderBy(self, *key:str) -> MySQLSQLiteTable:
-        self.table = self.table.order_by(*key)
+        self.table[self._id()] = self.table[self._id()].order_by(*key)
         return self 
 
+    @initTableObj
     def Limit(self, num:int) -> MySQLSQLiteTable:
-        self.table = self.table.limit(num)
+        self.table[self._id()] = self.table[self._id()].limit(num)
         return self 
 
+    @initTableObj
     def Paginate(self, size:int, page:int) -> MySQLSQLiteTable:
-        self.table = self.table.simple_paginate(size, page)
+        self.table[self._id()] = self.table[self._id()].simple_paginate(size, page)
         return self 
 
+    @initTableObj
     def Data(self, value:map) -> MySQLSQLiteTable:
         self.data = value
         return self 
 
+    @initTableObj
     def Offset(self, num:int) -> MySQLSQLiteTable:
-        self.table = self.table.offset(num)
+        self.table[self._id()] = self.table[self._id()].offset(num)
         return self 
 
-    @wrap
+    @initTableObj
+    @avoidError
     def Insert(self):
-        self.table.insert(self.data)
+        self.table[self._id()].insert(self.data)
 
         self.data = {}
-        self.table = self.db.db.table(self.tbname)
+        del(self.table[self._id()])
 
-    @wrap
+    @initTableObj
+    @avoidError
     def Update(self):
-        self.table.update(self.data)
+        self.table[self._id()].update(self.data)
         
-        self.table = self.db.db.table(self.tbname) 
+        del(self.table[self._id()])
 
-    @wrap
+    @initTableObj
+    @avoidError
     def Delete(self):
-        self.table.delete()
+        self.table[self._id()].delete()
 
-        self.table = self.db.db.table(self.tbname)
+        del(self.table[self._id()])
 
-    @wrap
+    @initTableObj
+    @avoidError
     def InsertGetID(self) -> int:
-        id = self.table.insert_get_id(self.data)
+        id = self.table[self._id()].insert_get_id(self.data)
 
         self.data = {}
-        self.table = self.db.db.table(self.tbname)
+        del(self.table[self._id()])
 
         return id
 
@@ -247,7 +281,7 @@ class MySQLSQLiteTable():
             exists = True
 
         return exists
-    
+
     def NotExists(self) -> bool: 
         notexists = True
         if self.First():
@@ -255,19 +289,22 @@ class MySQLSQLiteTable():
 
         return notexists
 
-    @wrap
+    @initTableObj
+    @avoidError
     def Count(self) -> int:
-        count = self.table.count()
+        count = self.table[self._id()].count()
 
-        self.table = self.db.db.table(self.tbname)
+        del(self.table[self._id()])
         return count
 
-    @wrap
+    @initTableObj
+    @avoidError
     def Find(self, id:int) -> dict | None:
         res = self.db.db.table(self.tbname).where('id', "=", id).first()
         return res 
         
-    @wrap
+    @initTableObj
+    @avoidError
     def First(self) -> dict | None: 
         """
         :return: A map of the first row in the table. Return None if the table is empty. 
@@ -275,7 +312,7 @@ class MySQLSQLiteTable():
         lastqueryiserror = False 
         while True:
             try:
-                res = self.table.first()
+                res = self.table[self._id()].first()
                 if lastqueryiserror and res == None:
                     Time.Sleep(0.5)
                 else:
@@ -287,10 +324,11 @@ class MySQLSQLiteTable():
                 else:
                     raise e 
 
-        self.table = self.db.db.table(self.tbname)
+        del(self.table[self._id()])
         return res
 
-    @wrap
+    @initTableObj
+    @avoidError
     def Get(self) -> list[dict]:
         """
         It gets the data from the table and then resets the table
@@ -301,7 +339,7 @@ class MySQLSQLiteTable():
         lastqueryiserror = False 
         while True:
             try:
-                res = [dict(i) for i in self.table.get()]
+                res = [dict(i) for i in self.table[self._id()].get()]
                 if lastqueryiserror and len(res) == 0:
                     Time.Sleep(0.5)
                 else:
@@ -313,7 +351,7 @@ class MySQLSQLiteTable():
                 else:
                     raise e 
 
-        self.table = self.db.db.table(self.tbname)
+        del(self.table[self._id()])
         return res
 
     def Columns(self) -> list[dict]:
