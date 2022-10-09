@@ -1,5 +1,6 @@
 import random 
 from typing import Any
+import copy
 
 def Int(min:int, max:int) -> int:
     return random.randint(min, max)
@@ -14,6 +15,12 @@ def String(length:int=8, charset:str="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP
     
     return "".join(res)
 
+def Shuffle(li:list) -> list:
+    l = copy.copy(li)
+    random.shuffle(l)
+    return l
+
 if __name__ == "__main__":
     print(Choice("doijwoefwe"))
     print(String(5))
+    print(Shuffle([1,2,3,4,5]))

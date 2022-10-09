@@ -18,7 +18,7 @@ except:
 import pickle
 import typing
 import bagbag
-import MySQLdb
+import pymysql
 
 class MySQLSQLiteTable():
     def __init__(self, db: MySQLSQLiteBase, schema: orator.Schema, tbname: str):
@@ -129,12 +129,18 @@ class MySQLSQLiteTable():
     def wrap(func): # func是被包装的函数
         def ware(self, *args, **kwargs): # self是类的实例
             if self.db.driver == "mysql":
-                try:
-                    res = func(self, *args, **kwargs)
-                except bagbag.Tools.orator.exceptions.query.QueryException as e:
-                    # MySQL驱动默认不允许一个连接跨多个线程, 重连就行
-                    self.db.db.reconnect()
-                    res = func(self, *args, **kwargs)
+                while True:
+                    try:
+                        res = func(self, *args, **kwargs)
+                        break
+                    except bagbag.Tools.orator.exceptions.query.QueryException as e:
+                        # MySQL驱动默认不允许一个连接跨多个线程, 重连就行
+                        self.db.db.reconnect()
+                    except pymysql.err.OperationalError as e:  
+                        if e.args[0] == 2003:
+                            Time.Sleep(0.5)
+                        else:
+                            raise e 
 
             elif self.db.driver == "sqlite":
                 # SQLite驱动默认不允许一个连接跨多个线程
@@ -209,58 +215,26 @@ class MySQLSQLiteTable():
 
     @wrap
     def Insert(self):
-        while True:
-            try:
-                self.table.insert(self.data)
-                break 
-            except MySQLdb.OperationalError as e:  
-                if e.args[0] == 2003:
-                    Time.Sleep(0.5)
-                else:
-                    raise e 
+        self.table.insert(self.data)
 
         self.data = {}
         self.table = self.db.db.table(self.tbname)
 
     @wrap
     def Update(self):
-        while True:
-            try:
-                self.table.update(self.data)
-                break 
-            except MySQLdb.OperationalError as e:  
-                if e.args[0] == 2003:
-                    Time.Sleep(0.5)
-                else:
-                    raise e 
+        self.table.update(self.data)
         
         self.table = self.db.db.table(self.tbname) 
 
     @wrap
     def Delete(self):
-        while True:
-            try:
-                self.table.delete()
-                break 
-            except MySQLdb.OperationalError as e:  
-                if e.args[0] == 2003:
-                    Time.Sleep(0.5)
-                else:
-                    raise e 
+        self.table.delete()
 
         self.table = self.db.db.table(self.tbname)
 
     @wrap
     def InsertGetID(self) -> int:
-        while True:
-            try:
-                id = self.table.insert_get_id(self.data)
-                break 
-            except MySQLdb.OperationalError as e:  
-                if e.args[0] == 2003:
-                    Time.Sleep(0.5)
-                else:
-                    raise e 
+        id = self.table.insert_get_id(self.data)
 
         self.data = {}
         self.table = self.db.db.table(self.tbname)
@@ -283,30 +257,15 @@ class MySQLSQLiteTable():
 
     @wrap
     def Count(self) -> int:
-        while True:
-            try:
-                count = self.table.count()
-                break 
-            except MySQLdb.OperationalError as e:  
-                if e.args[0] == 2003:
-                    Time.Sleep(0.5)
-                else:
-                    raise e 
+        count = self.table.count()
 
         self.table = self.db.db.table(self.tbname)
         return count
 
     @wrap
     def Find(self, id:int) -> dict | None:
-        while True:
-            try:
-                res = self.db.db.table(self.tbname).where('id', "=", id).first()
-                return res 
-            except MySQLdb.OperationalError as e:  
-                if e.args[0] == 2003:
-                    Time.Sleep(0.5)
-                else:
-                    raise e 
+        res = self.db.db.table(self.tbname).where('id', "=", id).first()
+        return res 
         
     @wrap
     def First(self) -> dict | None: 
@@ -321,12 +280,13 @@ class MySQLSQLiteTable():
                     Time.Sleep(0.5)
                 else:
                     break 
-            except MySQLdb.OperationalError as e:  
+            except pymysql.err.OperationalError as e:  
                 if e.args[0] == 2003:
                     lastqueryiserror = True 
                     Time.Sleep(0.5)
                 else:
                     raise e 
+
         self.table = self.db.db.table(self.tbname)
         return res
 
@@ -341,12 +301,12 @@ class MySQLSQLiteTable():
         lastqueryiserror = False 
         while True:
             try:
-                res = [i for i in self.table.get()]
+                res = [dict(i) for i in self.table.get()]
                 if lastqueryiserror and len(res) == 0:
                     Time.Sleep(0.5)
                 else:
                     break 
-            except MySQLdb.OperationalError as e:  
+            except pymysql.err.OperationalError as e:  
                 if e.args[0] == 2003:
                     lastqueryiserror = True 
                     Time.Sleep(1)

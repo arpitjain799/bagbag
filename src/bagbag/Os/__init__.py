@@ -70,6 +70,9 @@ def Copy(src:str, dst:str, force:bool=True):
     
     shutil.copy2(src, dst)
 
+def GetLoginUserName() -> str:
+    return os.getlogin()
+
 if __name__ == "__main__":
     # Move("a", "b") # 移动当前目录的a到b
     # Move("b", "c/d/e") # 移动b到c/d/e, 会先递归创建目录c/d

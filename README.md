@@ -97,6 +97,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * Int(min:int, max:int) -> int
   * Choice(obj:list|str) -> Any
   * String(length:int, charset:str="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") -> str
+  * Shuffle(li:list) -> list
 * Funcs
   * Wget(url:str, dest:str=None, override=True)
   * IP2Int(ip:str) -> int
@@ -104,6 +105,13 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * ResizeImage(src:str, dst:str, width:int, quality:int=95)
   * UUID() -> str
 * Tools 一些工具
+  * SSH(host:str, port:int=None, user:str=None, password:str=None, pkey:str=None)
+    * GetOutput(command:str) -> str
+    * Close()
+    * Upload(localpath:str, remotepath:str=None)
+    * Download(remotepath:str, localpath:str=None)
+    * FileInfo(filepath:str)
+    * ListDir(dirpath:str=".") -> dict
   * Translater
     * Baidu(appid:str, secretkey:str)
       * SetLang(To:str="zh", From:str="auto") -> Baidu
@@ -262,8 +270,8 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
       * WhereNotIn(key:str, value: list) -> MySQLSQLiteTable
       * WhereNull(key:str) -> MySQLSQLiteTable
       * WhereNotNull(key:str) -> MySQLSQLiteTable
-      * WhereBetween(self, key:str, start:int|float|str, end:int|float|str) -> MySQLSQLiteTable
-      * WhereNotBetween(self, key:str, start:int|float|str, end:int|float|str) -> MySQLSQLiteTable
+      * WhereBetween(key:str, start:int|float|str, end:int|float|str) -> MySQLSQLiteTable
+      * WhereNotBetween(key:str, start:int|float|str, end:int|float|str) -> MySQLSQLiteTable
       * OrWhere(key:str, opera:str, value:str) -> MySQLSQLiteTable
       * OrWhereIn(key:str, value: list) -> MySQLSQLiteTable
       * OrderBy(*key:str) -> MySQLSQLiteTable

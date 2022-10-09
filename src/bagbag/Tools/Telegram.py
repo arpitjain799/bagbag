@@ -13,7 +13,7 @@ except:
     import sys 
     sys.path.append("..")
     import Os
-    from MySQL_SQLite import SQLite
+    from Database import SQLite
 
 class TelegramGeo():
     def __init__(self):

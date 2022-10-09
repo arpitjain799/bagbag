@@ -5,8 +5,8 @@ try:
     from .Database import SQLite
     from .Lock import Lock 
 except:
-    from MySQL_SQLite import MySQL
-    from MySQL_SQLite import SQLite
+    from Database import MySQL
+    from Database import SQLite
     from Lock import Lock
 
 import time
