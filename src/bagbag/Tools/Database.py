@@ -131,6 +131,8 @@ class MySQLSQLiteTable():
 
         return self
     
+    # 由于不同的线程使用同一个table的时候, 条件会串, 例如多个线程同时调用where的时候.
+    # 所以为每个线程生成一个orator的table对象
     def initTableObj(func):
         def ware(self, *args, **kwargs):
             if self._id() not in self.table:
