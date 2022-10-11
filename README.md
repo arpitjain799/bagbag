@@ -104,6 +104,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * Int2IP(intip:int) -> str
   * ResizeImage(src:str, dst:str, width:int, quality:int=95)
   * UUID() -> str
+  * CutSentence(sentence:str, filter:bool=True) -> list[str]
 * Tools 一些工具
   * SSH(host:str, port:int=None, user:str=None, password:str=None, pkey:str=None)
     * GetOutput(command:str) -> str
@@ -236,9 +237,12 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
     * SessionString() -> str
     * ResolvePeerByUsername(username:str) -> TelegramPeer
     * PeerByIDAndHash(ID:int, Hash:int, Type:str="channel") -> TelegramPeer
+      * Resolve() # 如果手动根据ID初始化一个TelegramPeer实例, 调用这个函数可以补全这个ID对应的Peer的信息
+      * SendMessage(message:str)
       * Messages(limit:int=100, offset:int=0) -> list[TelegramMessage]
       * Message(id:str) -> TelegramMessage
-      * Resolve() # 如果手动根据ID初始化一个TelegramPeer实例, 调用这个函数可以补全这个ID对应的Peer的信息
+        * Refresh() -> TelegramMessage # 有时候同一个id, 被编辑了, 刷新一下返回最新的消息
+        * ClickButton(buttonText:str) -> bool
   * TelegramBot(token:str)
     * GetMe() -> telebot.types.User
     * SetChatID(chatid:int) -> TelegramBot

@@ -9,6 +9,9 @@ def Join(*path) -> str:
 def Exists(path:str) -> bool:
     return os.path.exists(path)
 
+def NotExists(path:str) -> bool:
+    return not os.path.exists(path)
+
 def Uniquify(path:str) -> str:
     """
     If the file exists, add a number to the end of the file name until it doesn't exist

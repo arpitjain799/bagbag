@@ -8,6 +8,7 @@ except:
 import os
 import sys 
 import shutil
+import glob
 
 def Exit(num:int=0):
     sys.exit(num)
@@ -17,8 +18,11 @@ System = os.system
 def Mkdir(path:str):
     os.makedirs(path, exist_ok=True)
 
-def ListDir(path:str) -> list[str]:
+def ListDir(path:str=".") -> list[str]:
     return os.listdir(path)
+
+def ListFiles(path:str) -> list[str]:
+    return glob.glob(path)
 
 Args = sys.argv 
 

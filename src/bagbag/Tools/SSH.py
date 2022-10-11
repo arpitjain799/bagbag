@@ -37,7 +37,7 @@ class SSH():
         if Os.Getenv("HOME"):
             cfgpath = Os.Path.Join(Os.Getenv("HOME"), ".ssh/config")
             self.sshcfg.parse(open(cfgpath))
-            
+
         hostcfg = self.sshcfg.lookup(host)
 
         # 用配置文件解析一下host的ip, 如果配置文件没写就用传入的参数
