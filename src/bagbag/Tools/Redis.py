@@ -1,17 +1,87 @@
 from __future__ import annotations
 from curses import keyname
 import redis 
+import pickle
+import typing
+import time
+
+class RedisException(Exception):
+    pass 
+
+class RedisQueueClosed(RedisException):
+    pass 
+
+def RetryOnNetworkError(func): # func是被包装的函数
+    def ware(self, *args, **kwargs): # self是类的实例
+        while True:
+            try:
+                res = func(self, *args, **kwargs)
+                break
+            except Exception as e:
+                if True in map(lambda x: e.args[0].startswith(x), ['Connection closed by server', 'Error 61 connecting to ']):
+                    time.sleep(0.5)
+
+        return res
+    
+    return ware
+
+class RedisQueue():
+    """Simple Queue with Redis Backend"""
+    def __init__(self, rdb:redis.Redis, name:str):
+        self.rdb = rdb
+        self.key = '%s:%s' % ('redis_queue', name)
+        self.closed = False
+
+    @RetryOnNetworkError
+    def Size(self) -> int:
+        """Return the approximate size of the queue."""
+        return self.rdb.llen(self.key)
+
+    @RetryOnNetworkError
+    def Put(self, item:typing.Any):
+        """Put item into the queue."""
+        self.rdb.rpush(self.key, pickle.dumps(item))
+
+    @RetryOnNetworkError
+    def Get(self, block=True, timeout=None) -> typing.Any:
+        """Remove and return an item from the queue. 
+
+        If optional args block is true and timeout is None (the default), block
+        if necessary until an item is available."""
+        if block:
+            item = self.rdb.blpop(self.key, timeout=timeout)
+        else:
+            item = self.rdb.lpop(self.key)
+
+        if item:
+            item = item[1]
+
+        return pickle.loads(item)
+    
+    def Close(self):
+        self.closed = True
+
+    def __iter__(self):
+        return self 
+    
+    def __next__(self):
+        try:
+            return self.Get()
+        except RedisQueueClosed:
+            raise StopIteration
 
 class RedisLock():
     def __init__(self, lock):
         self.lock = lock
 
+    @RetryOnNetworkError
     def Acquire(self):
         """
         The function Acquire() is a method of the class Lock. It acquires the lock
         """
         self.lock.acquire()
     
+    @RetryOnNetworkError
     def Release(self):
         """
         The function releases the lock
@@ -44,6 +114,7 @@ class Redis():
     
     # https://redis.readthedocs.io/en/v4.3.4/commands.html#redis.commands.core.CoreCommands.set
     # ttl, second
+    @RetryOnNetworkError
     def Set(self, key:str, value:str, ttl:int=None) -> (bool | None):
         """
         It sets the value of a key in the database.
@@ -59,6 +130,7 @@ class Redis():
         return self.rdb.set(key, value, ex=ttl)
     
     # https://redis.readthedocs.io/en/v4.3.4/commands.html#redis.commands.core.CoreCommands.get
+    @RetryOnNetworkError
     def Get(self, key:str) -> (str | None):
         """
         It gets the value of a key from the redis database.
@@ -74,6 +146,7 @@ class Redis():
             return res
 
     # https://redis.readthedocs.io/en/v4.3.4/commands.html#redis.commands.core.CoreCommands.delete
+    @RetryOnNetworkError
     def Del(self, key:str) -> bool:
         """
         It deletes the key from the database
@@ -85,6 +158,7 @@ class Redis():
         return self.rdb.delete(key) == 1
     
     # https://redis.readthedocs.io/en/latest/connections.html?highlight=lock#redis.Redis.lock
+    @RetryOnNetworkError
     def Lock(self, key:str) -> RedisLock:
         """
         It returns a RedisLock object.
@@ -93,10 +167,21 @@ class Redis():
         :type key: str
         :return: A RedisLock object.
         """
-        return RedisLock(self.rdb.lock(key))
+        return RedisLock(self.rdb.lock("redis_lock:" + key))
+    
+    @RetryOnNetworkError
+    def Queue(self, key:str) -> RedisQueue:
+        """
+        It creates a RedisQueue object.
+        
+        :param key: The key of the queue
+        :type key: str
+        :return: RedisQueue
+        """
+        return RedisQueue(self.rdb, key)
 
 if __name__ == "__main__":
-    r = Redis("10.69.69.1")
+    r = Redis("192.168.168.21")
     r.Ping()
     print(1, r.Get("key"))
     print(2, r.Set("key", "value"))
@@ -106,3 +191,10 @@ if __name__ == "__main__":
     l = r.Lock("lock_key")
     l.Acquire()
     l.Release()
+
+    q = r.Queue('queue')
+    q.Put('1')
+    q.Put('2')
+
+    for v in q:
+        print("value: ", v)

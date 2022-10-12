@@ -33,7 +33,7 @@ def __make_words(s:str) -> list[str]:
 
             sss.append(i)
         
-        return ' '.join(sss)
+        return sss
 
 def CutSentence(sentence:str, filter:bool=True) -> list[str]:
     if filter:

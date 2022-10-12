@@ -42,6 +42,17 @@ class String():
             return self.string[:length] + "..."
         else:
             return self.string
+        
+    def Filter(self, chars:str="1234567890qwertyuioplkjhgfdsazxcvbnmQWERTYUIOPLKJHGFDSAZXCVBNM") -> str:
+        res = []
+        for i in self.string:
+            if i in chars:
+                res.append(i)
+        
+        return ''.join(res)
+    
+    def Len(self) -> int:
+        return len(self.string)
 
 if __name__ == "__main__":
     print(1, String("ABC").HasChinese())
