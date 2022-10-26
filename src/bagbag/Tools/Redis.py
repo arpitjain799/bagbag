@@ -1,5 +1,5 @@
 from __future__ import annotations
-from curses import keyname
+
 import redis 
 import pickle
 import typing
@@ -27,10 +27,11 @@ def RetryOnNetworkError(func): # func是被包装的函数
 
 class RedisQueue():
     """Simple Queue with Redis Backend"""
-    def __init__(self, rdb:redis.Redis, name:str):
+    def __init__(self, rdb:redis.Redis, name:str, length:int=0):
         self.rdb = rdb
         self.key = '%s:%s' % ('redis_queue', name)
         self.closed = False
+        self.length = length
 
     @RetryOnNetworkError
     def Size(self) -> int:
@@ -40,6 +41,9 @@ class RedisQueue():
     @RetryOnNetworkError
     def Put(self, item:typing.Any):
         """Put item into the queue."""
+        while self.length > 0 and self.Size() >= self.length:
+            time.sleep(0.3)
+
         self.rdb.rpush(self.key, pickle.dumps(item))
 
     @RetryOnNetworkError
@@ -170,7 +174,7 @@ class Redis():
         return RedisLock(self.rdb.lock("redis_lock:" + key))
     
     @RetryOnNetworkError
-    def Queue(self, key:str) -> RedisQueue:
+    def Queue(self, key:str, length:int=0) -> RedisQueue:
         """
         It creates a RedisQueue object.
         
@@ -178,7 +182,7 @@ class Redis():
         :type key: str
         :return: RedisQueue
         """
-        return RedisQueue(self.rdb, key)
+        return RedisQueue(self.rdb, key, length)
 
 if __name__ == "__main__":
     r = Redis("192.168.168.21")
@@ -198,3 +202,5 @@ if __name__ == "__main__":
 
     for v in q:
         print("value: ", v)
+
+

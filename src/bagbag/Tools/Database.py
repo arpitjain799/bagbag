@@ -197,7 +197,7 @@ class MySQLSQLiteTable():
     
     @initTableObj
     def WhereNotNull(self, key:str) -> MySQLSQLiteTable:
-        self.table[self._id()] = self.table[self._id()].where_null(key)
+        self.table[self._id()] = self.table[self._id()].where_not_null(key)
         return self
 
     @initTableObj
@@ -381,31 +381,64 @@ class MySQLSQLiteKeyValueTable():
                 AddIndex("key")
         )
         self.tbname = tbname
+        self.namespace = []
+    
+    def Namespace(self, namespace:str) -> MySQLSQLiteKeyValueTable:
+        self.namespace.append(namespace)
+        return self
+    
+    def __key(self, key:str) -> str:
+        if len(self.namespace) == 0:
+            return key 
+        else:
+            return ':'.join(self.namespace) + ":" + key
     
     def Get(self, key:str, default:typing.Any=None) -> typing.Any:
         tb = self.db.Table(self.tbname)
-        res = tb.Where("key", "=", key).First()
-        return pickle.loads(Base64.Decode(res["value"])) if res != None else default 
+        res = tb.Where("key", "=", self.__key(key)).First()
+
+        if res != None:
+            value = res["value"]
+            if value[:2] == "i ":
+                value = int(value[2:])
+            elif value[:2] == "s ":
+                value = value[2:]
+            elif value[:2] == "f ":
+                value = float(value[2:])
+            elif value[:2] == "p ":
+                value = pickle.loads(Base64.Decode(value[2:])) 
+            else:
+                value = pickle.loads(Base64.Decode(value)) # 为了兼容之前的代码
+        else:
+            value = default 
+
+        return value
     
     def Set(self, key:str, value:typing.Any):
         tb = self.db.Table(self.tbname)
-        if tb.Where("key", "=", key).Exists():
-            tb.Where("key", "=", key).Data({
-                "value": Base64.Encode(pickle.dumps(value)),
+
+        if type(value) == int:
+            value = "i " + str(value)
+        elif type(value) == str:
+            value = "s " + str(value)
+        elif type(value) == float:
+            value = "f " + str(value)
+        else:
+            value = "p " + Base64.Encode(pickle.dumps(value))
+
+        if tb.Where("key", "=", self.__key(key)).Exists():
+            tb.Where("key", "=", self.__key(key)).Data({
+                "value": value,
             }).Update()
         else:
             tb.Data({
-                "key": key, 
-                "value": Base64.Encode(pickle.dumps(value)),
+                "key": self.__key(key), 
+                "value": value,
             }).Insert()
     
     def Del(self, key:str):
         tb = self.db.Table(self.tbname)
-        tb.Where("key", "=", key).Delete()
-        
-    def Keys(self) -> list[str]:
-        tb = self.db.Table(self.tbname)
-        return [i["key"] for i in tb.Fields("key").Get()]
+        tb.Where("key", "=", self.__key(key)).Delete()
 
 # > The class is a base class for MySQL and SQLite
 class MySQLSQLiteBase():

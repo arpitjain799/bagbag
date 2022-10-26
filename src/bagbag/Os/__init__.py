@@ -9,11 +9,13 @@ import os
 import sys 
 import shutil
 import glob
+import subprocess
 
 def Exit(num:int=0):
     sys.exit(num)
 
-System = os.system 
+def System(cmd:str) -> int:
+    return subprocess.call(cmd, stderr=sys.stderr, stdout=sys.stdout, shell=True)
 
 def Mkdir(path:str):
     os.makedirs(path, exist_ok=True)

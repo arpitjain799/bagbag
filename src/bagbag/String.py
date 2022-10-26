@@ -1,6 +1,7 @@
 import re
 import langid
 import opencc
+import ipaddress
 
 class String():
     def __init__(self, string:str):
@@ -53,6 +54,13 @@ class String():
     
     def Len(self) -> int:
         return len(self.string)
+
+    def IsIPAddress(self) -> bool:
+        try:
+            ipaddress.ip_address(self.string)
+            return True 
+        except ValueError:
+            return False 
 
 if __name__ == "__main__":
     print(1, String("ABC").HasChinese())

@@ -34,6 +34,9 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * SimplifiedChineseToTraditional() -> str
   * TraditionalChineseToSimplified() -> str
   * Ommit(length:int) -> str
+  * Filter(chars:str="1234567890qwertyuioplkjhgfdsazxcvbnmQWERTYUIOPLKJHGFDSAZXCVBNM") -> str
+  * Len() -> int
+  * IsIPAddress() -> bool
 * Time 时间
   * Strftime(timestamp:float|int, format:str="%Y-%m-%d %H:%M:%S") -> str
   * Strptime(timestring:str, format:str=None) -> int
@@ -99,6 +102,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * String(length:int, charset:str="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") -> str
   * Shuffle(li:list) -> list
 * Funcs
+  * Markdown2Html(text:str) -> str
   * Wget(url:str, dest:str=None, override=True)
   * IP2Int(ip:str) -> int
   * Int2IP(intip:int) -> str
@@ -235,14 +239,15 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
         * ScrollIntoElement() -> SeleniumElement
   * Telegram(appid:str, apphash:str, sessionString:str=None)
     * SessionString() -> str
-    * ResolvePeerByUsername(username:str) -> TelegramPeer
-    * PeerByIDAndHash(ID:int, Hash:int, Type:str="channel") -> TelegramPeer
+    * ResolvePeerByUsername(username:str) -> TelegramPeer | None 
+    * PeerByIDAndHash(ID:int, Hash:int, Type:str="channel") -> TelegramPeer | None
       * Resolve() # 如果手动根据ID初始化一个TelegramPeer实例, 调用这个函数可以补全这个ID对应的Peer的信息
       * SendMessage(message:str)
       * Messages(limit:int=100, offset:int=0) -> list[TelegramMessage]
       * Message(id:str) -> TelegramMessage
         * Refresh() -> TelegramMessage # 有时候同一个id, 被编辑了, 刷新一下返回最新的消息
         * ClickButton(buttonText:str) -> bool
+        * Delete()
   * TelegramBot(token:str)
     * GetMe() -> telebot.types.User
     * SetChatID(chatid:int) -> TelegramBot

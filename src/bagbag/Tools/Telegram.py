@@ -7,34 +7,55 @@ import telethon
 from telethon import utils
 from telethon import types
 import time
-# import ipdb
-from typing import List
+import ipdb
+from typing import List, Iterator
+from telethon.tl.types import  InputMessagesFilterGif
+from telethon.tl.types import  InputMessagesFilterDocument
+from telethon.tl.types import  InputMessagesFilterMusic
+from telethon.tl.types import  InputMessagesFilterPhotoVideo
+from telethon.tl.types import  InputMessagesFilterUrl
+from telethon.tl.types import  InputMessagesFilterVoice
 
 try:
     from .. import Os
     from .Database import SQLite
+    from .. import Time
+    from .. import Lg
+    from .. import Re
 except:
     import sys 
     sys.path.append("..")
     import Os
     from Database import SQLite
+    import Time
+    import Lg
+    import Re
 
 class TelegramGeo():
     def __init__(self):
         self.Long = None
         self.Lat = None 
         self.AccessHash = None
-    
+
     def __repr__(self):
         return f"TelegramGeo(Long={self.Long}, Lat={self.Lat}, AccessHash={self.AccessHash})"
         
     def __str__(self):
         return f"TelegramGeo(Long={self.Long}, Lat={self.Lat}, AccessHash={self.AccessHash})"
-        
+
 class TelegramPhoto():
     def __init__(self):
         self.ID = None
         self.AccessHash = 0
+        self.message = None 
+    
+    def Save(self, fpath:str=None) -> str:
+        if fpath == None:
+            fpath = "photo.jpg"
+
+        fpath = Os.Path.Uniquify(fpath)
+
+        self.message.download_media(file=fpath)
     
     def __repr__(self):
         return f"TelegramPhoto(ID={self.ID}, AccessHash={self.AccessHash})"
@@ -45,10 +66,24 @@ class TelegramPhoto():
 # File and Audio
 class TelegramFile():
     def __init__(self):
+        self.message:telethon.tl.patched.Message = None 
         self.Name = ""
         self.Size = 0
         self.ID = None 
         self.AccessHash = 0
+        self.MimeType = None 
+        # mimetype = video
+        self.VideoDuration = None 
+        self.VideoWidth = None 
+        self.VideoHeight = None 
+    
+    def Save(self, fpath:str=None) -> str:
+        if fpath == None:
+            fpath = self.Name
+
+        fpath = Os.Path.Uniquify(fpath)
+
+        self.message.download_media(file=fpath)
     
     def __repr__(self):
         return f"TelegramFile(Name={self.Name}, Size={self.Size}, ID={self.ID}, AccessHash={self.AccessHash})"
@@ -67,16 +102,17 @@ class TelegramButton():
         self.btn.click()
 
     def __repr__(self):
-        return f"TelegramButton(Text={self.btn.text})"
+        return f"TelegramButton(Text={self.btn.text} Data={self.btn.data} Url={self.btn.url} Inline_query={self.btn.inline_query})"
         
     def __str__(self):
-        return f"TelegramButton(Text={self.btn.text})"
+        return self.__repr__()
 
 class TelegramMessage():
     def __init__(self, client:TelegramClient):
         self.client = client
+        self.tg:Telegram = None 
         self.peer:TelegramPeer = None 
-        self.message = None
+        self.message:telethon.tl.patched.Message = None
         self.PeerType:str = None 
         self.Chat = TelegramPeer(client=self.client)
         self.ID:int = None 
@@ -90,20 +126,19 @@ class TelegramMessage():
         self.Buttons:List[List[TelegramButton]] = None
         self.MessageRaw:str = None 
     
-    def DownloadMedia(self, SavePath:str=None) -> str | None:
-        if not SavePath:
-            if self.File:
-                SavePath = self.File.Name
-            elif self.Photo:
-                SavePath = "photo.jpg"
-        
-        SavePath = Os.Path.Uniquify(SavePath)
+    def ForwardTo(self, Username:str|TelegramPeer, HideSenderName:bool=True):
+        if type(Username) == str:
+            if HideSenderName:
+                p = self.tg.PeerByUsername(Username)
+                p.SendMessage(self.message)
+            else:
+                self.message.forward_to(Username)
+        else:
+            if HideSenderName:
+                Username.SendMessage(self.message)
+            else:
+                self.message.forward_to(Username)
 
-        if not Os.Path.Exists(Os.Path.Basedir(SavePath)):
-            Os.Mkdir(Os.Path.Basedir(SavePath))
-
-        self.client.download_media(self.message)
-    
     def Refresh(self) -> TelegramMessage:
         return self.peer.Message(self.ID) 
 
@@ -124,11 +159,14 @@ class TelegramMessage():
 
         return False 
     
+    def Delete(self):
+        self.message.delete()
+    
     def __repr__(self):
-        return f"TelegramMessage(PeerType={self.PeerType}, Chat={self.Chat}, ID={self.ID}, Time={self.Time}, Action={self.Action}, File={self.File}, Photo={self.Photo}, Message={self.Message}, User={self.User}, Button={self.Buttons})"
+        return f"TelegramMessage(PeerType={self.PeerType}, Chat={self.Chat}, ID={self.ID}, Time={self.Time}, Action={self.Action}, File={self.File}, Photo={self.Photo}, Message={self.MessageRaw}, User={self.User}, Button={self.Buttons})"
         
     def __str__(self):
-        return f"TelegramMessage(PeerType={self.PeerType}, Chat={self.Chat}, ID={self.ID}, Time={self.Time}, Action={self.Action}, File={self.File}, Photo={self.Photo}, Message={self.Message}, User={self.User}, Button={self.Buttons})"
+        return f"TelegramMessage(PeerType={self.PeerType}, Chat={self.Chat}, ID={self.ID}, Time={self.Time}, Action={self.Action}, File={self.File}, Photo={self.Photo}, Message={self.MessageRaw}, User={self.User}, Button={self.Buttons})"
         
 class TelegramPeer():
     def __init__(self, Type:str=None, Name:str=None, Username:str=None, ID:int=None, AccessHash:int=None, PhoneNumber:int=None, LangCode:str=None, client:TelegramClient=None):
@@ -159,17 +197,19 @@ class TelegramPeer():
         self.Resolved = False # 是否已解析. 只设置一个ID, 解析之后就补上其它的字段.
         self.client = client # telethon.sync.TelegramClient
         self.entity = None 
+        self.tg:Telegram = None
     
     def Message(self, id:str) -> TelegramMessage:
         message = self.client.get_messages(self.ID, ids=id)
         return self.__wrapMsg(message)
     
-    def __wrapMsg(self, message) -> TelegramMessage:
+    def __wrapMsg(self, message:telethon.tl.patched.Message) -> TelegramMessage:
         # import ipdb
         # ipdb.set_trace()
         msg = TelegramMessage(self.client)
         msg.peer = self
-        msg.message = message
+        msg.message:telethon.tl.patched.Message = message
+        msg.tg = self.tg
         msg.PeerType = self.Type 
         msg.Chat = self 
         msg.ID = message.id 
@@ -179,14 +219,24 @@ class TelegramPeer():
         if message.media:
             if message.document:
                 msg.File = TelegramFile()
+                msg.File.message = message
                 msg.File.ID = message.document.id 
                 msg.File.AccessHash = message.document.access_hash
                 msg.File.Size = message.document.size 
-                for attr in message.media.document.attributes:
-                    if attr.to_dict()['_'] == "DocumentAttributeFilename":
-                        msg.File.Name = attr.to_dict()['file_name']
+                msg.File.MimeType = message.document.mime_type
+                # Media为MessageMediaWebPage的时候没有document
+                # 其实就是message的预览, 不用录细节
+                if hasattr(message.media, "document"):
+                    for attr in message.media.document.attributes:
+                        if attr.to_dict()['_'] == "DocumentAttributeFilename":
+                            msg.File.Name = attr.to_dict()['file_name']
+                        if attr.to_dict()['_'] == "DocumentAttributeVideo":
+                            msg.File.VideoDuration = attr.to_dict()['duration']
+                            msg.File.VideoWidth = attr.to_dict()['w']
+                            msg.File.VideoHeight = attr.to_dict()['h']
             elif message.photo:
                 msg.Photo = TelegramPhoto()
+                msg.Photo.message = message
                 msg.Photo.ID = message.photo.id
                 msg.Photo.AccessHash = message.photo.access_hash
             elif message.geo:
@@ -203,7 +253,12 @@ class TelegramPeer():
         if message.text:
             msg.MessageRaw = message.text
         if message.from_id:
-            msg.User = TelegramPeer(ID=message.from_id.user_id, client=self.client)
+            # ipdb.set_trace()
+            # print(message.from_id.to_dict())
+            if message.from_id.to_dict()['_'] == "PeerUser":
+                msg.User = TelegramPeer(Type="user", ID=message.from_id.user_id, client=self.client)
+            elif message.from_id.to_dict()['_'] == "PeerChannel":
+                msg.User = TelegramPeer(Type="user", ID=message.from_id.channel_id, client=self.client)
         
         # ipdb.set_trace()
 
@@ -219,18 +274,30 @@ class TelegramPeer():
 
         return msg
     
-    def Messages(self, limit:int=100, offset:int=0) -> list[TelegramMessage]:
+    def Messages(self, limit:int=100, offset:int=0, filter:str=None) -> list[TelegramMessage]:
         """
-        It takes a chat object, and returns a list of messages in that chat.
+        只指定limit的时候就从会话的底部往上翻. 消息从新到旧返回, 新的msg id更大.
+        如果有指定offset就是从id为这个offset往上翻. 不包含这offset的id的消息.
+        所以如果要遍历所有消息, 就先不指定offset, 提取100条. 然后把offset设置为这一批的消息的最后一条消息的offset再抓取, 循环往复.
         
         :param limit: The maximum number of messages to be returned, defaults to 100
         :type limit: int (optional)
         :param offset: The offset of the first message to be returned, defaults to 0
         :type offset: int (optional)
+        :param filter: 需要过滤出来的消息类型, 可选 gif, file, music, media, link, voice, 参考telegram的客户端关于群组或者频道的详情
         :return: A list of TelegramMessage objects
         """
+        filterm = {
+            "gif": InputMessagesFilterGif,
+            "file": InputMessagesFilterDocument,
+            "music": InputMessagesFilterMusic,
+            "media": InputMessagesFilterPhotoVideo,
+            "link": InputMessagesFilterUrl,
+            "voice": InputMessagesFilterVoice,
+            None: None, 
+        }
         res = []
-        getmessage = self.client.get_messages(self.ID, limit=limit, offset_id=offset)
+        getmessage = self.client.get_messages(self.ID, limit=limit, offset_id=offset, filter=filterm[filter])
         for message in getmessage:
             msg = self.__wrapMsg(message)
             res.append(msg)
@@ -273,6 +340,21 @@ class TelegramPeer():
             self.Resolve()
 
         self.client.send_message(self.entity, message)
+    
+    def MessagesAll(self, filter:str=None) -> Iterator[str]:
+        """
+        :param filter: 需要过滤出来的消息类型, 可选 gif, file, music, media, link, voice, 参考telegram的客户端关于群组或者频道的详情
+        :return: A list of TelegramMessage objects
+        """
+
+        msgs = self.Messages(filter=filter)
+        while len(msgs) != 0:
+            for msg in msgs:
+                yield msg 
+
+            msgs = self.Messages(offset=msgs[-1].ID, filter=filter)
+
+        return 
 
 # It's a wrapper for the `telethon` library that allows you to use it in a more Pythonic way
 class Telegram():
@@ -287,6 +369,7 @@ class Telegram():
         # me = self.client.get_me()
         # print(me.stringify())
         self.sessionfile = sessionfile + ".session"
+        self.peersResolved = {}
 
     def SessionString(self) -> str:
         """
@@ -295,40 +378,94 @@ class Telegram():
         """
         return self.client.session.save()
     
-    def PeerByUsername(self, username:str) -> TelegramPeer:
+    def retryOnFloodWaitError(func): # func是被包装的函数
+        def ware(self, *args, **kwargs): # self是类的实例
+            while True:
+                try:
+                    res = func(self, *args, **kwargs)
+                    return res
+                except telethon.errors.rpcerrorlist.FloodWaitError as e:
+                    sleepsec = int(Re.FindAll("A wait of (.+?) seconds is required", e.args[0])[0][1]) + 1
+                    Lg.Warn(f"捕获FloodWaitError错误, 休眠{sleepsec}秒")
+                    Time.Sleep(sleepsec)
+
+        return ware
+    
+    @retryOnFloodWaitError
+    def PeerByUsername(self, username:str) -> TelegramPeer | None:
         """
         根据Username解析一个Peer, 有速率限制
         
         :param username: The username of the user/channel you want to send the message to
         :type username: str
         """
-        tp = TelegramPeer()
+        Lg.Trace("开始解析username:", username )
+        if username in self.peersResolved:
+            Lg.Trace("存在缓存, 直接返回")
+            return self.peersResolved[username]
+        else:
+            tp = TelegramPeer()
 
-        tp.client = self.client
+            tp.client = self.client
 
-        try:
-            obj = self.client.get_entity(username)
-        except (ValueError, TypeError):
-            time.sleep(1)
-            obj = self.client.get_entity(username)
-        if type(obj) == telethon.tl.types.Channel:
-            tp.Type = "channel"
-            tp.Name = obj.title
-        elif type(obj) == telethon.tl.types.User:
-            tp.Type = "user"
-            tp.Name = " ".join(filter(lambda x: x != None, [obj.first_name, obj.last_name]))
-        
-        tp.AccessHash = obj.access_hash
-        tp.Username = obj.username 
-        tp.ID = obj.id
+            try:
+                Lg.Trace("第一次解析尝试")
+                obj = self.client.get_entity(username)
+            except (ValueError, TypeError) as e:
+                Lg.Trace("报错了:", e)
+                if str(e).startswith("No user has") and str(e).endswith("as username"):
+                    return None 
+                if str(e).startswith("Could not find the input entity for "):
+                    return None 
 
-        self.client.session.save()
+                time.sleep(1)
+                try:
+                    Lg.Trace("第二次解析尝试")
+                    obj = self.client.get_entity(username)
+                except ValueError as e:
+                    Lg.Trace("报错了:", e)
+                    if str(e).startswith("No user has") and str(e).endswith("as username"):
+                        return None 
+                    if str(e).startswith("Could not find the input entity for "):
+                        return None 
 
-        return tp
+            except telethon.errors.rpcerrorlist.UsernameInvalidError as e:
+                Lg.Trace("报错了, 用户名不存在:", e)
+                return None 
+            except telethon.errors.rpcerrorlist.UsernameNotOccupiedError as e:
+                Lg.Trace("报错了, 用户名不存在:", e)
+                return None 
+            except telethon.errors.rpcerrorlist.ChannelInvalidError as e:
+                Lg.Trace("报错了, 用户名不存在:", e)    
+                return None 
+            except telethon.errors.rpcerrorlist.ChannelPrivateError as e:
+                Lg.Trace("报错了, 用户名不存在:", e)
+                return None 
+
+            if type(obj) == telethon.tl.types.Channel:
+                tp.Type = "channel"
+                tp.Name = obj.title
+            elif type(obj) == telethon.tl.types.User:
+                tp.Type = "user"
+                tp.Name = " ".join(filter(lambda x: x != None, [obj.first_name, obj.last_name]))
+            
+            tp.AccessHash = obj.access_hash
+            tp.Username = obj.username 
+            tp.ID = obj.id
+            tp.entity = obj
+            tp.tg = self
+
+            self.client.session.save()
+
+            self.peersResolved[username] = tp
+
+            return tp
     
-    def PeerByIDAndHash(self, ID:int, Hash:int, Type:str="channel") -> TelegramPeer:
+    def PeerByIDAndHash(self, ID:int, Hash:int, Type:str="channel") -> TelegramPeer | None:
         """
-        根据ID和Hash返回一个Peer, 没有速率限制
+        根据ID和Hash返回一个Peer, 没有速率限制. 
+        不同的帐号解析同一个Username会得到不一样的AccessHash, 所以:
+        之前帐号解析出来的Hash需要之前的帐号使用, 否则就会报错: Could not find the input entity for
         
         :param ID: The ID of the user or group
         :type ID: int
@@ -346,11 +483,16 @@ class Telegram():
             tp = types.PeerUser(ID)
         else:
             raise Exception(f"未知的类型:{Type}")
+
         peerid = utils.get_peer_id(tp)
 
-        try:
-            return self.PeerByUsername(peerid)
-        except (ValueError, TypeError):
+        Lg.Trace("第一次在PeerByIDAndHash里面解析")
+        # ipdb.set_trace()
+
+        peer = self.PeerByUsername(peerid) 
+
+        if peer == None:
+            Lg.Trace("PeerByIDAndHash里面解析第一次结果为None")
             self.client.session.save() # save all data to sqlite database session file to avoide database lock
             db = SQLite(self.sessionfile)
             (db.Table("entities").
@@ -359,15 +501,16 @@ class Telegram():
                     "hash": Hash,
                 }).Insert())
             db.Close()
-            try:
-                peer = self.PeerByUsername(peerid)
-            except (ValueError, TypeError):
+
+            peer = self.PeerByUsername(peerid) 
+            if peer == None:
                 time.sleep(1)
-                peer = self.PeerByUsername(peerid)
-            self.client.session.save() # save the entity we just resolved to the database
+                peer = self.PeerByUsername(peerid) 
 
-            return peer 
-
+            return peer
+        # else:
+        return peer
+    
     def GetMe(self) -> TelegramPeer:
         me = self.client.get_me()
         return self.PeerByIDAndHash(ID=me.id, Hash=me.access_hash, Type="user").Resolve()

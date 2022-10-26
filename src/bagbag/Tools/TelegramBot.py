@@ -2,11 +2,18 @@ from __future__ import annotations
 
 import telebot # https://github.com/eternnoir/pyTelegramBotAPI
 
+try:
+    from .Ratelimit import RateLimit
+except:
+    from Ratelimit import RateLimit
+
 class TelegramBot():
     def __init__(self, token:str):
         self.token = token 
         self.tb = telebot.TeleBot(self.token)
         self.tags:list[str] = []
+        self.rlenable = True 
+        self.rl = RateLimit("20/m")
     
     def GetMe(self) -> telebot.types.User:
         return self.tb.get_me()
@@ -52,10 +59,20 @@ class TelegramBot():
                 tag = ""
         
         if len(msg) <= 4096 - len(tag):
+            if self.rlenable:
+                self.rl.Take()
             self.tb.send_message(self.chatid, msg.strip() + tag) 
         else:
             for m in telebot.util.smart_split(msg, 4096 - len(tag)):
+                if self.rlenable:
+                    self.rl.Take()
                 self.tb.send_message(self.chatid, m.strip() + tag) 
+    
+    def EnableRateLimit(self):
+        self.rlenable = True 
+    
+    def DisableRateLimit(self):
+        self.rlenable = False
 
 if __name__ == "__main__":
     token, chatid = open("TelegramBot.ident").read().strip().split("\n")

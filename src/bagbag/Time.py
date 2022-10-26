@@ -9,6 +9,9 @@ try:
 except:
     import Re
 
+def FormatDuration(seconds:int) -> str:
+    return time.strftime("%H:%M:%S", time.gmtime(seconds))
+
 Now = time.time 
 
 def Sleep(num:int=0, bar:bool=None):
@@ -125,3 +128,5 @@ if __name__ == "__main__":
     print(Strftime(Strptime("1 second ago")))
     print(Strptime("in 24 days"))
     print(Strftime(Strptime("in 24 days")))
+
+    print(FormatDuration(1750))
