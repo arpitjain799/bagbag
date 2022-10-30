@@ -2,8 +2,10 @@ import time
 
 try:
     from .Lock import Lock
+    from .Redis import Redis 
 except:
     from Lock import Lock
+    from Redis import Redis
 
 # sleep=True的时候会添加一个sleep, 可以把请求平均在时间段内. 在低速率的时候能限制准确. 高速率例如每秒50次以上, 实际速率会降低, 速率越高降低越多. 
 # sleep=False的时候没有sleep, 会全在一开始扔出去, 然后block住, 等下一个周期, 在需要速率很高的时候可以这样, 例如发包的时候, 一秒限制2000个包这样.
@@ -15,13 +17,17 @@ except:
 # The Take() method should be thread-safe.
 #
 class RateLimit:
-    def __init__(self, rate:str):
+    def __init__(self, rate:str, redis:Redis=None, rediskey:str=None):
         self.history = None
         self.rate = rate
         self.num, self.duration = self._parse_rate()
         self.history = []
         self.lock = Lock()
         self.sleeptime = float(self.duration) / float(self.num)
+        self.r = redis
+        self.rk = rediskey 
+        if self.r != None and self.rk == None:
+            raise Exception("需要指定redis的key")
 
     def _parse_rate(self):
         num, period = self.rate.split('/')
@@ -30,49 +36,106 @@ class RateLimit:
         return (num, duration)
 
     def Take(self, sleep:bool=True) -> bool:
-        if sleep:
-            self.lock.Acquire()
-            current_time = time.time()
-
-            if not self.history:
-                self.history.append(current_time)
-                self.lock.Release()
-                return 
-
-            while len(self.history) > self.num:
-                if self.history and self.history[-1] <= current_time - self.sleeptime:
-                    self.history.pop()
-                else:
-                    time.sleep(self.sleeptime)
-    
-            time.sleep(self.sleeptime)
-            self.history.insert(0, current_time)
-            self.lock.Release()
-            return True
-        else:
-            current_time = time.time()
-
-            if not self.history:
-                self.history.append(current_time)
-                return True
-
-            while True:
-                #print("1")
-                # 判断访问记录是否超过指定的时间限制, 如果超出限制, 移出list
-                while self.history and self.history[-1] <= current_time - self.duration:
-                    self.history.pop()
-
-                #print(2)
-                # 判断指定时间范围的访问记录数量是否超过最大次数
-                if len(self.history) >= self.num:
-                    #print(3)
-                    time.sleep(self.duration - (current_time - self.history[-1]))                
-                else:
-                    #print(4)
-                    self.history.insert(0, current_time)
-                    return True
-                
+        if self.r != None :
+            if sleep:
+                self.lock.Acquire()
                 current_time = time.time()
+
+                if self.r.rdb.llen(self.rk) == 0:
+                    # self.history.append(current_time)
+                    self.r.rdb.rpush(self.rk, current_time)
+                    self.lock.Release()
+                    return 
+
+                # while len(self.history) > self.num:
+                while self.r.rdb.llen(self.rk) > self.num:
+                    # if self.history and self.history[-1] <= current_time - self.sleeptime:
+                    if self.r.rdb.llen(self.rk) > 0 and self.r.rdb.lindex(self.rk, -1) <= current_time - self.sleeptime:
+                        # self.history.pop()
+                        self.r.rdb.brpop(self.rk)
+                    else:
+                        time.sleep(self.sleeptime)
+        
+                time.sleep(self.sleeptime)
+                # self.history.insert(0, current_time)
+                self.r.rdb.lpush(self.rk, current_time)
+                self.lock.Release()
+                return True
+            else:
+                current_time = time.time()
+
+                # if not self.history:
+                if self.r.rdb.llen(self.rk) == 0:
+                    # self.history.append(current_time)
+                    self.r.rdb.rpush(self.rk, current_time)
+                    return True
+
+                while True:
+                    #print("1")
+                    # 判断访问记录是否超过指定的时间限制, 如果超出限制, 移出list
+                    # while self.history and self.history[-1] <= current_time - self.duration:
+                    while self.r.rdb.llen(self.rk) > 0 and self.r.rdb.lindex(self.rk, -1) <= current_time - self.duration:
+                        # self.history.pop()
+                        self.r.rdb.brpop(self.rk)
+
+                    #print(2)
+                    # 判断指定时间范围的访问记录数量是否超过最大次数
+                    # if len(self.history) >= self.num:
+                    if self.r.rdb.llen(self.rk) > self.num:
+                        #print(3)
+                        # time.sleep(self.duration - (current_time - self.history[-1]))      
+                        time.sleep(self.duration - (current_time - self.r.rdb.lindex(self.rk, -1)))             
+                    else:
+                        #print(4)
+                        # self.history.insert(0, current_time)
+                        self.r.rdb.lpush(self.rk, current_time)
+                        return True
+                    
+                    current_time = time.time()
+        else:
+            if sleep:
+                self.lock.Acquire()
+                current_time = time.time()
+
+                if not self.history:
+                    self.history.append(current_time)
+                    self.lock.Release()
+                    return 
+
+                while len(self.history) > self.num:
+                    if self.history and self.history[-1] <= current_time - self.sleeptime:
+                        self.history.pop()
+                    else:
+                        time.sleep(self.sleeptime)
+        
+                time.sleep(self.sleeptime)
+                self.history.insert(0, current_time)
+                self.lock.Release()
+                return True
+            else:
+                current_time = time.time()
+
+                if not self.history:
+                    self.history.append(current_time)
+                    return True
+
+                while True:
+                    #print("1")
+                    # 判断访问记录是否超过指定的时间限制, 如果超出限制, 移出list
+                    while self.history and self.history[-1] <= current_time - self.duration:
+                        self.history.pop()
+
+                    #print(2)
+                    # 判断指定时间范围的访问记录数量是否超过最大次数
+                    if len(self.history) >= self.num:
+                        #print(3)
+                        time.sleep(self.duration - (current_time - self.history[-1]))                
+                    else:
+                        #print(4)
+                        self.history.insert(0, current_time)
+                        return True
+                    
+                    current_time = time.time()
 
 if __name__ == "__main__":
     # Test speed

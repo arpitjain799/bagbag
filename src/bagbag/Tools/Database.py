@@ -446,6 +446,10 @@ class MySQLSQLiteBase():
         self.db:orator.DatabaseManager = None
 
     def Table(self, tbname: str) -> MySQLSQLiteTable:
+        if not tbname in self.Tables():
+            with self.schema.create(tbname) as table:
+                table.increments('id')
+
         return MySQLSQLiteTable(self, self.schema, tbname)
 
     def Execute(self, sql: str) -> (bool | int | list):
@@ -503,6 +507,15 @@ class MySQLSQLiteBase():
     
     def KeyValue(self, tbname:str) -> MySQLSQLiteKeyValueTable:
         return MySQLSQLiteKeyValueTable(self, tbname)
+    
+    def BeginTransaction(self):
+        self.db.begin_transaction()
+    
+    def Rollback(self):
+        self.db.rollback()
+    
+    def Commit(self):
+        self.db.commit()
 
 # > This class is a wrapper for the orator library, which is a wrapper for the mysqlclient library,
 # which is a wrapper for the MySQL C API

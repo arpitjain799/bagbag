@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from re import I
+from attr import has
 from telethon.sync import TelegramClient
 from telethon.sessions import StringSession
 import telethon
@@ -200,7 +201,7 @@ class TelegramPeer():
         self.tg:Telegram = None
     
     def Message(self, id:str) -> TelegramMessage:
-        message = self.client.get_messages(self.ID, ids=id)
+        message = self.client.get_messages(self.entity, ids=id)
         return self.__wrapMsg(message)
     
     def __wrapMsg(self, message:telethon.tl.patched.Message) -> TelegramMessage:
@@ -297,7 +298,7 @@ class TelegramPeer():
             None: None, 
         }
         res = []
-        getmessage = self.client.get_messages(self.ID, limit=limit, offset_id=offset, filter=filterm[filter])
+        getmessage = self.client.get_messages(self.entity, limit=limit, offset_id=offset, filter=filterm[filter])
         for message in getmessage:
             msg = self.__wrapMsg(message)
             res.append(msg)
@@ -341,7 +342,7 @@ class TelegramPeer():
 
         self.client.send_message(self.entity, message)
     
-    def MessagesAll(self, filter:str=None) -> Iterator[str]:
+    def MessagesAll(self, filter:str=None) -> Iterator[TelegramMessage]:
         """
         :param filter: 需要过滤出来的消息类型, 可选 gif, file, music, media, link, voice, 参考telegram的客户端关于群组或者频道的详情
         :return: A list of TelegramMessage objects
@@ -391,6 +392,29 @@ class Telegram():
 
         return ware
     
+    def __wrapPeer(self, entity) -> TelegramPeer:
+        tp = TelegramPeer()
+        tp.client = self.client
+        if type(entity) == telethon.tl.types.Channel:
+            tp.Type = "channel"
+            tp.Name = entity.title
+        elif type(entity) == telethon.tl.types.User:
+            tp.Type = "user"
+            tp.Name = " ".join(filter(lambda x: x != None, [entity.first_name, entity.last_name]))
+        elif type(entity) == telethon.tl.types.Chat:
+            tp.Type = "chat"
+            tp.Name = entity.title
+
+        if hasattr(entity, "access_hash"):
+            tp.AccessHash = entity.access_hash
+        if hasattr(entity, "username"):
+            tp.Username = entity.username 
+        tp.ID = entity.id
+        tp.entity = entity
+        tp.tg = self
+
+        return tp
+    
     @retryOnFloodWaitError
     def PeerByUsername(self, username:str) -> TelegramPeer | None:
         """
@@ -404,10 +428,6 @@ class Telegram():
             Lg.Trace("存在缓存, 直接返回")
             return self.peersResolved[username]
         else:
-            tp = TelegramPeer()
-
-            tp.client = self.client
-
             try:
                 Lg.Trace("第一次解析尝试")
                 obj = self.client.get_entity(username)
@@ -442,18 +462,7 @@ class Telegram():
                 Lg.Trace("报错了, 用户名不存在:", e)
                 return None 
 
-            if type(obj) == telethon.tl.types.Channel:
-                tp.Type = "channel"
-                tp.Name = obj.title
-            elif type(obj) == telethon.tl.types.User:
-                tp.Type = "user"
-                tp.Name = " ".join(filter(lambda x: x != None, [obj.first_name, obj.last_name]))
-            
-            tp.AccessHash = obj.access_hash
-            tp.Username = obj.username 
-            tp.ID = obj.id
-            tp.entity = obj
-            tp.tg = self
+            tp = self.__wrapPeer(obj)
 
             self.client.session.save()
 
@@ -514,6 +523,13 @@ class Telegram():
     def GetMe(self) -> TelegramPeer:
         me = self.client.get_me()
         return self.PeerByIDAndHash(ID=me.id, Hash=me.access_hash, Type="user").Resolve()
+    
+    def Dialogs(self) -> list[TelegramPeer]:
+        res = []
+        for d in self.client.get_dialogs():
+            res.append(self.__wrapPeer(d.entity))
+        
+        return res
 
 if __name__ == "__main__":
     import json 
