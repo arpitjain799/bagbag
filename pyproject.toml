@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bagbag"
-version = "0.44.39"
+version = "0.45.0"
 description = "An all in one python library"
 
 license = "MIT"
@@ -53,7 +53,8 @@ lxml = ">=4.9.1"
 pygtrans = ">=1.4.0"
 shortuuid = ">=1.0.9"
 paramiko = ">=2.11.0"
-pycrypto = ">=2.6.1"
+# pycrypto = ">=2.6.1"
+pycryptodome = ">3.15.0"
 Markdown = ">=3.4.1"
 
 # orator 

@@ -21,6 +21,7 @@ from . import Socket
 from . import Random
 from . import Math
 from .File import File
+from . import Cryptoo as Crypto
 
 # import re
 # import forbiddenfruit

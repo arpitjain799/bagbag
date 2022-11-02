@@ -36,5 +36,5 @@ lxml >= 4.9.1
 pygtrans >= 1.4.0
 shortuuid >= 1.0.9
 paramiko >= 2.11.0
-pycrypto >= 2.6.1
+pycryptodome >= 3.15.0
 Markdown >= 3.4.1
