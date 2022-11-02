@@ -16,6 +16,10 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
 
 # Library
 
+* Crypto
+  * AES(key:str, mode:str="cfb")
+    * Encrypt(raw:str) -> str
+    * Decrypt(enc:str) -> str
 * File(path:str)
   * Write(data:str)
   * Append(data:str)
