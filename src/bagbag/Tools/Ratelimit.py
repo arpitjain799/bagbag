@@ -15,13 +15,14 @@ except:
 # The Take() method should be thread-safe.
 #
 class RateLimit:
-    def __init__(self, rate:str):
+    def __init__(self, rate:str, sleep:bool=True):
         self.history = None
         self.rate = rate
         self.num, self.duration = self._parse_rate()
         self.history = []
         self.lock = Lock()
         self.sleeptime = float(self.duration) / float(self.num)
+        self.sleep = sleep
 
     def _parse_rate(self):
         num, period = self.rate.split('/')
@@ -29,8 +30,8 @@ class RateLimit:
         duration = {'s': 1, 'm': 60, 'h': 3600, 'd': 86400}[period[0]]
         return (num, duration)
 
-    def Take(self, sleep:bool=True) -> bool:
-        if sleep:
+    def Take(self) -> bool:
+        if self.sleep:
             self.lock.Acquire()
             current_time = time.time()
 

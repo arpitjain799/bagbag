@@ -1,7 +1,7 @@
+from Crypto.Cipher import AES as AAAES
+from Crypto import Random
 import base64
 import hashlib
-from Crypto import Random
-from Crypto.Cipher import AES as AAAES
 
 class AES():
     def __init__(self, key:str, mode:str="cfb"): 

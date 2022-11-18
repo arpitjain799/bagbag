@@ -1,4 +1,5 @@
 import hashlib
+    
 
 def Md5sum(data:str|bytes) -> str:
     if type(data) == str:

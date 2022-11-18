@@ -151,7 +151,10 @@ class MySQLSQLiteTable():
                         res = func(self, *args, **kwargs)
                         break
                     except bagbag.Tools.orator.exceptions.query.QueryException as e:
+                        if str(e).startswith('(1054, ') or str(e).startswith('(1406, '):
+                            raise e 
                         # MySQL驱动默认不允许一个连接跨多个线程, 重连就行
+                        Lg.Trace("重连, 因为:", e)
                         self.db.db.reconnect()
                     except pymysql.err.OperationalError as e:  
                         if e.args[0] == 2003:

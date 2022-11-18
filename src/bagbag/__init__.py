@@ -1,3 +1,6 @@
+# import importlib
+# importlib.enable_lazy_imports_in_module() 
+
 import ipdb
 import traceback
 import sys
@@ -5,9 +8,7 @@ import selenium
 
 from . import Lg
 from . import Tools
-from .String import String
 from . import Time
-from .Python import Range
 from . import Base64
 from . import Json
 from . import Os
@@ -15,13 +16,29 @@ from . import Funcs
 from . import Re
 from . import Hash
 from . import Http
-from .Thread import Thread
-from .Process import Process
 from . import Socket 
 from . import Random
 from . import Math
-from .File import File
+
+# __all__ = ['Lg', 'Tools', 'Time', 'Base64', 'Json', 'Json', 'Os', 'Funcs', 'Re', 'Hash', 'Http', 'Socket', 'Random', 'Math']
+
+# def __getattr__(name):
+#   if name in __all__:
+#     print("import " + name)
+#     return importlib.import_module("." + name, __name__)
+#   else:
+#     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+# def __dir__():
+#   return __all__
+
 from . import Cryptoo as Crypto
+
+from .File import File
+from .Thread import Thread
+from .Process import Process
+from .Python import Range
+from .String import String
 
 # import re
 # import forbiddenfruit

@@ -75,19 +75,13 @@ class responseStream(object):
             self._bytes.seek(position, whence)
 
 class Response():
-    def __init__(
-        self, 
-        Headers:dict=None, 
-        Content:str=None, 
-        StatusCode:int=None, 
-        URL:str=None, 
-        Debug:str=None
-    ):
-        self.Headers = Headers # dict[str]str
-        self.Content = Content # str 
-        self.StatusCode = StatusCode # int
-        self.URL = URL # str
-        self.Debug = Debug # str
+    def __init__(self):
+        self.Headers:dict = None # dict[str]str
+        self.Content:str = None # str 
+        self.StatusCode:int = None # int
+        self.URL:str = None # str
+        self.Debug:str = None # str
+        self.ContentByte:bytes = None 
     
     def __str__(self) -> str:
         Debug = None
@@ -119,8 +113,10 @@ def makeResponse(response:requests.Response, Debug:bool, ReadBodySize:int) -> Re
         content = st.read()
     else:
         content = st.read(ReadBodySize)
+        
     if content:
-        resp.Content = content.decode("utf-8")
+        resp.Content = content.decode("utf-8", errors="ignore")
+        resp.ContentBytes = content
     
     resp.Headers = response.headers 
     resp.StatusCode = response.status_code

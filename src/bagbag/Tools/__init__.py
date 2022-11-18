@@ -23,3 +23,4 @@ from .XPath import XPath
 from . import Translater
 from .SSH import SSH
 # from .TelegramAsync import TelegramAsync
+from .Github import Github

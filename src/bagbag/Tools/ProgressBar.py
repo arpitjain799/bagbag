@@ -29,12 +29,28 @@ class ProgressBar():
     def __init__(self, iterable_obj=None, total=None, title=None, leave=False):
         self.iterable = iterable_obj
         self.tqdm = tqdm.tqdm(iterable_obj, dynamic_ncols=True, total=total, leave=leave, desc=title)
+        self.total = total if total != None else 0
+        self.current = 0
 
     def Add(self, num:int=1):
+        self.current = self.current + num
         self.tqdm.update(num)
     
     def Close(self):
         self.tqdm.close()
+    
+    def SetTotal(self, total:int):
+        self.tqdm.total = total 
+        self.tqdm.refresh()
+    
+    def Total(self) -> int:
+        return self.total 
+
+    def Current(self) -> int:
+        return self.current 
+    
+    def Remain(self) -> int:
+        return self.total - self.current 
 
     def __iter__(self):
         if not self.iterable:

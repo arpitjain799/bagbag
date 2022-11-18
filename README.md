@@ -114,6 +114,9 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * UUID() -> str
   * CutSentence(sentence:str, filter:bool=True) -> list[str]
 * Tools 一些工具
+  * Github(token:str, ratelimit:str="30/m")
+    * Search(pattern:str) -> GithubSearchResults
+      * Get() -> GithubSearchResult | None
   * SSH(host:str, port:int=None, user:str=None, password:str=None, pkey:str=None)
     * GetOutput(command:str) -> str
     * Close()
@@ -190,8 +193,8 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
       * Args()
         * Get(name:str, default:str="") -> str | None # 获取URL的参数
   * Chan() 内存队列, 跟go的chan一样
-  * RateLimit(rate:str) rate可以是 次数/时间区间, 时间可以是s, m, h, d, 即秒,分,时,天. 例如一分钟限制五次: 5/m. 在低速率的时候能限制准确, 例如低于1秒10次. 高速率例如每秒50次以上, 实际速率会降低, 速率越高降低越多. 
-    * Take(sleep:bool=True) sleep=True的时候会添加一个sleep, 可以把请求平均在时间段内. 在低速率的时候能限制准确. 高速率例如每秒50次以上, 实际速率会降低, 速率越高降低越多. sleep=False的时候没有sleep, 会全在一开始扔出去, 然后block住, 等下一个周期, 在需要速率很高的时候可以这样, 例如发包的时候, 一秒限制2000个包这样.
+  * RateLimit(rate:str, sleep:bool=True) rate可以是 次数/时间区间, 时间可以是s, m, h, d, 即秒,分,时,天. 例如一分钟限制五次: 5/m. 在低速率的时候能限制准确, 例如低于1秒10次. 高速率例如每秒50次以上, 实际速率会降低, 速率越高降低越多. 
+    * Take() sleep=True的时候会添加一个sleep, 可以把请求平均在时间段内. 在低速率的时候能限制准确. 高速率例如每秒50次以上, 实际速率会降低, 速率越高降低越多. sleep=False的时候没有sleep, 会全在一开始扔出去, 然后block住, 等下一个周期, 在需要速率很高的时候可以这样, 例如发包的时候, 一秒限制2000个包这样.
   * URL(url:str)
     * Parse() -> URLParseResult
     * Encode() -> str

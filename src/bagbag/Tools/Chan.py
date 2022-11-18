@@ -78,22 +78,20 @@ class Chan(Generic[_T]):
     
     def Close(self):
         self.closed = True
-    
+
     def __iter__(self):
-        return self 
-    
-    def __next__(self):
-        try:
-            return self.Get()
-        except ChannelClosed:
-            raise StopIteration
+        while True:
+            try:
+                yield self.Get()
+            except ChannelClosed:
+                return 
 
 if __name__ == "__main__":
     # 声明Queue里面内容的类型
     q:Chan[str] = Chan(10)
 
-    for _ in q:
-        print(_)
+    # for _ in q:
+    #     print(_)
 
     q.Put("0")
     s = q.Get() # (variable) s: str
@@ -126,7 +124,7 @@ if __name__ == "__main__":
     import time
     time.sleep(1)
 
-    for _ in q:
-        print(_)
+    # for _ in q:
+    #     print(_)
 
     q.Close()
