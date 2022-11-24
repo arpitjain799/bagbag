@@ -448,6 +448,8 @@ class Telegram():
                         return None 
                     if str(e).startswith("Could not find the input entity for "):
                         return None 
+                    if str(e).startswith("Cannot find any entity corresponding to"):
+                        return None 
 
             except telethon.errors.rpcerrorlist.UsernameInvalidError as e:
                 Lg.Trace("报错了, 用户名不存在:", e)

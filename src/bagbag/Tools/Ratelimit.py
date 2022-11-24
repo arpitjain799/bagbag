@@ -1,9 +1,11 @@
-import time
-
 try:
     from .Lock import Lock
+    from .. import Time
 except:
     from Lock import Lock
+    import sys
+    sys.path.append("..")
+    import Time 
 
 # sleep=True的时候会添加一个sleep, 可以把请求平均在时间段内. 在低速率的时候能限制准确. 高速率例如每秒50次以上, 实际速率会降低, 速率越高降低越多. 
 # sleep=False的时候没有sleep, 会全在一开始扔出去, 然后block住, 等下一个周期, 在需要速率很高的时候可以这样, 例如发包的时候, 一秒限制2000个包这样.
@@ -33,7 +35,7 @@ class RateLimit:
     def Take(self) -> bool:
         if self.sleep:
             self.lock.Acquire()
-            current_time = time.time()
+            current_time = Time.Now()
 
             if not self.history:
                 self.history.append(current_time)
@@ -44,14 +46,14 @@ class RateLimit:
                 if self.history and self.history[-1] <= current_time - self.sleeptime:
                     self.history.pop()
                 else:
-                    time.sleep(self.sleeptime)
+                    Time.Sleep(self.sleeptime)
     
-            time.sleep(self.sleeptime)
+            Time.Sleep(self.sleeptime)
             self.history.insert(0, current_time)
             self.lock.Release()
             return True
         else:
-            current_time = time.time()
+            current_time = Time.Now()
 
             if not self.history:
                 self.history.append(current_time)
@@ -67,13 +69,13 @@ class RateLimit:
                 # 判断指定时间范围的访问记录数量是否超过最大次数
                 if len(self.history) >= self.num:
                     #print(3)
-                    time.sleep(self.duration - (current_time - self.history[-1]))                
+                    Time.Sleep(self.duration - (current_time - self.history[-1]))                
                 else:
                     #print(4)
                     self.history.insert(0, current_time)
                     return True
                 
-                current_time = time.time()
+                current_time = Time.Now()
 
 if __name__ == "__main__":
     # Test speed
