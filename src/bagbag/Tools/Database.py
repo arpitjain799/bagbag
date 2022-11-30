@@ -83,7 +83,7 @@ class MySQLSQLiteTable():
                     else:
                         raise Exception("列的类型可选为: int, string, float, text")
                     
-                    if default:
+                    if default != None:
                         col.default(default)
                     
                     if nullable:

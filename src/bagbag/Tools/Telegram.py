@@ -16,6 +16,7 @@ from telethon.tl.types import  InputMessagesFilterMusic
 from telethon.tl.types import  InputMessagesFilterPhotoVideo
 from telethon.tl.types import  InputMessagesFilterUrl
 from telethon.tl.types import  InputMessagesFilterVoice
+import tqdm
 
 try:
     from .. import Os
@@ -50,13 +51,24 @@ class TelegramPhoto():
         self.AccessHash = 0
         self.message = None 
     
+    def callback(self, current, total):
+        self.pbar.update(current-self.prev_curr)
+        self.prev_curr = current
+    
     def Save(self, fpath:str=None) -> str:
         if fpath == None:
             fpath = "photo.jpg"
+        elif Os.Path.IsDir(fpath):
+            fpath = Os.Path.Join(fpath, "photo.jpg")
 
         fpath = Os.Path.Uniquify(fpath)
 
-        self.message.download_media(file=fpath)
+        self.prev_curr = 0
+        self.pbar = tqdm.tqdm(total=self.Size, unit='B', unit_scale=True)
+        self.message.download_media(file=fpath, progress_callback=self.callback)
+        self.pbar.close()
+
+        return fpath
     
     def __repr__(self):
         return f"TelegramPhoto(ID={self.ID}, AccessHash={self.AccessHash})"
@@ -78,13 +90,24 @@ class TelegramFile():
         self.VideoWidth = None 
         self.VideoHeight = None 
     
+    def callback(self, current, total):
+        self.pbar.update(current-self.prev_curr)
+        self.prev_curr = current
+    
     def Save(self, fpath:str=None) -> str:
         if fpath == None:
             fpath = self.Name
+        elif Os.Path.IsDir(fpath):
+            fpath = Os.Path.Join(fpath, self.Name)
 
         fpath = Os.Path.Uniquify(fpath)
 
-        self.message.download_media(file=fpath)
+        self.prev_curr = 0
+        self.pbar = tqdm.tqdm(total=self.Size, unit='B', unit_scale=True)
+        self.message.download_media(file=fpath, progress_callback=self.callback)
+        self.pbar.close()
+
+        return fpath
     
     def __repr__(self):
         return f"TelegramFile(Name={self.Name}, Size={self.Size}, ID={self.ID}, AccessHash={self.AccessHash})"
