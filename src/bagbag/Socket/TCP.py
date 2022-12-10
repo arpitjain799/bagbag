@@ -33,7 +33,7 @@ class PacketConnection():
         self.sc = sc 
 
     def PeerAddress(self) -> TCPPeerAddress:
-        return TCPPeerAddress(self.sc.host, self.sc.port)
+        return TCPPeerAddress(self.sc.Host, self.sc.Port)
 
     def Close(self):
         self.sc.Close()
@@ -48,15 +48,21 @@ class PacketConnection():
         length = int.from_bytes(self.sc.RecvBytes(8), "big")
         datab = self.sc.RecvBytes(length)
         return pickle.loads(datab)
+    
+    def __str__(self):
+        return f"PacketConnection(Host={self.sc.Host} Port={self.sc.Port})"
+    
+    def __repr__(self):
+        return f"PacketConnection(Host={self.sc.Host} Port={self.sc.Port})"
         
 class StreamConnection():
     def __init__(self, ss:socket, host:str, port:int):
         self.ss = ss
-        self.host = host
-        self.port = port 
+        self.Host = host
+        self.Port = port 
     
     def PeerAddress(self) -> TCPPeerAddress:
-        return TCPPeerAddress(self.host, self.port)
+        return TCPPeerAddress(self.Host, self.Port)
     
     def Send(self, data:str):
         self.SendBytes(data.encode('utf-8'))
@@ -79,6 +85,12 @@ class StreamConnection():
     
     def Close(self):
         self.ss.close()
+    
+    def __str__(self):
+        return f"StreamConnection(Host={self.Host} Port={self.Port})"
+    
+    def __repr__(self):
+        return f"StreamConnection(Host={self.Host} Port={self.Port})"
 
 class Listen():
     def __init__(self, host:str, port:int, waitQueue:int=5):

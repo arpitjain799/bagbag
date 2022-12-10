@@ -114,6 +114,11 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * UUID() -> str
   * CutSentence(sentence:str, filter:bool=True) -> list[str]
 * Tools 一些工具
+  * Kafka(topic:str, servers:str|list)
+    * Producer(value_serializer=lambda m: json.dumps(m).encode()) -> KafkaProducer
+      * Send(data:dict)
+    * Consumer(group_id:str=None, auto_offset_reset:str='earliest') -> KafkaConsumer
+      * Get() -> dict
   * Github(token:str, ratelimit:str="30/m")
     * Search(pattern:str) -> GithubSearchResults
       * Get() -> GithubSearchResult | None

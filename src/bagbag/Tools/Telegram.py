@@ -18,12 +18,17 @@ from telethon.tl.types import  InputMessagesFilterUrl
 from telethon.tl.types import  InputMessagesFilterVoice
 import tqdm
 
+from hachoir.metadata import extractMetadata
+from hachoir.parser import createParser
+from telethon.tl.types import DocumentAttributeVideo
+
 try:
     from .. import Os
     from .Database import SQLite
     from .. import Time
     from .. import Lg
     from .. import Re
+    from ..File import File
 except:
     import sys 
     sys.path.append("..")
@@ -32,6 +37,7 @@ except:
     import Time
     import Lg
     import Re
+    from File import File
 
 class TelegramGeo():
     def __init__(self):
@@ -185,6 +191,28 @@ class TelegramMessage():
     
     def Delete(self):
         self.message.delete()
+
+    def ReplyMessage(self, message:str):
+        self.peer.client.send_message(self.peer.entity, message, reply_to=self.ID)
+    
+    def callback(self, current, total):
+        self.pbar.update(current-self.prev_curr)
+        self.prev_curr = current
+
+    def ReplyVideo(self, path:str):
+        metadata = extractMetadata(createParser(path))
+
+        self.prev_curr = 0
+        self.pbar = tqdm.tqdm(total=File(path).Size(), unit='B', unit_scale=True)
+        
+        self.peer.client.send_file(self.peer.entity, file=open(path, 'rb'), attributes=[
+                                  DocumentAttributeVideo(
+                                      (0, metadata.get('duration').seconds)[metadata.has('duration')],
+                                      (0, metadata.get('width'))[metadata.has('width')],
+                                      (0, metadata.get('height'))[metadata.has('height')]
+                                  )], progress_callback=self.callback, reply_to=self.ID)
+        
+        self.pbar.close()
     
     def __repr__(self):
         return f"TelegramMessage(PeerType={self.PeerType}, Chat={self.Chat}, ID={self.ID}, Time={self.Time}, Action={self.Action}, File={self.File}, Photo={self.Photo}, Message={self.MessageRaw}, User={self.User}, Button={self.Buttons})"
@@ -365,6 +393,28 @@ class TelegramPeer():
 
         self.client.send_message(self.entity, message)
     
+    def callback(self, current, total):
+        self.pbar.update(current-self.prev_curr)
+        self.prev_curr = current
+
+    def SendVideo(self, path:str):
+        if not self.entity:
+            self.Resolve()
+        
+        metadata = extractMetadata(createParser(path))
+
+        self.prev_curr = 0
+        self.pbar = tqdm.tqdm(total=File(path).Size(), unit='B', unit_scale=True)
+        
+        self.client.send_file(self.entity, file=open(path, 'rb'), attributes=[
+                                  DocumentAttributeVideo(
+                                      (0, metadata.get('duration').seconds)[metadata.has('duration')],
+                                      (0, metadata.get('width'))[metadata.has('width')],
+                                      (0, metadata.get('height'))[metadata.has('height')]
+                                  )], progress_callback=self.callback)
+        
+        self.pbar.close()
+        
     def MessagesAll(self, filter:str=None) -> Iterator[TelegramMessage]:
         """
         :param filter: 需要过滤出来的消息类型, 可选 gif, file, music, media, link, voice, 参考telegram的客户端关于群组或者频道的详情
@@ -529,11 +579,16 @@ class Telegram():
             Lg.Trace("PeerByIDAndHash里面解析第一次结果为None")
             self.client.session.save() # save all data to sqlite database session file to avoide database lock
             db = SQLite(self.sessionfile)
-            (db.Table("entities").
-                Data({
-                    "id": peerid, 
-                    "hash": Hash,
-                }).Insert())
+            try:
+                (db.Table("entities").
+                    Data({
+                        "id": peerid, 
+                        "hash": Hash,
+                    }).Insert())
+            except:
+                db.Close() 
+                return None  
+
             db.Close()
 
             peer = self.PeerByUsername(peerid) 

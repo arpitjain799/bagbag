@@ -39,3 +39,5 @@ paramiko >= 2.11.0
 pycryptodome >= 3.15.0
 Markdown >= 3.4.1
 PyGithub >= 1.57
+hachoir >= 3.2.0
+kafka-python >= 2.0.2

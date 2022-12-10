@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bagbag"
-version = "0.46.22"
+version = "0.47.0"
 description = "An all in one python library"
 
 license = "MIT"
@@ -57,6 +57,8 @@ paramiko = ">=2.11.0"
 pycryptodome = ">=3.15.0"
 Markdown = ">=3.4.1"
 PyGithub = ">=1.57"
+hachoir = ">=3.2.0"
+kafka-python = ">=2.0.2"
 
 # orator 
 # Fix bug in mysql8.0: https://github.com/sdispater/orator/issues/361
