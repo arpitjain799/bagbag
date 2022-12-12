@@ -6,4 +6,8 @@ if [ -f "requirements.txt" ]; then
     pip install -r requirements.txt
 fi
 
-python run.py 
+if [[ -z "${RUN}" ]]; then
+    RUN="run.py"
+fi 
+
+python $RUN

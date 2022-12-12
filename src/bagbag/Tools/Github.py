@@ -62,12 +62,12 @@ class GithubSearchResults():
         return ware
 
     @retryOnRateLimitAfterSleep
-    def __init__(self, github:Github, pattern:str):
+    def __init__(self, github:Github, pattern:str, sortby:str, orderby:str):
         self.token = github.token 
         self.g = github.g 
         self.rl = github.rl 
 
-        self.repos = self.g.search_code(pattern, 'indexed', "desc")
+        self.repos = self.g.search_code(pattern, sortby, orderby)
 
         self.rl.Take()
         self.total = self.repos.totalCount
@@ -124,8 +124,8 @@ class Github():
 
         self.g.per_page = 100
 
-    def Search(self, pattern:str) -> GithubSearchResults:
-        return GithubSearchResults(self, pattern)
+    def Search(self, pattern:str, sortby:str="indexed", orderby:str="desc") -> GithubSearchResults:
+        return GithubSearchResults(self, pattern, sortby, orderby)
 
 if __name__ == "__main__":
     import yaml 
