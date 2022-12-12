@@ -27,13 +27,13 @@ except:
 
 class GithubSearchResult():
     def __init__(self):
-        self.url:str = ""
-        self.content:str = ""
-        self.rawurl:str = ""
+        self.URL:str = ""
+        self.Content:str = ""
+        self.RawURL:str = ""
 
     def __str__(self) -> str:
-        content = String(self.content.replace("\n", "\\n")).Ommit(160)
-        return f"GithubSearchResult(url={self.url}, content={content}, rawurl={self.rawurl})"
+        content = String(self.Content.replace("\n", "\\n")).Ommit(160)
+        return f"GithubSearchResult(url={self.URL}, content={content}, rawurl={self.RawURL})"
     
     def __iter__(self):
         # first start by grabbing the Class items
@@ -43,7 +43,7 @@ class GithubSearchResult():
         iters.update(self.__dict__)
 
         # now 'yield' through the items
-        for x,y in iters.items():
+        for x, y in iters.items():
             yield x,y
 
 class GithubSearchResults():
@@ -67,7 +67,7 @@ class GithubSearchResults():
         self.g = github.g 
         self.rl = github.rl 
 
-        self.repos = self.g.search_code(pattern)
+        self.repos = self.g.search_code(pattern, 'indexed', "desc")
 
         self.rl.Take()
         self.total = self.repos.totalCount
@@ -104,6 +104,9 @@ class GithubSearchResults():
         res.rawurl = rawurl
         
         return res
+    
+    def Total(self) -> int:
+        return self.total
 
     def __iter__(self) -> GithubSearchResult:
         while True:

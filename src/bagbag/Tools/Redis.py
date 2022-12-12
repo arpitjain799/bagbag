@@ -185,7 +185,7 @@ class Redis():
         return RedisQueue(self.rdb, key, length)
 
 if __name__ == "__main__":
-    r = Redis("192.168.168.21")
+    r = Redis("192.168.1.139")
     r.Ping()
     print(1, r.Get("key"))
     print(2, r.Set("key", "value"))

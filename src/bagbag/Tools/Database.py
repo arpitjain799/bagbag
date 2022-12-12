@@ -396,6 +396,10 @@ class MySQLSQLiteKeyValueTable():
         else:
             return ':'.join(self.namespace) + ":" + key
     
+    def Has(self, key:str) -> bool:
+        tb = self.db.Table(self.tbname)
+        return tb.Where("key", "=", self.__key(key)).Exists()
+    
     def Get(self, key:str, default:typing.Any=None) -> typing.Any:
         tb = self.db.Table(self.tbname)
         res = tb.Where("key", "=", self.__key(key)).First()
