@@ -22,7 +22,7 @@ import pymysql
 import threading
 import multiprocessing
 
-class MySQLSQLiteTable():
+class mySQLSQLiteTable():
     def __init__(self, db: MySQLSQLiteBase, schema: orator.Schema, tbname: str):
         """
         This function initializes the class with the database, schema, and table name
@@ -55,7 +55,7 @@ class MySQLSQLiteTable():
         
         return ''.join(nl)
 
-    def AddColumn(self, colname: str, coltype: str, default=None, nullable:bool = True) -> MySQLSQLiteTable:
+    def AddColumn(self, colname: str, coltype: str, default=None, nullable:bool = True) -> mySQLSQLiteTable:
         """
         添加一个字段, 如果字段存在就跳过, 不会修改.
 
@@ -114,7 +114,7 @@ class MySQLSQLiteTable():
 
         return self
     
-    def AddIndex(self, *cols: str) -> MySQLSQLiteTable:
+    def AddIndex(self, *cols: str) -> mySQLSQLiteTable:
         """
         It adds an index to the table
         
@@ -174,77 +174,77 @@ class MySQLSQLiteTable():
         return ware
     
     @initTableObj
-    def Fields(self, *cols: str) -> MySQLSQLiteTable:
+    def Fields(self, *cols: str) -> mySQLSQLiteTable:
         self.table[self._id()] = self.table[self._id()].select(*cols)
         return self
     
     @initTableObj
-    def Where(self, key:str, opera:str, value:str) -> MySQLSQLiteTable:
+    def Where(self, key:str, opera:str, value:str) -> mySQLSQLiteTable:
         self.table[self._id()] = self.table[self._id()].where(key, opera, value)
         return self
     
     @initTableObj
-    def WhereIn(self, key:str, value: list) -> MySQLSQLiteTable:
+    def WhereIn(self, key:str, value: list) -> mySQLSQLiteTable:
         self.table[self._id()] = self.table[self._id()].where_in(key, value)
         return self 
 
     @initTableObj
-    def WhereNotIn(self, key:str, value: list) -> MySQLSQLiteTable:
+    def WhereNotIn(self, key:str, value: list) -> mySQLSQLiteTable:
         self.table[self._id()] = self.table[self._id()].where_not_in(key, value)
         return self
 
     @initTableObj
-    def WhereNull(self, key:str) -> MySQLSQLiteTable:
+    def WhereNull(self, key:str) -> mySQLSQLiteTable:
         self.table[self._id()] = self.table[self._id()].where_null(key)
         return self 
     
     @initTableObj
-    def WhereNotNull(self, key:str) -> MySQLSQLiteTable:
+    def WhereNotNull(self, key:str) -> mySQLSQLiteTable:
         self.table[self._id()] = self.table[self._id()].where_not_null(key)
         return self
 
     @initTableObj
-    def WhereBetween(self, key:str, start:int|float|str, end:int|float|str) -> MySQLSQLiteTable:
+    def WhereBetween(self, key:str, start:int|float|str, end:int|float|str) -> mySQLSQLiteTable:
         self.table[self._id()] = self.table[self._id()].where_between(key, [start, end])
         return self 
     
     @initTableObj
-    def WhereNotBetween(self, key:str, start:int|float|str, end:int|float|str) -> MySQLSQLiteTable:
+    def WhereNotBetween(self, key:str, start:int|float|str, end:int|float|str) -> mySQLSQLiteTable:
         self.table[self._id()] = self.table[self._id()].where_not_between(key, [start, end])
         return self 
 
     @initTableObj
-    def OrWhere(self, key:str, opera:str, value:str) -> MySQLSQLiteTable:
+    def OrWhere(self, key:str, opera:str, value:str) -> mySQLSQLiteTable:
         self.table[self._id()] = self.table[self._id()].or_where(key, opera, value)
         return self 
 
     @initTableObj
-    def OrWhereIn(self, key:str, value: list) -> MySQLSQLiteTable:
+    def OrWhereIn(self, key:str, value: list) -> mySQLSQLiteTable:
         self.table[self._id()] = self.table[self._id()].or_where_in(key, value)
         return self
 
     @initTableObj
-    def OrderBy(self, *key:str) -> MySQLSQLiteTable:
+    def OrderBy(self, *key:str) -> mySQLSQLiteTable:
         self.table[self._id()] = self.table[self._id()].order_by(*key)
         return self 
 
     @initTableObj
-    def Limit(self, num:int) -> MySQLSQLiteTable:
+    def Limit(self, num:int) -> mySQLSQLiteTable:
         self.table[self._id()] = self.table[self._id()].limit(num)
         return self 
 
     @initTableObj
-    def Paginate(self, size:int, page:int) -> MySQLSQLiteTable:
+    def Paginate(self, size:int, page:int) -> mySQLSQLiteTable:
         self.table[self._id()] = self.table[self._id()].simple_paginate(size, page)
         return self 
 
     @initTableObj
-    def Data(self, value:map) -> MySQLSQLiteTable:
+    def Data(self, value:map) -> mySQLSQLiteTable:
         self.data = value
         return self 
 
     @initTableObj
-    def Offset(self, num:int) -> MySQLSQLiteTable:
+    def Offset(self, num:int) -> mySQLSQLiteTable:
         self.table[self._id()] = self.table[self._id()].offset(num)
         return self 
 
@@ -374,7 +374,7 @@ class MySQLSQLiteTable():
                 res.append({'name': i["name"], 'type': i["type"]})
         return res
 
-class MySQLSQLiteKeyValueTable():
+class mySQLSQLiteKeyValueTable():
     def __init__(self, db:MySQLSQLiteBase, tbname:str) -> None:
         self.db = db 
         (
@@ -386,7 +386,7 @@ class MySQLSQLiteKeyValueTable():
         self.tbname = tbname
         self.namespace = []
     
-    def Namespace(self, namespace:str) -> MySQLSQLiteKeyValueTable:
+    def Namespace(self, namespace:str) -> mySQLSQLiteKeyValueTable:
         if len(':'.join(self.namespace)) > 200:
             raise Exception("Namespace too long: " + str(len(':'.join(self.namespace))))
         self.namespace.append(namespace)
@@ -454,12 +454,12 @@ class MySQLSQLiteBase():
     def __init__(self) -> None:
         self.db:orator.DatabaseManager = None
 
-    def Table(self, tbname: str) -> MySQLSQLiteTable:
+    def Table(self, tbname: str) -> mySQLSQLiteTable:
         if not tbname in self.Tables():
             with self.schema.create(tbname) as table:
                 table.increments('id')
 
-        return MySQLSQLiteTable(self, self.schema, tbname)
+        return mySQLSQLiteTable(self, self.schema, tbname)
 
     def Execute(self, sql: str) -> (bool | int | list):
         """
@@ -514,8 +514,8 @@ class MySQLSQLiteBase():
     def Close(self):
         self.db.disconnect()
     
-    def KeyValue(self, tbname:str) -> MySQLSQLiteKeyValueTable:
-        return MySQLSQLiteKeyValueTable(self, tbname)
+    def KeyValue(self, tbname:str) -> mySQLSQLiteKeyValueTable:
+        return mySQLSQLiteKeyValueTable(self, tbname)
     
     def BeginTransaction(self):
         self.db.begin_transaction()

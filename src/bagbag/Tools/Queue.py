@@ -30,7 +30,7 @@ class Queue():
     def __init__(self, db:MySQL|SQLite):
         self.db = db 
     
-    def New(self, queueName="_queue_empty_name_") -> NamedQueue:
+    def New(self, size:int=None, queueName="_queue_empty_name_") -> namedQueue:
         queueName = ''.join(list(map(lambda x: x if x in "qazwsxedcrfvtgbyhnujmikolopQAZWSXEDCRFVTGBYHNUJMIKOLP0123456789" else "_", queueName)))
         
         if len(queueName) > 55:
@@ -42,9 +42,9 @@ class Queue():
         if queueName not in self.db.Tables():
             self.db.Table(queueName).AddColumn("data", "text")
         
-        return NamedQueue(self.db, queueName, self)
+        return namedQueue(self.db, queueName, self, size)
     
-    def NewConfirm(self, timeout:int=900, queueName:str="_queue_c_empty_name_") -> NamedConfirmQueue:
+    def NewConfirm(self, size:int=None, timeout:int=900, queueName:str="_queue_c_empty_name_") -> namedConfirmQueue:
         """
         这是一个需要调用Done方法来确认某个任务完成的队列
         如果不确认某个任务完成, 它就会留在队列当中等待timeout之后重新能被Get到
@@ -72,15 +72,16 @@ class Queue():
                     AddIndex("stime")
             )
         
-        return NamedConfirmQueue(self.db, queueName, self, timeout)
+        return namedConfirmQueue(self.db, queueName, self, timeout, size)
 
-class NamedConfirmQueue():
-    def __init__(self, db:MySQL|SQLite, name:str, tq:Queue, timeout:int) -> None:
+class namedConfirmQueue():
+    def __init__(self, db:MySQL|SQLite, name:str, tq:Queue, timeout:int, size:int) -> None:
         self.db = db 
         self.name = name 
         self.tq = tq 
         self.lock = Lock()
         self.timeout = timeout
+        self.size = size
     
     def Size(self) -> int:
         """
@@ -131,6 +132,9 @@ class NamedConfirmQueue():
         return r["id"], pickle.loads(b64decode(r["data"]))
     
     def Put(self, item:typing.Any):
+        while self.size != None and self.Size() >= self.size:
+            Time.Sleep(0.1)
+
         self.db.Table(self.name).Data({
             "data": b64encode(pickle.dumps(item)),
             # "stime": int(Time.Now()),
@@ -147,12 +151,13 @@ class NamedConfirmQueue():
             else:
                 self.db.Table(self.name).Where("id", "=", id).Delete()
 
-class NamedQueue():
-    def __init__(self, db:MySQL|SQLite, name:str, tq:Queue) -> None:
+class namedQueue():
+    def __init__(self, db:MySQL|SQLite, name:str, tq:Queue, size:int) -> None:
         self.db = db 
         self.name = name 
         self.tq = tq 
         self.lock = Lock()
+        self.size = size
     
     def Size(self) -> int:
         return self.db.Table(self.name).Count()
@@ -175,6 +180,9 @@ class NamedQueue():
         return pickle.loads(b64decode(r["data"]))
     
     def Put(self, item:typing.Any):
+        while self.size != None and self.Size() >= self.size:
+            Time.Sleep(0.1)
+
         self.db.Table(self.name).Data({
             "data": b64encode(pickle.dumps(item)),
         }).Insert()
