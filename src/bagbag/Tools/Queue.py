@@ -103,7 +103,7 @@ class NamedConfirmQueue():
         """
         return self.db.Table(self.name).Count()
     
-    def Get(self, waiting=True) -> typing.Tuple[int, typing.Any]:
+    def Get(self, wait=True) -> typing.Tuple[int, typing.Any]:
         self.lock.Acquire()
         while True:
             r = self.db.Table(self.name).Where("stime", "<", int(Time.Now()) - self.timeout).OrderBy("id").First()
@@ -112,7 +112,7 @@ class NamedConfirmQueue():
                 r = self.db.Table(self.name).Where("stime", "=", 0).OrderBy("id").First()
 
                 if r == None:
-                    if not waiting:
+                    if not wait:
                         self.lock.Release()
                         return -1, None 
                     else:
@@ -157,11 +157,11 @@ class NamedQueue():
     def Size(self) -> int:
         return self.db.Table(self.name).Count()
     
-    def Get(self, waiting=True) -> typing.Any:
+    def Get(self, wait=True) -> typing.Any:
         self.lock.Acquire()
         r = self.db.Table(self.name).OrderBy("id").First()
         if r == None:
-            if not waiting:
+            if not wait:
                 self.lock.Release()
                 return None 
             else:

@@ -216,13 +216,13 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * Queue(db:Tools.MySql|Tools.SQLite)
     * New(queueName="__queue__empty__name__") -> NamedQueue
       * Size() -> int
-      * Get(waiting=True) -> Any
+      * Get(wait=True) -> Any
       * Put(string:Any)
     * NewConfirm(timeout:int=900, queueName:str="_queue_c_empty_name_") -> NamedConfirmQueue
       * Size() -> int
       * SizeStarted() -> int
       * SizeTotal() -> int
-      * Get(waiting=True) -> typing.Tuple[int, typing.Any]
+      * Get(wait=True) -> typing.Tuple[int, typing.Any]
       * Put(item:typing.Any)
       * Done(id:int)
   * Selenium
@@ -247,7 +247,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
       * SwitchTabByIdent(ident:str)
       * Tabs() -> list[str]
       * NewTab() -> str
-      * Find(xpath:str, waiting=True) -> SeleniumElement
+      * Find(xpath:str, timeout:int=60, scrollIntoElement:bool=True) -> SeleniumElement
         * Clear() -> SeleniumElement
         * Click() -> SeleniumElement
         * Text() -> str
