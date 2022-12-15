@@ -387,6 +387,8 @@ class MySQLSQLiteKeyValueTable():
         self.namespace = []
     
     def Namespace(self, namespace:str) -> MySQLSQLiteKeyValueTable:
+        if len(':'.join(self.namespace)) > 200:
+            raise Exception("Namespace too long: " + str(len(':'.join(self.namespace))))
         self.namespace.append(namespace)
         return self
     

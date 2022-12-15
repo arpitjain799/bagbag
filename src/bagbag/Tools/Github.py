@@ -99,9 +99,9 @@ class GithubSearchResults():
         content = Http.Get(rawurl).Content
 
         res = GithubSearchResult()
-        res.url = url 
-        res.content = content 
-        res.rawurl = rawurl
+        res.URL = url 
+        res.Content = content 
+        res.RawURL = rawurl
         
         return res
     
