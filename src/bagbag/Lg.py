@@ -7,13 +7,14 @@ import multiprocessing
 import re
 
 pformat = (lambda a:lambda v,t="    ",n="\n",i=0:a(a,v,t,n,i))(lambda f,v,t,n,i:"{%s%s%s}"%(",".join(["%s%s%s: %s"%(n,t*(i+1),repr(k),f(f,v[k],t,n,i+1))for k in v]),n,(t*i)) if type(v)in[dict] else (type(v)in[list]and"[%s%s%s]"or"(%s%s%s)")%(",".join(["%s%s%s"%(n,t*(i+1),f(f,k,t,n,i+1))for k in v]),n,(t*i)) if type(v)in[list,tuple] else repr(v))
+logformat = '<green>{time:MM-DD HH:mm:ss}</green> <level>{level:4.4}</level> {message}'
 
 __config = {
     "handlers": [
         {
             "sink": __sys.stdout, 
             # "format": "{time:MM-DD HH:mm:ss} [{icon}] {message}",
-            "format": '<green>{time:MM-DD HH:mm:ss}</green> <level>{level:4.4}</level> {message}',
+            "format": logformat,
             "level": "TRACE",
         },
         # {"sink": "file.log", "serialize": True},
@@ -198,7 +199,25 @@ def SetLevel(level: str):
     :param level: The level of messages to log. canbe: trace,debug,info,warn,error
     :type level: str
     """
-    __config['handlers'][0]['level'] = level.upper()
+    for idx in range(len(__config['handlers'])):
+        __config['handlers'][idx]['level'] = level.upper()
+
+    logger.configure(**__config)
+
+def SetStdout(enable:bool):
+    if enable == False:
+        for idx in range(len(__config['handlers'])):
+            if __config['handlers'][idx]['sink'] == __sys.stdout:
+                del(__config['handlers'][idx])
+    else:
+        if __sys.stdout not in [i["sink"] for i in __config['handlers']]:
+            handler = {
+                "sink": __sys.stdout, 
+                "format": logformat,
+                "level": "TRACE",
+            }
+            __config['handlers'].append(handler)
+
     logger.configure(**__config)
 
 def SetFile(path:str, size:int=100, during:int=7, color:bool=True, json:bool=False):
@@ -219,15 +238,18 @@ def SetFile(path:str, size:int=100, during:int=7, color:bool=True, json:bool=Fal
     if '/' in path.strip("/") and not os.path.exists(os.path.dirname(path)):
         os.makedirs(os.path.dirname(path.strip('/')))
 
-    logger.add(
-        path, 
-        rotation=str(size)+" MB", 
-        retention=str(during)+" days", 
-        format=__config['handlers'][0]['format'], 
-        colorize=color,
-        serialize=json,
-        level="TRACE"
-    )
+    if path not in [i["sink"] for i in __config['handlers']]:
+        handler = {
+            "sink": path,
+            "rotation": str(size)+" MB", 
+            "retention": str(during)+" days", 
+            "format": logformat,
+            "level": __config['handlers'][0]['level'] if len(__config['handlers']) > 0 else "TRACE",
+            "colorize": color,
+            "serialize": json,
+        }
+        __config['handlers'].append(handler)
+        logger.configure(**__config)
 
 # import time 
 

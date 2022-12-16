@@ -322,7 +322,7 @@ class mySQLSQLiteTable():
                     Time.Sleep(0.5)
                 else:
                     break 
-            except pymysql.err.OperationalError as e:  
+            except pymysql.err.OperationalError as e:
                 if e.args[0] == 2003:
                     lastqueryiserror = True 
                     Time.Sleep(0.5)
