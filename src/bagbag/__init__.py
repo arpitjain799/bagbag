@@ -39,6 +39,7 @@ from .Thread import Thread
 from .Process import Process
 from .Python import Range
 from .String import String
+from . import Cmd
 
 # import re
 # import forbiddenfruit
@@ -47,3 +48,4 @@ from .String import String
 #     return len(re.findall(r'[\u4e00-\u9fff]+', self)) != 0
 
 # forbiddenfruit.curse(str, "HasChinese", __hasChinese)
+
