@@ -1,11 +1,10 @@
 from .Redis import Redis
-from .Database import MySQL, SQLite, mySQLSQLiteKeyValueTable, mySQLSQLiteTable
+from .Database import MySQL, SQLite, mySQLSQLiteKeyValueTable, mySQLSQLiteTable, mySQLSQLiteQueue, mySQLSQLiteConfirmQueue
 from .ProgressBar import ProgressBar
 from .Telegram import Telegram
 # from .Telegram import TelegramPeer # 手动组装Peer需要用到
 from . import Selenium
 from .Lock import Lock
-from .Queue import Queue, namedConfirmQueue, namedQueue
 from .PrometheusMetricServer import PrometheusMetricServer
 from .URL import URL
 from .Ratelimit import RateLimit

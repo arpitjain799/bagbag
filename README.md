@@ -213,18 +213,6 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
       * Set(num:int|float)
     * NewGaugeWithLabel(name:str, labels:list[str], help:str) -> prometheusGaugeVec
       * Set(labels:dict|list, num:int|float=1)
-  * Queue(db:Tools.MySql|Tools.SQLite)
-    * New(queueName="__queue__empty__name__") -> NamedQueue
-      * Size() -> int
-      * Get(wait=True) -> Any
-      * Put(string:Any)
-    * NewConfirm(timeout:int=900, queueName:str="_queue_c_empty_name_") -> NamedConfirmQueue
-      * Size() -> int
-      * SizeStarted() -> int
-      * SizeTotal() -> int
-      * Get(wait=True) -> typing.Tuple[int, typing.Any]
-      * Put(item:typing.Any)
-      * Done(id:int)
   * Selenium
     * Firefox(seleniumServer:str=None, PACFileURL:str=None, sessionID:str=None)
     * Chrome(seleniumServer:str=None, httpProxy:str=None, sessionID=None)
@@ -291,6 +279,17 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
       * Get(block=True, timeout=None) -> str
   * MySQL(host: str, port: int, user: str, password: str, database: str, prefix:str = "") # 跟5.7兼容. 因为orator跟5.7兼容, 跟8.0会有小问题, 作者很久不更新, 有空换掉这个orm. **注意, Python的MySQL操作不支持多线程, 需要每个线程连接一次MySQL, 不过这个是自动的, 在Get, Update等操作的时候如果链接异常就重连**
   * SQLite(path: str, prefix:str = "") **由于SQLite每次只能一个线程进行操作, 所以这里默认会有一个锁, 线程安全**
+    * Queue(tbname:str, size:int=None) -> NamedQueue
+      * Size() -> int
+      * Get(wait=True) -> Any
+      * Put(string:Any)
+    * QueueConfirm(tbname:str, size:int=None, timeout:int=900) -> NamedConfirmQueue
+      * Size() -> int
+      * SizeStarted() -> int
+      * SizeTotal() -> int
+      * Get(wait=True) -> typing.Tuple[int, typing.Any]
+      * Put(item:typing.Any)
+      * Done(id:int)
     * Execute(sql: str) -> (bool | int | list)
     * Tables() -> list
     * Table(tbname: str) -> MySQLSQLiteTable

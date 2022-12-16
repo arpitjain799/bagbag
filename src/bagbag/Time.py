@@ -14,7 +14,7 @@ def FormatDuration(seconds:int) -> str:
 
 Now = time.time 
 
-def Sleep(num:int=0, bar:bool=None):
+def Sleep(num:int=0, title:str=None, bar:bool=None):
     """
     Sleep(num:int, bar:bool=None)
     
@@ -40,7 +40,7 @@ def Sleep(num:int=0, bar:bool=None):
 
         if bar:
             num = int(num)
-            for _ in tqdm.tqdm(range(num), total=num, leave=False):
+            for _ in tqdm.tqdm(range(num), total=num, leave=False, desc=title):
                 time.sleep(1)
         else:
             time.sleep(num)

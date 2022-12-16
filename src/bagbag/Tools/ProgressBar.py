@@ -36,6 +36,17 @@ class ProgressBar():
         self.current = self.current + num
         self.tqdm.update(num)
     
+    def Set(self, num:int):
+        if num < self.current:
+            raise Exception("不能小于当前进度")
+
+        if num == self.current:
+            return
+
+        step = num - self.current
+        self.current = num
+        self.tqdm.update(step)
+    
     def Close(self):
         self.tqdm.close()
     

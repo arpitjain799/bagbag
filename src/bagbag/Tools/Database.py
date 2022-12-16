@@ -449,10 +449,150 @@ class mySQLSQLiteKeyValueTable():
         tb = self.db.Table(self.tbname)
         tb.Where("key", "=", self.__key(key)).Delete()
 
+class mySQLSQLiteConfirmQueue():
+    def __init__(self, db:MySQL|SQLite, name:str, timeout:int, size:int) -> None:
+        self.db = db 
+        self.name = name 
+        self.lock = Lock()
+        self.timeout = timeout
+        self.size = size
+    
+    def Size(self) -> int:
+        """
+        返回未曾开始过的新任务个数
+        :return: The number of rows in the table.
+        """
+        return self.db.Table(self.name).Where("stime", "=", 0).Count()
+    
+    def SizeStarted(self) -> int:
+        """
+        返回正在执行的任务个数
+        :return: The number of rows in the table where the stime column is not equal to 0.
+        """
+        return self.db.Table(self.name).Where("stime", "!=", 0).Count()
+    
+    def SizeTotal(self) -> int:
+        """
+        返回所有任务总数
+        :return: The number of rows in the table.
+        """
+        return self.db.Table(self.name).Count()
+    
+    def Get(self, wait=True) -> typing.Tuple[int, typing.Any]:
+        self.lock.Acquire()
+        while True:
+            r = self.db.Table(self.name).Where("stime", "<", int(Time.Now()) - self.timeout).OrderBy("id").First()
+
+            if r == None:
+                r = self.db.Table(self.name).Where("stime", "=", 0).OrderBy("id").First()
+
+                if r == None:
+                    if not wait:
+                        self.lock.Release()
+                        return -1, None 
+                    else:
+                        Time.Sleep(0.1)
+                else:
+                    break 
+            else:
+                break
+        
+        self.db.Table(self.name).Where("id", "=", r["id"]).Data({
+            "stime": int(Time.Now()),
+        }).Update()
+
+        self.lock.Release()
+        return r["id"], pickle.loads(Base64.Decode(r["data"]))
+    
+    def Put(self, item:typing.Any):
+        while self.size != None and self.Size() >= self.size:
+            Time.Sleep(0.1)
+
+        self.db.Table(self.name).Data({
+            "data": Base64.Encode(pickle.dumps(item)),
+            "stime": 0,
+        }).Insert()
+
+    def Done(self, id:int):
+        r = self.db.Table(self.name).Where("id", "=", id).First()
+        if r == None:
+            raise Exception("任务没找到")
+        else:
+            if r["stime"] == 0:
+                raise Exception("任务未开始")
+            else:
+                self.db.Table(self.name).Where("id", "=", id).Delete()
+    
+    def __iter__(self):
+        while True:
+            yield self.Get()
+
+class mySQLSQLiteQueue():
+    def __init__(self, db:MySQL|SQLite, name:str, size:int) -> None:
+        self.db = db 
+        self.name = name 
+        self.lock = Lock()
+        self.size = size
+    
+    def Size(self) -> int:
+        return self.db.Table(self.name).Count()
+    
+    def Get(self, wait=True) -> typing.Any:
+        self.lock.Acquire()
+        r = self.db.Table(self.name).OrderBy("id").First()
+        if r == None:
+            if not wait:
+                self.lock.Release()
+                return None 
+            else:
+                while r == None:
+                    Time.Sleep(0.1)
+                    r = self.db.Table(self.name).OrderBy("id").First()
+        
+        self.db.Table(self.name).Where("id", "=", r["id"]).Delete()
+
+        self.lock.Release()
+        return pickle.loads(Base64.Decode(r["data"]))
+    
+    def Put(self, item:typing.Any):
+        while self.size != None and self.Size() >= self.size:
+            Time.Sleep(0.1)
+
+        self.db.Table(self.name).Data({
+            "data": Base64.Encode(pickle.dumps(item)),
+        }).Insert()
+    
+    def __iter__(self):
+        while True:
+            yield self.Get()
+
 # > The class is a base class for MySQL and SQLite
 class MySQLSQLiteBase():
     def __init__(self) -> None:
         self.db:orator.DatabaseManager = None
+
+    def Queue(self, tbname:str, size:int=None) -> mySQLSQLiteQueue:
+        if tbname not in self.Tables():
+            self.Table(tbname).AddColumn("data", "text")
+        
+        return mySQLSQLiteQueue(self, tbname, size)
+
+    def QueueConfirm(self, tbname:str, size:int=None, timeout:int=900) -> mySQLSQLiteConfirmQueue:
+        """
+        这是一个需要调用Done方法来确认某个任务完成的队列
+        如果不确认某个任务完成, 它就会留在队列当中等待timeout之后重新能被Get到
+        优先Get到timeout的任务
+        """
+
+        if tbname not in self.Tables():
+            (
+                self.Table(tbname).
+                    AddColumn("data", "text"). 
+                    AddColumn("stime", "int"). 
+                    AddIndex("stime")
+            )
+        
+        return mySQLSQLiteConfirmQueue(self, tbname, timeout, size)
 
     def Table(self, tbname: str) -> mySQLSQLiteTable:
         if not tbname in self.Tables():
@@ -618,7 +758,7 @@ if __name__ == "__main__":
     # {'count': 1, 'data': '3'},
     # {'count': 1, 'data': '4'})
 
-    db = MySQL("192.168.1.230")
+    # db = MySQL("192.168.1.230")
 
     # 中文字段
     # (
@@ -634,5 +774,37 @@ if __name__ == "__main__":
     #     "col": "😆😆😆😆😆",
     # }).Insert()
 
-    Lg.Trace(db.Table("chainabuse").Columns())
+    # Lg.Trace(db.Table("chainabuse").Columns())
 
+    db = MySQL("192.168.1.230")
+
+    qn = db.Queue("queue_test")
+    qn.Put(b'\x00\x00\x00\x1cftypisom\x00\x00\x02\x00isom')
+    print(qn.Size())
+    print(repr(qn.Get()))
+
+    print("开启一个需要确认任务完成的队列, 3秒超时")
+    qnc = db.QueueConfirm("queue_confirm_test", timeout=3)
+    qnc.Put(b'\x00\x00\x00\x1cftypisom\x00\x00\x02\x00isom')
+
+    print("获取任务内容")
+    idx, data = qnc.Get()
+    print(repr(data))
+
+    print("等待5秒")
+    Time.Sleep(5)
+
+    print("再次获取任务")
+    idx, data = qnc.Get()
+    print(repr(data))
+
+    print("确认任务完成")
+    Time.Sleep(1)
+    qnc.Done(idx)
+
+    print("等待5秒")
+    Time.Sleep(5)
+
+    print("再次获取任务, 不等待")
+    idx, data = qnc.Get(False)
+    print(repr(data))
