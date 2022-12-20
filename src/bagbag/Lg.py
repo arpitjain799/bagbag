@@ -206,9 +206,12 @@ def SetLevel(level: str):
 
 def SetStdout(enable:bool):
     if enable == False:
+        handlers = []
         for idx in range(len(__config['handlers'])):
-            if __config['handlers'][idx]['sink'] == __sys.stdout:
-                del(__config['handlers'][idx])
+            if __config['handlers'][idx]['sink'] != __sys.stdout:
+                handlers.append(__config['handlers'][idx])
+        
+        __config['handlers'] = handlers
     else:
         if __sys.stdout not in [i["sink"] for i in __config['handlers']]:
             handler = {

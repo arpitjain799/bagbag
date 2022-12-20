@@ -67,3 +67,4 @@ if __name__ == "__main__":
     print(2, String("ddddd中kkkkkkk").HasChinese())
     print(3, String("\"wef\t测\b试....\n\tffef'").Repr())
     print(4, String("这是一段用鼠标写的简体中文").SimplifiedChineseToTraditional())
+    print(5, String("這是一段用鍵盤點擊出來的軌跡").TraditionalChineseToSimplified())

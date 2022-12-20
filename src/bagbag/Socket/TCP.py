@@ -39,7 +39,7 @@ class PacketConnection():
         self.sc.Close()
 
     def Send(self, data:typing.Any):
-        datab = pickle.dumps(data)
+        datab = pickle.dumps(data, protocol=2)
         length = len(datab)
         lengthb = length.to_bytes(8, "big")
         self.sc.SendBytes(lengthb + datab)

@@ -398,7 +398,7 @@ class mySQLSQLiteKeyValueTable():
         else:
             return ':'.join(self.namespace) + ":" + key
     
-    def Has(self, key:str) -> bool:
+    def Exists(self, key:str) -> bool:
         tb = self.db.Table(self.tbname)
         return tb.Where("key", "=", self.__key(key)).Exists()
     
@@ -433,7 +433,7 @@ class mySQLSQLiteKeyValueTable():
         elif type(value) == float:
             value = "f " + str(value)
         else:
-            value = "p " + Base64.Encode(pickle.dumps(value))
+            value = "p " + Base64.Encode(pickle.dumps(value, protocol=2))
 
         if tb.Where("key", "=", self.__key(key)).Exists():
             tb.Where("key", "=", self.__key(key)).Data({
@@ -478,7 +478,7 @@ class mySQLSQLiteConfirmQueue():
         """
         return self.db.Table(self.name).Count()
     
-    def Get(self, wait=True) -> typing.Tuple[int, typing.Any]:
+    def Get(self, block:bool=True) -> typing.Tuple[int, typing.Any]:
         self.lock.Acquire()
         while True:
             r = self.db.Table(self.name).Where("stime", "<", int(Time.Now()) - self.timeout).OrderBy("id").First()
@@ -487,9 +487,9 @@ class mySQLSQLiteConfirmQueue():
                 r = self.db.Table(self.name).Where("stime", "=", 0).OrderBy("id").First()
 
                 if r == None:
-                    if not wait:
+                    if not block:
                         self.lock.Release()
-                        return -1, None 
+                        return None, None 
                     else:
                         Time.Sleep(0.1)
                 else:
@@ -504,14 +504,21 @@ class mySQLSQLiteConfirmQueue():
         self.lock.Release()
         return r["id"], pickle.loads(Base64.Decode(r["data"]))
     
-    def Put(self, item:typing.Any):
-        while self.size != None and self.Size() >= self.size:
-            Time.Sleep(0.1)
+    def Put(self, item:typing.Any, block:bool=True, force:bool=False):
+        if force == False:
+            if block:
+                while self.size != None and self.Size() >= self.size:
+                    Time.Sleep(0.1)
+            else:
+                if self.size != None and self.Size() >= self.size:
+                    return False
 
         self.db.Table(self.name).Data({
-            "data": Base64.Encode(pickle.dumps(item)),
+            "data": Base64.Encode(pickle.dumps(item, protocol=2)),
             "stime": 0,
         }).Insert()
+
+        return True
 
     def Done(self, id:int):
         r = self.db.Table(self.name).Where("id", "=", id).First()
@@ -559,7 +566,7 @@ class mySQLSQLiteQueue():
             Time.Sleep(0.1)
 
         self.db.Table(self.name).Data({
-            "data": Base64.Encode(pickle.dumps(item)),
+            "data": Base64.Encode(pickle.dumps(item, protocol=2)),
         }).Insert()
     
     def __iter__(self):

@@ -1,4 +1,4 @@
-from .Redis import Redis
+from .Redis import Redis, redisQueue, redisQueueConfirm
 from .Database import MySQL, SQLite, mySQLSQLiteKeyValueTable, mySQLSQLiteTable, mySQLSQLiteQueue, mySQLSQLiteConfirmQueue
 from .ProgressBar import ProgressBar
 from .Telegram import Telegram
@@ -23,3 +23,5 @@ from .SSH import SSH
 # from .TelegramAsync import TelegramAsync
 from .Github import Github
 from .Kafka import Kafka
+from .Queue import Queue
+from . import RSS

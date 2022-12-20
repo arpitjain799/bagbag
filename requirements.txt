@@ -41,3 +41,6 @@ Markdown >= 3.4.1
 PyGithub >= 1.57
 hachoir >= 3.2.0
 kafka-python >= 2.0.2
+pybase64 >= 1.2.3
+listparser >= 0.19
+feedparser >= 6.0.10
