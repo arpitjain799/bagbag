@@ -11,8 +11,8 @@ class ElasticsearchCollection():
     def __init__(self, url:str):
         self.baseurl = url
     
-    def Index(self, id:int, data:dict, refresh:bool=False, Timeout:int=15):
-        url = self.baseurl + "/_doc/" + str(id) + "?refresh" if refresh else ""
+    def Index(self, id:int|str, data:dict, refresh:bool=False, Timeout:int=15):
+        url = self.baseurl + "/_doc/" + str(id) + ("?refresh" if refresh else "")
         r = Http.PostJson(url, data, Timeout=Timeout)
         if r.StatusCode != 201 and r.StatusCode != 200:
             raise Exception("插入到Elasticsearch出错: 状态码不是201或者200")
@@ -20,7 +20,7 @@ class ElasticsearchCollection():
     def Refresh(self, Timeout:int=15):
         Http.PostRaw(self.baseurl+"/_refresh", "", Timeout=Timeout)
     
-    def Delete(self, id:int):
+    def Delete(self, id:int|str):
         r = Http.Delete(self.baseurl + "/_doc/" + str(id))
         if r.StatusCode != 200:
             raise Exception("在elasticsearch删除id为\"" + str(id) + "\"的文档出错")

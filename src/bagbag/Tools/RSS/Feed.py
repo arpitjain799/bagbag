@@ -1,25 +1,35 @@
 import feedparser
 import markdownify
+import requests
 
-class RSSPage():
+from bagbag import Time
+
+class rssPage():
     def __init__(self):
         self.Title:str = ""
         self.URL:str = "" 
         self.Description:str = "" 
         self.Content:str = "" 
+        self.Time:int = 0
     
     def __str__(self) -> str:
-        content = str(repr(self.Content).encode("ASCII", "backslashreplace"), "ASCII")[1:-1]
-        if len(content) > 80:
-            content = content[:80] + "..."
-        return f"RSSPage(Title={self.Title} URL={self.URL} Description={self.Description} Content={content})"
+        return f"RSSPage(Title={self.Title} Time={self.Time} URL={self.URL})"
+        # content = str(repr(self.Content).encode("ASCII", "backslashreplace"), "ASCII")[1:-1]
+        # if len(content) > 80:
+        #     content = content[:80] + "..."
+        # return f"RSSPage(Title={self.Title} Time={self.Time} URL={self.URL} Description={self.Description} Content={content})"
+    
+    def __repr__(self) -> str:
+        return self.__str__()
 
-def Feed(feedurl:str) -> list[RSSPage]:
-    feed = dict(feedparser.parse(feedurl))
+def Feed(feedurl:str) -> list[rssPage]:
+    resp = requests.get(feedurl, timeout=30.0)
+
+    feed = dict(feedparser.parse(resp.content))
 
     res = []
     for f in feed['entries']:
-        r = RSSPage()
+        r = rssPage()
         r.Title = f['title']
         r.URL = f['link']
         if 'summary_detail' in f:
@@ -47,6 +57,10 @@ def Feed(feedurl:str) -> list[RSSPage]:
                 else:
                     if 'value' in c:
                         r.Content = c['value']
+        
+        if 'published' in f:
+            r.Time = Time.Strptime(feed['entries'][0]['published'])
+
         res.append(r)
     
     return res

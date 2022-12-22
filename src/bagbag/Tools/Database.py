@@ -507,10 +507,10 @@ class mySQLSQLiteConfirmQueue():
     def Put(self, item:typing.Any, block:bool=True, force:bool=False):
         if force == False:
             if block:
-                while self.size != None and self.Size() >= self.size:
+                while self.size > 0 and self.Size() >= self.size:
                     Time.Sleep(0.1)
             else:
-                if self.size != None and self.Size() >= self.size:
+                if self.size > 0 and self.Size() >= self.size:
                     return False
 
         self.db.Table(self.name).Data({
@@ -562,7 +562,7 @@ class mySQLSQLiteQueue():
         return pickle.loads(Base64.Decode(r["data"]))
     
     def Put(self, item:typing.Any):
-        while self.size != None and self.Size() >= self.size:
+        while self.size > 0 and self.Size() >= self.size:
             Time.Sleep(0.1)
 
         self.db.Table(self.name).Data({
@@ -578,13 +578,13 @@ class MySQLSQLiteBase():
     def __init__(self) -> None:
         self.db:orator.DatabaseManager = None
 
-    def Queue(self, tbname:str, size:int=None) -> mySQLSQLiteQueue:
+    def Queue(self, tbname:str, size:int=0) -> mySQLSQLiteQueue:
         if tbname not in self.Tables():
             self.Table(tbname).AddColumn("data", "text")
         
         return mySQLSQLiteQueue(self, tbname, size)
 
-    def QueueConfirm(self, tbname:str, size:int=None, timeout:int=900) -> mySQLSQLiteConfirmQueue:
+    def QueueConfirm(self, tbname:str, size:int=0, timeout:int=300) -> mySQLSQLiteConfirmQueue:
         """
         这是一个需要调用Done方法来确认某个任务完成的队列
         如果不确认某个任务完成, 它就会留在队列当中等待timeout之后重新能被Get到

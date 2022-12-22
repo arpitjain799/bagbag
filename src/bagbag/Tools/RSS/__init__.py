@@ -1,2 +1,2 @@
-from .Opml import Opml
-from .Feed import Feed
+from .Opml import Opml, rssFeed
+from .Feed import Feed, rssPage

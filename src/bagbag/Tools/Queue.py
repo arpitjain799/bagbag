@@ -16,19 +16,19 @@ class queueQueueConfirm():
     def __init__(self, server:str, name:str, length:int=0, timeout:int=300) -> None:
         self.server = server 
         self.name = name 
-        Http.PostForm(self.server + "/newQueueConfirm", {"qname": "test", "length": length, "timeout": timeout})
+        Http.PostForm(self.server + "/newQueueConfirm", {"qname": self.name, "length": length, "timeout": timeout})
     
     def Put(self, item:typing.Any, force:bool=False):
         while True:
-            res = Http.PostForm(self.server + "/put", {"qname": "test", "value": Base64.Encode(pickle.dumps(item, 2)), "force": str(force)})
+            res = Http.PostForm(self.server + "/put", {"qname": self.name, "value": Base64.Encode(pickle.dumps(item, 2)), "force": str(force)})
 
             if res.StatusCode == 200:
                 break 
 
     def Get(self) -> typing.Tuple[str, typing.Any]:
         while True:
-            res = Http.Get(self.server + "/get", {"qname": "test"}, Timeout=900)
-            Lg.Trace(res)
+            res = Http.Get(self.server + "/get", {"qname": self.name}, Timeout=900)
+            # Lg.Trace(res)
 
             if res.StatusCode == 200:
                 tid = res.Headers["Tid"]
@@ -37,10 +37,10 @@ class queueQueueConfirm():
                 return tid, value 
     
     def Done(self, tid:str):
-        Http.Get(self.server + "/done", {"qname": "test", "tid": tid})
+        Http.Get(self.server + "/done", {"qname": self.name, "tid": tid})
     
     def Size(self) -> int:
-        res = Http.Get(self.server + "/size", {"qname": "test"})
+        res = Http.Get(self.server + "/size", {"qname": self.name})
         return int(res.Content)
 
 class Queue():

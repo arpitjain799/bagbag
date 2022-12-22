@@ -5,5 +5,5 @@ from .GetPublicIP import GetPublicIP
 from .Ping import Ping
 from .CutSentence import CutSentence
 from .UUID import UUID
-from .Markdown2Html import Markdown2Html
+from .Markdown import Markdown2Html, Html2Markdown
 from . import Format

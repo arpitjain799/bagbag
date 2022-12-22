@@ -48,7 +48,7 @@ docker buildx build --platform linux/amd64,linux/arm64 . -t darren2046/python:3.
 
 # os.system('exec ipython')
 
-print("Versions: \n")
+print("Versions: ")
 v = [
     'darren2046/bagbag:' + nfversion,
     "darren2046/bagbag:latest",

@@ -6,13 +6,11 @@ import typing
 import time
 
 try:
-    from .. import Base64
     from .. import Funcs
     from .. import Lg
 except:
     import sys
     sys.path.append("..")
-    import Base64
     import Funcs
     import Lg
 
@@ -112,7 +110,7 @@ class redisQueueConfirm():
                     tid = key.replace(self.key + ":doing:shadow:", "")
 
                     if self.rdb.exists(self.key + ":doing:" + tid) == True:
-                        Lg.Trace("重新发布任务:", msg["data"])
+                        # Lg.Trace("重新发布任务:", msg["data"])
                         value = self.rdb.get(self.key + ":doing:" + tid)
                         self.rdb.rpush(self.key, value)
 
@@ -157,7 +155,7 @@ class redisQueueConfirm():
         else:
             item = self.rdb.lpop(self.key)
 
-        Lg.Trace(item)
+        # Lg.Trace(item)
         if item != None:
             tid = Funcs.UUID()
 

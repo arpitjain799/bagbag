@@ -1,7 +1,7 @@
 import listparser
 import requests
 
-class RSSFeed():
+class rssFeed():
     def __init__(self, title:str, url:str):
         self.Title = title 
         self.URL = url
@@ -9,10 +9,13 @@ class RSSFeed():
     def __str__(self) -> str:
         return f"RSSFeed(Title={self.Title} URl={self.URL})"
 
-def Opml(opmlurl:str) -> list[RSSFeed]:
+    def __repr__(self) -> str:
+        return self.__str__()
+
+def Opml(opmlurl:str) -> list[rssFeed]:
     res = []
     for i in listparser.parse(requests.get(opmlurl).content)['feeds']:
-        res.append(RSSFeed(i["title"], i["url"]))
+        res.append(rssFeed(i["title"], i["url"]))
     
     return res
 

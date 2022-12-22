@@ -2,6 +2,7 @@ import re
 import langid
 import opencc
 import ipaddress
+import pypinyin
 
 class String():
     def __init__(self, string:str):
@@ -61,6 +62,14 @@ class String():
             return True 
         except ValueError:
             return False 
+    
+    def PinYin(self) -> str:
+        res = pypinyin.lazy_pinyin(self.string, style=pypinyin.Style.TONE3)
+        py = String(('-'.join(res)).replace(" ", "-")).Filter('1234567890qwertyuioplkjhgfdsazxcvbnmQWERTYUIOPLKJHGFDSAZXCVBNM -').replace('--', '-')
+        return py
+    
+    def RemoveNonUTF8Characters(self) -> str:
+        return self.string.encode('utf-8', errors='ignore').decode('utf-8')
 
 if __name__ == "__main__":
     print(1, String("ABC").HasChinese())
@@ -68,3 +77,5 @@ if __name__ == "__main__":
     print(3, String("\"wef\t测\b试....\n\tffef'").Repr())
     print(4, String("这是一段用鼠标写的简体中文").SimplifiedChineseToTraditional())
     print(5, String("這是一段用鍵盤點擊出來的軌跡").TraditionalChineseToSimplified())
+    print(6, String("This is a 用鼠标写的简体中文").SimplifiedChineseToTraditional())
+    print(7, String("This is a 用鼠标写的盤點擊出來的軌跡").PinYin())
