@@ -1,3 +1,32 @@
+# 需要配合以下服务器食用
+#
+# version: '3'
+# services:
+#   queue_server:
+#     image: darren2046/queue-server:0.0.24
+#     container_name: queue-server
+#     restart: always
+#     #ports:
+#     #   - "8080:8080" 
+#     environment:
+#       # 支持3种backend
+#       # REDIS_HOST: "192.168.1.5"
+#       # REDIS_PORT: 
+#       # REDIS_DB:
+#       # REDIS_PASSWORD: 
+
+#       MYSQL_HOST: "192.168.1.5"
+#       # MYSQL_PORT:
+#       # MYSQL_USER:
+#       # MYSQL_PASSWORD: 
+#       MYSQL_DATABASE: "queue"
+
+#       # SQLITE_PATH: /data/queue.db
+
+#     # volumes:
+#     #   - /data/cr-volumes/queue-server/data:/data
+    
+
 try:
     from .. import Http
     from .. import Base64
