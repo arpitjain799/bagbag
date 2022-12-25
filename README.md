@@ -114,6 +114,13 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * UUID() -> str
   * CutSentence(sentence:str, filter:bool=True) -> list[str]
 * Tools 一些工具
+  * MatrixBot(apiserver:str, password:str="")
+    * SetRoom(room:str) -> MatrixBot
+    * Send(message:str)
+    * SendImage(path:str)
+    * GetMessage(num:int=10) -> list[MatrixBotMessage]
+      * Reply(message:str)
+      * ReplyImage(path:str)
   * RSS
     * Opml(opmlurl:str) -> list[RSSFeed]
     * Feed(feedurl:str) -> list[RSSPage]
