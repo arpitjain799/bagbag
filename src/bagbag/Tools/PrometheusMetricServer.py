@@ -11,6 +11,7 @@ class PrometheusCounterVec():
     def __init__(self, name:str, labels:list[str], help:str) -> None:
         self.labels = labels 
         self.c = pc.Counter(name, help, labels)
+        self.current = {}
     
     def Add(self, labels:dict|list, num:int|float=1):
         """
@@ -33,7 +34,48 @@ class PrometheusCounterVec():
                 lb = labels
             else:
                 lb = labels[:len(self.labels)] + [""]*(len(self.labels) - len(labels))
+
+        lbr = repr(lb)
+        if lbr not in self.current:
+            self.current[lbr] = 0
+
+        self.current[lbr] = self.current[lbr] + num
         self.c.labels(*lb).inc(num)
+    
+    def Set(self, labels:dict|list, num:int|float=1):
+        """
+        It adds a new label to the metric.
+        
+        :param labels: a list of labels, or a dict of labels
+        :type labels: dict|list
+        :param num: The number to increment the counter by, defaults to 1
+        :type num: int|float (optional)
+        """
+        if type(labels) == dict:
+            lb = []
+            for k in self.labels:
+                if k in labels:
+                    lb.append(labels[k])
+                else:
+                    lb.append("")
+        elif type(labels) == list:
+            if len(self.labels) == len(labels):
+                lb = labels
+            else:
+                lb = labels[:len(self.labels)] + [""]*(len(self.labels) - len(labels))
+
+        lbr = repr(lb)
+        if lbr not in self.current:
+            self.current[lbr] = 0
+        
+        if num < self.current[lbr]:
+            raise Exception(f"Count类型只能设置更大类型的值, 当前值和想设置的值为: {self.current}, {num}")
+        
+        if num == self.current[lbr]:
+            return 
+
+        self.c.labels(*lb).inc(num - self.current[lbr])
+        self.current[lbr] = num
 
 class PrometheusGauge:
     def __init__(self, name:str, help:str) -> None:

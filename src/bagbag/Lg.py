@@ -231,7 +231,7 @@ def SetFile(path:str, size:int=100, during:int=7, color:bool=True, json:bool=Fal
     :type path: str
     :param size: The size of the file before it rotates, in MB
     :type size: int
-    :param during: how long to keep the log file, in Day
+    :param during: how long to keep the log file, in Hour
     :type during: int
     :param color: If True, the output will be colorized, defaults to True
     :type color: bool (optional)
@@ -245,7 +245,7 @@ def SetFile(path:str, size:int=100, during:int=7, color:bool=True, json:bool=Fal
         handler = {
             "sink": path,
             "rotation": str(size)+" MB", 
-            "retention": str(during)+" days", 
+            "retention": str(during)+" hours", 
             "format": logformat,
             "level": __config['handlers'][0]['level'] if len(__config['handlers']) > 0 else "TRACE",
             "colorize": color,

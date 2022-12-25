@@ -213,6 +213,9 @@ class seleniumElement():
         self.driver.execute_script("arguments[0].scrollIntoView(true);", self.element)
         return self
 
+    def HTML(self) -> str:
+        return self.element.get_attribute('innerHTML')
+
 class seleniumBase():
     def Find(self, xpath:str, timeout:int=60, scrollIntoElement:bool=True) -> seleniumElement|None:
         """

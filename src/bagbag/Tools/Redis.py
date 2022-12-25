@@ -27,8 +27,14 @@ def RetryOnNetworkError(func): # func是被包装的函数
                 res = func(self, *args, **kwargs)
                 break
             except Exception as e:
-                if True in map(lambda x: e.args[0].startswith(x), ['Connection closed by server', 'Error 61 connecting to ']):
-                    time.sleep(0.5)
+                Lg.Trace(str(e))
+                if True in map(lambda x: x in str(e), [
+                    'Connection closed by server', 
+                    'Error 61 connecting to ', 
+                    'Connection refused',
+                    'timed out'
+                ]):
+                    time.sleep(3)
                 else:
                     raise e
 
@@ -101,6 +107,7 @@ class redisQueueConfirm():
         self.rdb.config_set("notify-keyspace-events", "KEA")
         self.RunExpireCollector()
     
+    @RetryOnNetworkError
     def RunExpireCollector(self):
         def event_handler(msg):
             self.collectorLock.acquire()
@@ -272,6 +279,7 @@ class Redis():
         """
         return self.rdb.delete(key) == 1
     
+    @RetryOnNetworkError
     def Exists(self, key:str) -> bool:
         """
         It returns True if the key exists in the database, and False if it doesn't
