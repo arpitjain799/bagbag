@@ -46,3 +46,4 @@ listparser >= 0.19
 feedparser >= 6.0.10
 markdownify >= 0.11.6
 pypinyin >= 0.47.1
+nslookup >= 1.6.1

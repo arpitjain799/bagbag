@@ -26,3 +26,4 @@ from .Kafka import Kafka
 from .Queue import Queue
 from . import RSS
 from .MatrixBot import MatrixBot
+from .Nslookup import Nslookup

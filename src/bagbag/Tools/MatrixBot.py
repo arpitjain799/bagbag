@@ -79,6 +79,9 @@ class MatrixBot():
     def __init__(self, apiserver:str, password:str="") -> None:
         self.apiserver = apiserver.rstrip('/')
         self.password = password 
+
+        if not self.apiserver.startswith("http://") and not self.apiserver.startswith("https://"):
+            self.apiserver = "https://" + self.apiserver
     
     def SetRoom(self, room:str) -> MatrixBot:
         """
@@ -115,7 +118,7 @@ class MatrixBot():
     
     def GetMessage(self, num:int=10) -> list[MatrixBotMessage]:
         res = Http.Get(self.apiserver + "/get/message", {'password': self.password, 'num': str(num)}).Content
-        Lg.Trace(res)
+        # Lg.Trace(res)
         res = Json.Loads(res)
         resm = []
         for r in res:

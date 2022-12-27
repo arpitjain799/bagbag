@@ -114,6 +114,9 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * UUID() -> str
   * CutSentence(sentence:str, filter:bool=True) -> list[str]
 * Tools 一些工具
+  * Nslookup(server:list[str]=["8.8.8.8", "1.1.1.1", "8.8.4.4"], tcp:bool=False)
+    * A(domain:str) -> list[str]
+    * AAAA(domain:str) -> list[str]
   * MatrixBot(apiserver:str, password:str="")
     * SetRoom(room:str) -> MatrixBot
     * Send(message:str)
@@ -125,10 +128,10 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
     * Opml(opmlurl:str) -> list[RSSFeed]
     * Feed(feedurl:str) -> list[RSSPage]
   * Queue(server:str, name:str, length:int=0, timeout:int=300)
-    * QueueConfirm(self, name:str, length:int=0, timeout:int=300) -> queueQueueConfirm
-      * Put(self, item:typing.Any, force:bool=False)
+    * QueueConfirm(name:str, length:int=0, timeout:int=300) -> queueQueueConfirm
+      * Put(item:typing.Any, force:bool=False)
       * Get(self) -> typing.Tuple[str, typing.Any]
-      * Done(self, tid:str)
+      * Done(tid:str)
       * Size(self) -> int
   * Kafka(topic:str, servers:str|list)
     * Producer(value_serializer=lambda m: json.dumps(m).encode()) -> KafkaProducer
