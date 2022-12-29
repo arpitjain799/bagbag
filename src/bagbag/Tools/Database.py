@@ -239,7 +239,14 @@ class mySQLSQLiteTable():
         return self 
 
     @initTableObj
-    def Data(self, value:map) -> mySQLSQLiteTable:
+    def Data(self, value:map|list[map]) -> mySQLSQLiteTable:
+        """
+        在Insert的时候可以是map或者list[map], 在Update的时候只能是map
+        
+        :param value: The value to be inserted into the table
+        :type value: map|list[map]
+        :return: The object itself.
+        """
         self.data = value
         return self 
 

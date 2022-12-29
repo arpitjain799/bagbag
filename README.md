@@ -63,6 +63,9 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * ExtraValueByKey(obj:list|dict, key:str) -> list
 * Hash
   * Md5sum(string:str) -> str
+  * Md5sumFile(fpath:str, block_size=2**20) -> str
+  * Sha256sum(data:str|bytes) -> str
+  * Sha256sumFile(fpath:str, block_size=2**20) -> str
 * Os
   * Exit(num:int=0)
   * Mkdir(path:str)

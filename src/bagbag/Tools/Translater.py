@@ -85,11 +85,50 @@ class Google():
         )
         return client.translate(text).translatedText
 
+class NLLB():
+    # version: '3'
+    # services:
+    #   nllb-arm64-facebook-nllb-200-distilled-600m:
+    #     image: darren2046/nllb-arm64-facebook-nllb-200-distilled-600m
+    #     container_name: nllb-arm64-facebook-nllb-200-distilled-600m-192.168.168.77
+    #     restart: always
+    #     ports:
+    #       - 6060:6060
+
+    def __init__(self, server:str) -> None:
+        self.server = server 
+        self.From = "eng_Latr"
+        self.To = "zho_Hans"
+
+        if not self.server.startswith("http://") and not self.server.startswith("https://"):
+            self.server = "https://" + self.server + "/translate"
+    
+    def SetLang(self, To:str="zho_Hans", From:str="eng_Latr"):
+        self.To = To 
+        self.From = From
+    
+    def Translate(self, text:str) -> str:
+        res = Http.PostForm(self.server, {
+            "src_lang": self.From,
+            "tgt_lang": self.To, 
+            "source": text
+        }, Timeout=60)
+        Lg.Trace(res.Content)
+
+        res = Json.Loads(res.Content)
+        
+        return res["translation"]
+
 if __name__ == "__main__":
     # appid, secretkey = open("baidu.ident").read().strip().split(',')
     # b = Baidu(appid, secretkey).SetLang("zh", "auto")
-    # b.Translate("This is a test")
+    # text = b.Translate("This is a test")
+    # Lg.Trace(text)
 
-    g = Google("http://192.168.1.186:8899").SetLang("zh-CN")
-    text = g.Translate("This is a test")
+    # g = Google("http://192.168.1.186:8899").SetLang("zh-CN")
+    # text = g.Translate("This is a test")
+    # Lg.Trace(text)
+
+    n = NLLB("example.com")
+    text = n.Translate("No Language Left Behind")
     Lg.Trace(text)

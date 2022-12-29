@@ -79,7 +79,31 @@ def Copy(src:str, dst:str, force:bool=True):
 def GetLoginUserName() -> str:
     return os.getlogin()
 
+def Walk(path:str, type:str=None) -> str:
+    """
+    Walk through a directory and yield the names.
+    
+    :param path: The path to the directory you want to walk
+    :type path: str
+    :param type: The type of file you want to search for. "d" for directory and "f" for file, None(default) for all
+    :type type: str
+    """
+    for root, dirs, files in os.walk(path, topdown=False):
+        if type == None:
+            for name in files:
+                yield os.path.join(root, name)
+            for name in dirs:
+                yield os.path.join(root, name)
+        elif type == "f":
+            for name in files:
+                yield os.path.join(root, name)
+        elif type == "d":
+            for name in dirs:
+                yield os.path.join(root, name)
+
 if __name__ == "__main__":
     # Move("a", "b") # 移动当前目录的a到b
     # Move("b", "c/d/e") # 移动b到c/d/e, 会先递归创建目录c/d
-    Move("c/d/e", "d") # 移动c/d/e文件到d目录, 没有指定文件名就自动使用原来的文件名
+    # Move("c/d/e", "d") # 移动c/d/e文件到d目录, 没有指定文件名就自动使用原来的文件名
+    for i in Walk(".", type="d"):
+        print(i)
