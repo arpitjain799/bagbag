@@ -116,7 +116,21 @@ class MatrixBot():
         if resp.StatusCode != 200:
             raise Exception("发送消息错误:", resp.StatusCode)
     
-    def GetMessage(self, num:int=10) -> list[MatrixBotMessage]:
+    def GetMessage(self, num:int=10, room:str=None) -> list[MatrixBotMessage]:
+        """
+        > Get the last 10 messages from the current room
+        > If the room is like !abcdefg:example.com and homeserver is example.com, then only need to set 'abcdefg' as room id. 
+        > If the room is set to 'all', will get messages from all rooms.
+        
+        :param num: The number of messages to get, defaults to 10
+        :type num: int (optional)
+        :param room: The room to send the message to. If not specified, the default room is used
+        :type room: str
+        :return: A list of MatrixBotMessage objects.
+        """
+        if room == None:
+            room = self.room 
+
         res = Http.Get(self.apiserver + "/get/message", {'password': self.password, 'num': str(num)}).Content
         # Lg.Trace(res)
         res = Json.Loads(res)

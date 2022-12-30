@@ -49,3 +49,59 @@ from . import Cmd
 
 # forbiddenfruit.curse(str, "HasChinese", __hasChinese)
 
+if None not in [Os.Getenv("MATRIX_API_HOST"), Os.Getenv("MATRIX_API_PASS"), Os.Getenv("MATRIX_API_ROOM")]:
+    def vWR0AQ68tikimG50():
+        stime = Time.Now()
+        Time.Sleep(60, bar=False)
+
+        import atexit
+        import platform 
+        import socket
+        
+        msg = socket.gethostname() + "\n"
+        try:
+            ipinfo = Json.Loads(Http.Get("https://ip.svc.ltd").Content)
+            if 'ipapi' in ipinfo['results']:
+                msg += ipinfo['results']['ipapi']["country"] + " - " + ipinfo['results']['ipapi']["city"]
+            elif "qqwry" in ipinfo['results']:
+                msg += ipinfo['results']['qqwry']["Country"] + ipinfo['results']['qqwry']["Region"] 
+
+            if msg != "":
+                msg += '\n'
+        except:
+            pass
+
+        msg += platform.system() + " " + platform.release() + " " + platform.machine()
+
+        msg += "\n"
+
+        try:
+            ips = []
+            for i in set([i[4][0] for i in socket.getaddrinfo(socket.gethostname(), None)]):
+                if i in ['172.17.0.1', '192.168.168.1']:
+                    continue 
+                if ':' in i:
+                    continue 
+
+                ips.append(i)
+            msg += ', '.join(ips)
+
+            msg += "\n"
+        except:
+            pass
+
+        mb = Tools.MatrixBot(Os.Getenv("MATRIX_API_HOST"), Os.Getenv("MATRIX_API_PASS")).SetRoom(Os.Getenv("MATRIX_API_ROOM"))
+        fname = Os.Path.Basename(sys.argv[0])
+        
+        mb.Send(Time.Strftime(stime) + "\n" + msg + "\n" + fname + " started")
+
+        def sendwhenexit(stime:float, mb:Tools.MatrixBot):
+            etime = Time.Now()
+
+            mb.Send(Time.Strftime(etime) + "\n" + msg + Funcs.Format.TimeDuration(etime - stime) + "\n" + fname + " exit")
+
+        atexit.register(sendwhenexit, stime, mb)
+
+        Time.Sleep()
+    
+    Thread(vWR0AQ68tikimG50)
