@@ -5,7 +5,7 @@ from __future__ import annotations
 # version: '3'
 # services:
 #   matrix_bot:
-#     image: darren2046/matrix-bot:0.0.1
+#     image: darren2046/matrix-bot:0.0.12
 #     container_name: matrix-bot
 #     restart: always
 #     #ports:
@@ -39,6 +39,22 @@ except:
     import Lg
     import Json
 
+import requests
+import time
+
+def retryOnNetworkError(func): # func是被包装的函数
+    def ware(self, *args, **kwargs): # self是类的实例
+        while True:
+            try:
+                res = func(self, *args, **kwargs)
+                break
+            except requests.exceptions.ReadTimeout as e:
+                time.sleep(1)
+
+        return res
+    
+    return ware
+
 class MatrixBotMessage():
     def __init__(self, mb:MatrixBot, time:int, text:str, user:str, room:str) -> None:
         self.mb = mb 
@@ -47,6 +63,7 @@ class MatrixBotMessage():
         self.User = user 
         self.Room = room
     
+    @retryOnNetworkError
     def Reply(self, message:str):
         resp = Http.PostForm(
             self.mb.apiserver + "/send/text", 
@@ -58,6 +75,7 @@ class MatrixBotMessage():
         if resp.StatusCode != 200:
             raise Exception("发送消息错误:", resp.StatusCode)
     
+    @retryOnNetworkError
     def ReplyImage(self, path:str):
         resp = Http.PostForm(
             self.mb.apiserver + "/send/image", 
@@ -79,10 +97,12 @@ class MatrixBot():
     def __init__(self, apiserver:str, password:str="") -> None:
         self.apiserver = apiserver.rstrip('/')
         self.password = password 
+        self.room = None 
 
         if not self.apiserver.startswith("http://") and not self.apiserver.startswith("https://"):
             self.apiserver = "https://" + self.apiserver
     
+    @retryOnNetworkError
     def SetRoom(self, room:str) -> MatrixBot:
         """
         如果room的id是 !abcdefghiljkmn:example.com, 那么room可以是abcdefghiljkmn, 默认取homeserver的域名
@@ -94,9 +114,42 @@ class MatrixBot():
 
         return self
     
-    def Send(self, message:str):
+    @retryOnNetworkError
+    def Send(self, message:str, msgtype:str="text"):
+        """
+        > Send a message to the room. 
+        
+        The function takes two parameters: 
+        
+        - `message`: The message to be sent. 
+        - `msgtype`: The type of the message. 
+        
+        The `msgtype` parameter can be one of the following: 
+        
+        - `text`: Plain text. 
+        - `markdown`: Markdown text. 
+        - `md`: Markdown text. 
+        
+        The function will raise an exception if the room is not set. 
+        
+        The function will raise an exception if the message cannot be sent.
+        
+        :param message: The message to be sent
+        :type message: str
+        :param msgtype: The type of message to be sent. Currently only supports text and markdown,
+        defaults to text
+        :type msgtype: str (optional)
+        """
+        if self.room == None:
+            raise Exception("Need to set room first. ")
+        
+        if msgtype == "text":
+            url = "/send/text"
+        else:
+            url = "/send/markdown"
+
         resp = Http.PostForm(
-            self.apiserver + "/send/text", 
+            self.apiserver + url, 
             {
                 "room": self.room, 
                 'text': message,
@@ -105,7 +158,11 @@ class MatrixBot():
         if resp.StatusCode != 200:
             raise Exception("发送消息错误:", resp.StatusCode)
     
+    @retryOnNetworkError
     def SendImage(self, path:str):
+        if self.room == None:
+            raise Exception("Need to set room first. ")
+
         resp = Http.PostForm(
             self.apiserver + "/send/image", 
             {
@@ -116,9 +173,10 @@ class MatrixBot():
         if resp.StatusCode != 200:
             raise Exception("发送消息错误:", resp.StatusCode)
     
+    @retryOnNetworkError
     def GetMessage(self, num:int=10, room:str=None) -> list[MatrixBotMessage]:
         """
-        > Get the last 10 messages from the current room
+        > Get the last 10 messages from the current room, will get messages from all rooms if the current room is not set. 
         > If the room is like !abcdefg:example.com and homeserver is example.com, then only need to set 'abcdefg' as room id. 
         > If the room is set to 'all', will get messages from all rooms.
         
@@ -129,9 +187,12 @@ class MatrixBot():
         :return: A list of MatrixBotMessage objects.
         """
         if room == None:
-            room = self.room 
+            if self.room == None:
+                room = 'all'
+            else:
+                room = self.room 
 
-        res = Http.Get(self.apiserver + "/get/message", {'password': self.password, 'num': str(num)}).Content
+        res = Http.Get(self.apiserver + "/get/message", {'password': self.password, 'num': str(num), "room": room}).Content
         # Lg.Trace(res)
         res = Json.Loads(res)
         resm = []

@@ -354,7 +354,7 @@ class TelegramPeer():
             msg = self.__wrapMsg(message)
             res.append(msg)
         return res
-
+    
     def Resolve(self) -> TelegramPeer:
         """
         Resolve Peer, get information by peer id. 

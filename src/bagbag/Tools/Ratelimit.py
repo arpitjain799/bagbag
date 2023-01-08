@@ -46,9 +46,9 @@ class RateLimit:
                 if self.history and self.history[-1] <= current_time - self.sleeptime:
                     self.history.pop()
                 else:
-                    Time.Sleep(self.sleeptime)
+                    Time.Sleep(self.sleeptime, bar=False)
     
-            Time.Sleep(self.sleeptime)
+            Time.Sleep(self.sleeptime, bar=False)
             self.history.insert(0, current_time)
             self.lock.Release()
             return True
@@ -69,7 +69,7 @@ class RateLimit:
                 # 判断指定时间范围的访问记录数量是否超过最大次数
                 if len(self.history) >= self.num:
                     #print(3)
-                    Time.Sleep(self.duration - (current_time - self.history[-1]))                
+                    Time.Sleep(self.duration - (current_time - self.history[-1]), bar=False)                
                 else:
                     #print(4)
                     self.history.insert(0, current_time)

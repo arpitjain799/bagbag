@@ -1,16 +1,16 @@
 import prometheus_client as pc
 
 class PrometheusCounter():
-    def __init__(self, name:str, help:str) -> None:
-        self.c = pc.Counter(name, help)
+    def __init__(self, name:str, help:str, registry:pc.CollectorRegistry) -> None:
+        self.c = pc.Counter(name, help, registry=registry)
     
     def Add(self, num:int|float=1):
         self.c.inc(num)
 
 class PrometheusCounterVec():
-    def __init__(self, name:str, labels:list[str], help:str) -> None:
+    def __init__(self, name:str, labels:list[str], help:str, registry:pc.CollectorRegistry) -> None:
         self.labels = labels 
-        self.c = pc.Counter(name, help, labels)
+        self.c = pc.Counter(name, help, labels, registry=registry)
         self.current = {}
     
     def Add(self, labels:dict|list, num:int|float=1):
@@ -78,16 +78,16 @@ class PrometheusCounterVec():
         self.current[lbr] = num
 
 class PrometheusGauge:
-    def __init__(self, name:str, help:str) -> None:
-        self.g = pc.Gauge(name, help)
+    def __init__(self, name:str, help:str, registry:pc.CollectorRegistry) -> None:
+        self.g = pc.Gauge(name, help, registry=registry)
     
     def Set(self, num:int|float):
         self.g.set(num)
 
 class PrometheusGaugeVec():
-    def __init__(self, name:str, labels:list[str], help:str) -> None:
+    def __init__(self, name:str, labels:list[str], help:str, registry:pc.CollectorRegistry) -> None:
         self.labels = labels 
-        self.g = pc.Gauge(name, help, labels)
+        self.g = pc.Gauge(name, help, labels, registry=registry)
     
     def Set(self, labels:dict|list, num:int|float):
         """
@@ -111,43 +111,3 @@ class PrometheusGaugeVec():
             else:
                 lb = labels[:len(self.labels)] + [0]*(len(self.labels) - len(labels))
         self.g.labels(*lb).set(num)
-
-# It creates a Prometheus server that listens on the specified port and IP address.
-class PrometheusMetricServer():
-    def __init__(self, listen:str="0.0.0.0", port:int=9105):
-        pc.start_http_server(port, listen)
-    
-    def NewCounter(self, name:str, help:str) -> PrometheusCounter:
-        return PrometheusCounter(name, help)
-    
-    def NewCounterWithLabel(self, name:str, labels:list[str], help:str) -> PrometheusCounterVec:
-        return PrometheusCounterVec(name, labels, help)
-    
-    def NewGauge(self, name:str, help:str) -> PrometheusGauge:
-        return PrometheusGauge(name, help)
-    
-    def NewGaugeWithLabel(self, name:str, labels:list[str], help:str) -> PrometheusGaugeVec:
-        return PrometheusGaugeVec(name, labels, help)
-
-if __name__ == "__main__":
-    import time
-    import random
-
-    p = PrometheusMetricServer(port=8876)
-    c = p.NewCounterWithLabel(
-        "test_counter", 
-        ["label1", "label2"], # Two labels, will display with this order
-        "test counter metric"
-    )
-    g = p.NewGaugeWithLabel(
-        "test_gauge", 
-        ["label1", "label2"], # Two labels, will display with this order
-        "test gauge metric"
-    )
-    while True:
-        c.Add({"label2": "value2", "label1": "value1"}) # Order is not matter
-        c.Add(["l3", "l4"])
-        c.Add(["l5"]) # Will be "l5" and ""
-        c.Add(["l6", "l7", "l8"]) # Will be "l7" and "l8"
-        g.Set(["l6", "l7", "l8"], random.randint(0, 100))
-        time.sleep(1)

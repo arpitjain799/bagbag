@@ -226,15 +226,17 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
     * Parse() -> URLParseResult
     * Encode() -> str
     * Decode() -> str
-  * PrometheusMetricServer(listen:str="0.0.0.0", port:int=9105)
-    * NewCounter(name:str, help:str) -> prometheusCounter
-      * Add(num:int|float=1)
-    * NewCounterWithLabel(name:str, labels:list[str], help:str) -> prometheusCounterVec
-      * Add(labels:dict|list, num:int|float=1)
-    * NewGauge(name:str, help:str) -> prometheusGauge
-      * Set(num:int|float)
-    * NewGaugeWithLabel(name:str, labels:list[str], help:str) -> prometheusGaugeVec
-      * Set(labels:dict|list, num:int|float=1)
+  * Prometheus
+    * MetricServer(listen:str="0.0.0.0", port:int=9105)
+    * PushGateway(address:str, job:str, pushinterval:int=15, instance:str=None)
+      * NewCounter(name:str, help:str) -> prometheusCounter
+        * Add(num:int|float=1)
+      * NewCounterWithLabel(name:str, labels:list[str], help:str) -> prometheusCounterVec
+        * Add(labels:dict|list, num:int|float=1)
+      * NewGauge(name:str, help:str) -> prometheusGauge
+        * Set(num:int|float)
+      * NewGaugeWithLabel(name:str, labels:list[str], help:str) -> prometheusGaugeVec
+        * Set(labels:dict|list, num:int|float=1)
   * Selenium
     * Firefox(seleniumServer:str=None, PACFileURL:str=None, sessionID:str=None)
     * Chrome(seleniumServer:str=None, httpProxy:str=None, sessionID=None)

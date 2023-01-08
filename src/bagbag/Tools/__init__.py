@@ -5,7 +5,7 @@ from .Telegram import Telegram
 # from .Telegram import TelegramPeer # 手动组装Peer需要用到
 from . import Selenium
 from .Lock import Lock
-from .PrometheusMetricServer import PrometheusMetricServer
+from . import Prometheus
 from .URL import URL
 from .Ratelimit import RateLimit
 from .Chan import Chan

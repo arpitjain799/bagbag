@@ -1,4 +1,6 @@
 import json 
+import time 
+import requests
 
 try:
     from .. import Http, Lg
@@ -7,24 +9,43 @@ except:
     sys.path.append("..")
     import Http, Lg
 
+# requests.exceptions.ReadTimeout
+
+def retryOnNetworkError(func): # func是被包装的函数
+    def ware(self, *args, **kwargs): # self是类的实例
+        while True:
+            try:
+                res = func(self, *args, **kwargs)
+                break
+            except requests.exceptions.ReadTimeout as e:
+                time.sleep(3)
+
+        return res
+    
+    return ware
+
 class ElasticsearchCollection():
     def __init__(self, url:str):
         self.baseurl = url
     
+    @retryOnNetworkError
     def Index(self, id:int|str, data:dict, refresh:bool=False, Timeout:int=15):
         url = self.baseurl + "/_doc/" + str(id) + ("?refresh" if refresh else "")
         r = Http.PostJson(url, data, Timeout=Timeout)
         if r.StatusCode != 201 and r.StatusCode != 200:
             raise Exception("插入到Elasticsearch出错: 状态码不是201或者200")
     
+    @retryOnNetworkError
     def Refresh(self, Timeout:int=15):
         Http.PostRaw(self.baseurl+"/_refresh", "", Timeout=Timeout)
     
+    @retryOnNetworkError
     def Delete(self, id:int|str):
         r = Http.Delete(self.baseurl + "/_doc/" + str(id))
         if r.StatusCode != 200:
             raise Exception("在elasticsearch删除id为\"" + str(id) + "\"的文档出错")
     
+    @retryOnNetworkError
     def Search(self, key:str, value:str, page:int=1, pagesize:int=50, OrderByKey:str=None, OrderByOrder:str="ase", Highlight:str=None, mustIncludeAllPhrase:bool=True) -> dict:
         """
         It searches for a value in a key in Elasticsearch.
@@ -103,6 +124,7 @@ class Elasticsearch():
     def __init__(self, url:str):
         self.baseurl = url if url.startswith("http") else "http://" + url
     
+    @retryOnNetworkError
     def Delete(self, IndexName:str):
         r = Http.Delete(self.baseurl.strip("/") + "/" + IndexName)
         if r.StatusCode != 200:

@@ -35,6 +35,9 @@ def Getenv(varname:str, defaultValue:str=None) -> str | None:
     else:
         return v
 
+def Getcwd() -> str:
+    return os.getcwd()
+
 def Unlink(path:str):
     if os.path.exists(path):
         if os.path.isdir(path):

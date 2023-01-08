@@ -113,11 +113,11 @@ class NLLB():
             "tgt_lang": self.To, 
             "source": text
         }, Timeout=60)
-        Lg.Trace(res.Content)
+        # Lg.Trace(res.Content)
 
         res = Json.Loads(res.Content)
         
-        return res["translation"]
+        return res["translation"][0]
 
 if __name__ == "__main__":
     # appid, secretkey = open("baidu.ident").read().strip().split(',')

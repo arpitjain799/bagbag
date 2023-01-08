@@ -51,6 +51,7 @@ from . import Cmd
 
 if None not in [Os.Getenv("MATRIX_API_HOST"), Os.Getenv("MATRIX_API_PASS"), Os.Getenv("MATRIX_API_ROOM")]:
     def vWR0AQ68tikimG50():
+        cwd = Os.Getcwd()
         stime = Time.Now()
         Time.Sleep(60, bar=False)
 
@@ -91,14 +92,14 @@ if None not in [Os.Getenv("MATRIX_API_HOST"), Os.Getenv("MATRIX_API_PASS"), Os.G
             pass
 
         mb = Tools.MatrixBot(Os.Getenv("MATRIX_API_HOST"), Os.Getenv("MATRIX_API_PASS")).SetRoom(Os.Getenv("MATRIX_API_ROOM"))
-        fname = Os.Path.Basename(sys.argv[0])
+        # fname = Os.Path.Basename(sys.argv[0])
         
-        mb.Send(Time.Strftime(stime) + "\n" + msg + "\n" + fname + " started")
+        # mb.Send(Time.Strftime(stime) + "\n" + msg + "\nStarted: " + fname)
 
         def sendwhenexit(stime:float, mb:Tools.MatrixBot):
             etime = Time.Now()
 
-            mb.Send(Time.Strftime(etime) + "\n" + msg + Funcs.Format.TimeDuration(etime - stime) + "\n" + fname + " exit")
+            mb.Send(Time.Strftime(etime) + "\n" + msg + "\n\nExit\n\nDir: " + cwd + "\nCmd: " + ' '.join(sys.argv) + "\nDur: " + Funcs.Format.TimeDuration(etime - stime))
 
         atexit.register(sendwhenexit, stime, mb)
 

@@ -33,8 +33,10 @@ class Response():
     def Make(self, body:str) -> flask.Response:
         return flask.Response(body)
 
+    def Redirect(self, location:str, code:int=302):
+        return redirect(location, code)
+
     Abort = abort
-    Redirect = redirect
     Render = render_template
 
 class RequestArgs():
