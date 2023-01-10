@@ -1,6 +1,9 @@
 import prometheus_client as pc
 
-from .metrics import * 
+try:
+    from .metrics import * 
+except:
+    from metrics import * 
 
 # It creates a Prometheus server that listens on the specified port and IP address.
 class MetricServer():

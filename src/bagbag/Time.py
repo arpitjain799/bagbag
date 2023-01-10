@@ -61,10 +61,22 @@ def Strftime(timestamp:float|int, format:str="%Y-%m-%d %H:%M:%S") -> str:
 def parseTimeago(timestring:str) -> int|None:
     if timestring == "just now":
         return int(Now())
+    
+    res = Re.FindAll('([0-9]+)([smhdw])', timestring)
+    # print(res)
+    if len(res) != 0:
+        sm = {
+            "s": "second",
+            "m": "minute",
+            "h": "hour",
+            "d": "day",
+            "w": "week",
+        }
+        timestring = res[0][1] + " " + sm[res[0][2]] + " ago"
 
     formates = [
         "([0-9]+) %ss{0,1} ago",
-        "in ([0-9]+) %ss{0,1}"
+        "in ([0-9]+) %ss{0,1}",
     ]
 
     step = {
@@ -105,28 +117,35 @@ def Strptime(timestring:str, format:str=None) -> int:
     if format:
         dtimestamp = datetime.datetime.strptime(timestring, format).timestamp()
     else:
-        try:
-            dtimestamp = dateparser(timestring).timestamp()
-        except ParserError as e:
+        if len(Re.FindAll('([0-9]+)([smhdw])', timestring)) != 0:
             dtimestamp = parseTimeago(timestring)
             if not dtimestamp:
-                raise e
+                raise Exception(f"不能解析时间字符串: {timestring}")
+        else:
+            try:
+                dtimestamp = dateparser(timestring).timestamp()
+            except ParserError as e:
+                dtimestamp = parseTimeago(timestring)
+                if not dtimestamp:
+                    raise Exception(f"不能解析时间字符串: {timestring}")
 
     return int(round(dtimestamp))
 
 if __name__ == "__main__":
-    print(Strptime("2022-05-02 23:34:10", "%Y-%m-%d %H:%M:%S"))
-    print(Strftime(1651520050, "%Y-%m-%d %H:%M:%S"))
-    print(Strftime(Now()))
-    print(Strptime("2017-05-16T04:28:13.000000Z"))
+    # print(Strptime("2022-05-02 23:34:10", "%Y-%m-%d %H:%M:%S"))
+    # print(Strftime(1651520050, "%Y-%m-%d %H:%M:%S"))
+    # print(Strftime(Now()))
+    # print(Strptime("2017-05-16T04:28:13.000000Z"))
 
-    print(Strptime("6 months ago"))
-    print(Strftime(Strptime("6 months ago")))
-    print(Strptime("just now"))
-    print(Strftime(Strptime("just now")))
-    print(Strptime("1 second ago"))
-    print(Strftime(Strptime("1 second ago")))
-    print(Strptime("in 24 days"))
-    print(Strftime(Strptime("in 24 days")))
+    # print(Strptime("6 months ago"))
+    # print(Strftime(Strptime("6 months ago")))
+    # print(Strptime("just now"))
+    # print(Strftime(Strptime("just now")))
+    # print(Strptime("1 second ago"))
+    # print(Strftime(Strptime("1 second ago")))
+    # print(Strptime("in 24 days"))
+    # print(Strftime(Strptime("in 24 days")))
 
-    print(FormatDuration(1750))
+    # print(FormatDuration(1750))
+    print(Strftime(Strptime("4m"))) # 4分钟前
+    print(Strftime(Strptime("2h"))) # 2小时前

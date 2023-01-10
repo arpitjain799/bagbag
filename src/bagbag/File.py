@@ -5,6 +5,10 @@ class File():
         self.path = path 
     
     def Append(self, data:str|bytes):
+        if os.path.dirname(self.path) != "":
+            if not os.path.exists(os.path.dirname(self.path)):
+                os.makedirs(os.path.dirname(self.path), exist_ok=True)
+
         if type(data) == str:
             fd = open(self.path, "a")
         else:
@@ -13,6 +17,10 @@ class File():
         fd.close()
     
     def Write(self, data:str|bytes):
+        if os.path.dirname(self.path) != "":
+            if not os.path.exists(os.path.dirname(self.path)):
+                os.makedirs(os.path.dirname(self.path), exist_ok=True)
+
         if type(data) == str:
             fd = open(self.path, "w")
         else:

@@ -26,9 +26,19 @@ class URL():
         It parses the URL and returns the URLParseResult object.
         :return: A URLParseResult object.
         """
-        res = urlparse(self.url)
+        # 有时候是 example.com/abc?key=value, 这样没法解析, 所以加一个头才能解析
+        if not self.url.startswith("http://") and not self.url.startswith("https://"):
+            url = 'http://' + self.url 
+        else:
+            url = self.url 
 
-        Schema = res.scheme
+        res = urlparse(url)
+
+        # 如果是自己加的协议头, 就不写到schema里面了
+        if url == self.url:
+            Schema = res.scheme
+        else:
+            Schema = None
         Path = res.path
         Query = res.query 
         Fragment = res.fragment
@@ -81,3 +91,6 @@ if __name__ == "__main__":
 
     u = URL(u.Encode())
     print(u.Decode())
+
+    u = URL("example.com/abc?key=value")
+    print(u.Parse())

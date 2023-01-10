@@ -76,7 +76,7 @@ class responseStream(object):
 
 class Response():
     def __init__(self):
-        self.Headers:dict = None # dict[str]str
+        self.headers:dict = None # dict[str]str
         self.Content:str = None # str 
         self.StatusCode:int = None # int
         self.URL:str = None # str
@@ -97,278 +97,278 @@ class Response():
                 Content = String(self.Content[:160]).Repr() + "..."
             else:
                 Content = String(self.Content[:160]).Repr()
-        return f"Http.Response(\n    URL={self.URL}, \n    StatusCode={self.StatusCode}, \n    Headers={self.Headers}, \n    Debug={Debug}, \n    Content={Content}\n)"
+        return f"Http.Response(\n    URL={self.URL}, \n    StatusCode={self.StatusCode}, \n    headers={self.headers}, \n    Debug={Debug}, \n    Content={Content}\n)"
 
     def __repr__(self) -> str:
         return str(self)
 
-def makeResponse(response:requests.Response, Debug:bool, ReadBodySize:int) -> Response:
+def makeResponse(response:requests.Response, Debug:bool, readBodySize:int) -> Response:
     resp = Response()
 
     if Debug:
         resp.Debug = dump.dump_all(response).decode("utf-8")
     
     st = responseStream(response.iter_content(512))
-    if not ReadBodySize:
+    if not readBodySize:
         content = st.read()
     else:
-        content = st.read(ReadBodySize)
+        content = st.read(readBodySize)
         
     if content:
         resp.Content = content.decode("utf-8", errors="ignore")
         resp.ContentBytes = content
     
-    resp.Headers = response.headers 
+    resp.headers = response.headers 
     resp.StatusCode = response.status_code
     resp.URL = response.url 
     
     return resp
 
-def Head(url:str, Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
-    if "User-Agent" not in Headers:
-        Headers["User-Agent"] = random.choice(useragents)['user_agent']
+def Head(url:str, timeout:int=15, headers:dict={}, readBodySize:int=None, followRedirect:bool=True, httpProxy:str=None, timeoutRetryTimes:int=0, insecureSkipVerify:int=False,debug:bool=False):
+    if "User-Agent" not in headers:
+        headers["User-Agent"] = random.choice(useragents)['user_agent']
 
     timeouttimes = 0
     while True:
         try:
             response = requests.head(
                 url, 
-                timeout=Timeout, 
-                allow_redirects=FollowRedirect,
+                timeout=timeout, 
+                allow_redirects=followRedirect,
                 proxies={
-                    'http': HttpProxy,
-                    "https": HttpProxy,
+                    'http': httpProxy,
+                    "https": httpProxy,
                 },
-                verify=(not InsecureSkipVerify),
+                verify=(not insecureSkipVerify),
                 stream=True,
-                headers=Headers,
+                headers=headers,
             )
-            return makeResponse(response, Debug, ReadBodySize)
+            return makeResponse(response, debug, readBodySize)
         except requests.exceptions.Timeout as e:
             timeouttimes += 1
-            if TimeoutRetryTimes < timeouttimes:
+            if timeoutRetryTimes < timeouttimes:
                 raise e
 
-def Get(url:str, Params:dict=None, Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None,  TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False, Debug:bool=False):
-    if "User-Agent" not in Headers:
-        Headers["User-Agent"] = random.choice(useragents)['user_agent']
+def Get(url:str, Params:dict=None, timeout:int=15, headers:dict={}, readBodySize:int=None, followRedirect:bool=True, httpProxy:str=None,  timeoutRetryTimes:int=0, insecureSkipVerify:int=False, debug:bool=False):
+    if "User-Agent" not in headers:
+        headers["User-Agent"] = random.choice(useragents)['user_agent']
 
     timeouttimes = 0
     while True:
         try:
             response = requests.get(
                 url, 
-                timeout=Timeout, 
-                allow_redirects=FollowRedirect,
+                timeout=timeout, 
+                allow_redirects=followRedirect,
                 proxies={
-                    'http': HttpProxy,
-                    "https": HttpProxy,
+                    'http': httpProxy,
+                    "https": httpProxy,
                 },
-                verify=(not InsecureSkipVerify),
+                verify=(not insecureSkipVerify),
                 stream=True,
-                headers=Headers,
+                headers=headers,
                 params=Params,
             )
 
-            return makeResponse(response, Debug, ReadBodySize)
+            return makeResponse(response, debug, readBodySize)
         except requests.exceptions.Timeout as e:
             timeouttimes += 1
-            if TimeoutRetryTimes < timeouttimes:
+            if timeoutRetryTimes < timeouttimes:
                 raise e
 
-def PostRaw(url:str, Data:str, Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
-    if "User-Agent" not in Headers:
-        Headers["User-Agent"] = random.choice(useragents)['user_agent']
+def PostRaw(url:str, data:str, timeout:int=15, headers:dict={}, readBodySize:int=None, followRedirect:bool=True, httpProxy:str=None, timeoutRetryTimes:int=0, insecureSkipVerify:int=False,debug:bool=False):
+    if "User-Agent" not in headers:
+        headers["User-Agent"] = random.choice(useragents)['user_agent']
 
     timeouttimes = 0
     while True:
         try:
             response = requests.post(
                 url, 
-                data=Data,
-                timeout=Timeout, 
-                allow_redirects=FollowRedirect,
+                data=data,
+                timeout=timeout, 
+                allow_redirects=followRedirect,
                 proxies={
-                    'http': HttpProxy,
-                    "https": HttpProxy,
+                    'http': httpProxy,
+                    "https": httpProxy,
                 },
-                verify=(not InsecureSkipVerify),
+                verify=(not insecureSkipVerify),
                 stream=True,
-                headers=Headers,
+                headers=headers,
             )
 
-            return makeResponse(response, Debug, ReadBodySize)
+            return makeResponse(response, debug, readBodySize)
         except requests.exceptions.Timeout as e:
             timeouttimes += 1
-            if TimeoutRetryTimes < timeouttimes:
+            if timeoutRetryTimes < timeouttimes:
                 raise e
 
-def PostJson(url:str, Json:dict,Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
-    if "User-Agent" not in Headers:
-        Headers["User-Agent"] = random.choice(useragents)['user_agent']
+def PostJson(url:str, json:dict,timeout:int=15, headers:dict={}, readBodySize:int=None, followRedirect:bool=True, httpProxy:str=None, timeoutRetryTimes:int=0, insecureSkipVerify:int=False,debug:bool=False):
+    if "User-Agent" not in headers:
+        headers["User-Agent"] = random.choice(useragents)['user_agent']
 
     timeouttimes = 0
     while True:
         try:
             response = requests.post(
                 url, 
-                json=Json,
-                timeout=Timeout, 
-                allow_redirects=FollowRedirect,
+                json=json,
+                timeout=timeout, 
+                allow_redirects=followRedirect,
                 proxies={
-                    'http': HttpProxy,
-                    "https": HttpProxy,
+                    'http': httpProxy,
+                    "https": httpProxy,
                 },
-                verify=(not InsecureSkipVerify),
+                verify=(not insecureSkipVerify),
                 stream=True,
-                headers=Headers,
+                headers=headers,
             )
 
-            return makeResponse(response, Debug, ReadBodySize)
+            return makeResponse(response, debug, readBodySize)
         except requests.exceptions.Timeout as e:
             timeouttimes += 1
-            if TimeoutRetryTimes < timeouttimes:
+            if timeoutRetryTimes < timeouttimes:
                 raise e
 
-def PostForm(url:str, Data:dict, Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
-    if "User-Agent" not in Headers:
-        Headers["User-Agent"] = random.choice(useragents)['user_agent']
+def PostForm(url:str, data:dict, timeout:int=15, headers:dict={}, readBodySize:int=None, followRedirect:bool=True, httpProxy:str=None, timeoutRetryTimes:int=0, insecureSkipVerify:int=False,debug:bool=False):
+    if "User-Agent" not in headers:
+        headers["User-Agent"] = random.choice(useragents)['user_agent']
 
     timeouttimes = 0
     while True:
         try:
             response = requests.post(
                 url, 
-                data=Data,
-                timeout=Timeout, 
-                allow_redirects=FollowRedirect,
+                data=data,
+                timeout=timeout, 
+                allow_redirects=followRedirect,
                 proxies={
-                    'http': HttpProxy,
-                    "https": HttpProxy,
+                    'http': httpProxy,
+                    "https": httpProxy,
                 },
-                verify=(not InsecureSkipVerify),
+                verify=(not insecureSkipVerify),
                 stream=True,
-                headers=Headers,
+                headers=headers,
             )
 
-            return makeResponse(response, Debug, ReadBodySize)
+            return makeResponse(response, debug, readBodySize)
         except requests.exceptions.Timeout as e:
             timeouttimes += 1
-            if TimeoutRetryTimes < timeouttimes:
+            if timeoutRetryTimes < timeouttimes:
                 raise e
 
-def Delete(url:str, Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
-    if "User-Agent" not in Headers:
-        Headers["User-Agent"] = random.choice(useragents)['user_agent']
+def Delete(url:str, timeout:int=15, headers:dict={}, readBodySize:int=None, followRedirect:bool=True, httpProxy:str=None, timeoutRetryTimes:int=0, insecureSkipVerify:int=False,debug:bool=False):
+    if "User-Agent" not in headers:
+        headers["User-Agent"] = random.choice(useragents)['user_agent']
 
     timeouttimes = 0
     while True:
         try:
             response = requests.delete(
                 url, 
-                timeout=Timeout, 
-                allow_redirects=FollowRedirect,
+                timeout=timeout, 
+                allow_redirects=followRedirect,
                 proxies={
-                    'http': HttpProxy,
-                    "https": HttpProxy,
+                    'http': httpProxy,
+                    "https": httpProxy,
                 },
-                verify=(not InsecureSkipVerify),
+                verify=(not insecureSkipVerify),
                 stream=True,
-                headers=Headers,
+                headers=headers,
             )
 
-            return makeResponse(response, Debug, ReadBodySize)
+            return makeResponse(response, debug, readBodySize)
         except requests.exceptions.Timeout as e:
             timeouttimes += 1
-            if TimeoutRetryTimes < timeouttimes:
+            if timeoutRetryTimes < timeouttimes:
                 raise e
 
-def PutForm(url:str, Data:dict,Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
-    if "User-Agent" not in Headers:
-        Headers["User-Agent"] = random.choice(useragents)['user_agent']
+def PutForm(url:str, data:dict,timeout:int=15, headers:dict={}, readBodySize:int=None, followRedirect:bool=True, httpProxy:str=None, timeoutRetryTimes:int=0, insecureSkipVerify:int=False,debug:bool=False):
+    if "User-Agent" not in headers:
+        headers["User-Agent"] = random.choice(useragents)['user_agent']
 
     timeouttimes = 0
     while True:
         try:
             response = requests.put(
                 url, 
-                data=Data,
-                timeout=Timeout, 
-                allow_redirects=FollowRedirect,
+                data=data,
+                timeout=timeout, 
+                allow_redirects=followRedirect,
                 proxies={
-                    'http': HttpProxy,
-                    "https": HttpProxy,
+                    'http': httpProxy,
+                    "https": httpProxy,
                 },
-                verify=(not InsecureSkipVerify),
+                verify=(not insecureSkipVerify),
                 stream=True,
-                headers=Headers,
+                headers=headers,
             )
 
-            return makeResponse(response, Debug, ReadBodySize)
+            return makeResponse(response, debug, readBodySize)
         except requests.exceptions.Timeout as e:
             timeouttimes += 1
-            if TimeoutRetryTimes < timeouttimes:
+            if timeoutRetryTimes < timeouttimes:
                 raise e
 
-def PutRaw(url:str, Data:str, Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False, Debug:bool=False):
-    if "User-Agent" not in Headers:
-        Headers["User-Agent"] = random.choice(useragents)['user_agent']
+def PutRaw(url:str, data:str, timeout:int=15, headers:dict={}, readBodySize:int=None, followRedirect:bool=True, httpProxy:str=None, timeoutRetryTimes:int=0, insecureSkipVerify:int=False, debug:bool=False):
+    if "User-Agent" not in headers:
+        headers["User-Agent"] = random.choice(useragents)['user_agent']
 
     timeouttimes = 0
     while True:
         try:
             response = requests.put(
                 url, 
-                data=Data,
-                timeout=Timeout, 
-                allow_redirects=FollowRedirect,
+                data=data,
+                timeout=timeout, 
+                allow_redirects=followRedirect,
                 proxies={
-                    'http': HttpProxy,
-                    "https": HttpProxy,
+                    'http': httpProxy,
+                    "https": httpProxy,
                 },
-                verify=(not InsecureSkipVerify),
+                verify=(not insecureSkipVerify),
                 stream=True,
-                headers=Headers,
+                headers=headers,
             )
 
-            return makeResponse(response, Debug, ReadBodySize)
+            return makeResponse(response, debug, readBodySize)
         except requests.exceptions.Timeout as e:
             timeouttimes += 1
-            if TimeoutRetryTimes < timeouttimes:
+            if timeoutRetryTimes < timeouttimes:
                 raise e
 
-def PutJson(url:str, Json:dict, Timeout:int=15, Headers:dict={}, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False):
-    if "User-Agent" not in Headers:
-        Headers["User-Agent"] = random.choice(useragents)['user_agent']
+def PutJson(url:str, json:dict, timeout:int=15, headers:dict={}, readBodySize:int=None, followRedirect:bool=True, httpProxy:str=None, timeoutRetryTimes:int=0, insecureSkipVerify:int=False,debug:bool=False):
+    if "User-Agent" not in headers:
+        headers["User-Agent"] = random.choice(useragents)['user_agent']
 
     timeouttimes = 0
     while True:
         try:
             response = requests.put(
                 url, 
-                json=Json,
-                timeout=Timeout, 
-                allow_redirects=FollowRedirect,
+                json=json,
+                timeout=timeout, 
+                allow_redirects=followRedirect,
                 proxies={
-                    'http': HttpProxy,
-                    "https": HttpProxy,
+                    'http': httpProxy,
+                    "https": httpProxy,
                 },
-                verify=(not InsecureSkipVerify),
+                verify=(not insecureSkipVerify),
                 stream=True,
-                headers=Headers,
+                headers=headers,
             )
 
-            return makeResponse(response, Debug, ReadBodySize)
+            return makeResponse(response, debug, readBodySize)
         except requests.exceptions.Timeout as e:
             timeouttimes += 1
-            if TimeoutRetryTimes < timeouttimes:
+            if timeoutRetryTimes < timeouttimes:
                 raise e
 
 if __name__ == "__main__":
-    # resp = Head("https://httpbin.org/redirect/2", Debug=True)
+    # resp = Head("https://httpbin.org/redirect/2", debug=True)
     # print(resp)
 
-    # resp = Get("https://httpbin.org", Debug=True)
+    # resp = Get("https://httpbin.org", debug=True)
     # print(resp)
 
     resp = PutForm("http://127.0.0.1:8878", {"a": "b", "c": "d"})

@@ -4,9 +4,14 @@ import prometheus_client as pc
 import time
 import socket
 
-from .metrics import * 
+import threading 
 
-from bagbag import *
+try:
+    from .metrics import * 
+except:
+    from metrics import * 
+
+from bagbag import Http, Tools, Lg
 
 class PushGateway():
     def __init__(self, address:str, job:str, pushinterval:int=15, instance:str=None):
@@ -16,24 +21,33 @@ class PushGateway():
         self.registry = pc.CollectorRegistry()
         self.pushinterval = pushinterval
 
+        # print("address:", address)
+
         if not self.address.startswith("http://") or not self.address.startswith("https://"):
             self.address = 'https://' + self.address 
         
         self.address = self.address + f"/metrics/job/{self.job}/instance/{self.instance}"
         
-        Thread(self.run)
+        t = threading.Thread(target=self.run)
+        t.daemon = True 
+        t.start()
     
     def run(self):
+        # print(1)
         rl = Tools.RateLimit(str(int(3600/self.pushinterval)) + "/h")
         while True:
             rl.Take()
             data = pc.generate_latest(self.registry)
-            while True:
-                try:
-                    Http.PutRaw(self.address, data, TimeoutRetryTimes=9999)
-                    break 
-                except:
-                    pass 
+            # print(data)
+            # print(self.address)
+            if data != "":
+                while True:
+                    try:
+                        Http.PutRaw(self.address, data, TimeoutRetryTimes=9999)
+                        break 
+                    except Exception as e:
+                        time.sleep(1)
+                        print(e)
         
     def NewCounter(self, name:str, help:str) -> PrometheusCounter:
         return PrometheusCounter(name, help, self.registry)
