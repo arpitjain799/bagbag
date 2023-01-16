@@ -13,3 +13,4 @@ src/test*.py
 *.zip
 *.xlsx
 *.session-journal
+log

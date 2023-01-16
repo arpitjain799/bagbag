@@ -77,6 +77,7 @@ def parseTimeago(timestring:str) -> int|None:
     formates = [
         "([0-9]+) %ss{0,1} ago",
         "in ([0-9]+) %ss{0,1}",
+        "([0-9]+) %s\. ago"
     ]
 
     step = {
@@ -86,7 +87,9 @@ def parseTimeago(timestring:str) -> int|None:
         "day": 86400,
         "week": 604800,
         "month": 2592000,
-        "year": 31536000.
+        "mo": 2592000,
+        "year": 31536000,
+        "yr": 31536000,
     }
 
     for s in step:
@@ -147,5 +150,8 @@ if __name__ == "__main__":
     # print(Strftime(Strptime("in 24 days")))
 
     # print(FormatDuration(1750))
-    print(Strftime(Strptime("4m"))) # 4分钟前
-    print(Strftime(Strptime("2h"))) # 2小时前
+    # print(Strftime(Strptime("4m"))) # 4分钟前
+    # print(Strftime(Strptime("2h"))) # 2小时前
+
+    print(Strftime(Strptime("3 mo. ago"))) # 3个月前
+    print(Strftime(Strptime("3 yr. ago"))) # 3年前

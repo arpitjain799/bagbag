@@ -1,6 +1,18 @@
 import json
 
 def Dumps(obj, indent=4, ensure_ascii=False) -> str:
+    """
+    It takes a Python object and returns a JSON string
+    
+    :param obj: The object to be serialized
+    :param indent: This is the number of spaces to indent for each level. If it is None, that
+    will insert newlines but won't indent the new lines, defaults to 4 (optional)
+    :param ensure_ascii: If True, all non-ASCII characters in the output are escaped with \\uXXXX
+    sequences, and the result is a str instance consisting of ASCII characters only. If False, some
+    chunks written to fp may be unicode instances. This usually happens because the input contains
+    unicode strings or the, defaults to False (optional)
+    :return: A string
+    """
     return json.dumps(obj, indent=indent, ensure_ascii=ensure_ascii)
 
 def Loads(s:str) -> list | dict:

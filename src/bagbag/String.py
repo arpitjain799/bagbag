@@ -3,6 +3,7 @@ import langid
 import opencc
 import ipaddress
 import pypinyin
+from urllib.parse import quote_plus, unquote
 
 class String():
     def __init__(self, string:str):
@@ -70,6 +71,12 @@ class String():
     
     def RemoveNonUTF8Characters(self) -> str:
         return self.string.encode('utf-8', errors='ignore').decode('utf-8')
+
+    def URLEncode(self) -> str:
+        return quote_plus(self.string)
+    
+    def URLDecode(self) -> str:
+        return unquote(self.string)
 
 if __name__ == "__main__":
     print(1, String("ABC").HasChinese())

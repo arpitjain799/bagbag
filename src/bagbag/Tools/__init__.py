@@ -27,3 +27,5 @@ from .Queue import Queue
 from . import RSS
 from .MatrixBot import MatrixBot
 from .Nslookup import Nslookup
+from .Twitter import Twitter
+from .DistributedLock import DistributedLock

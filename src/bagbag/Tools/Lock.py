@@ -4,18 +4,34 @@ import multiprocessing
 class Lock():
     def __init__(self):
         self.lock = multiprocessing.Lock()
+        self.islocked = False
     
-    def Acquire(self):
+    def Acquire(self, block:bool=True) -> bool:
         """
-        The function Acquire() is a method of the class Lock. It acquires the lock
+        This function acquires the lock, blocking or non-blocking, depending on the value of the block
+        argument
+        
+        :param block: If this is True, the thread will wait until the lock is unlocked. If this is
+        False, the thread will return immediately with a value of False if the lock is locked, defaults
+        to True
+        :type block: bool (optional)
+        :return: A boolean value. True is acquired while False not.
         """
-        self.lock.acquire()
+        status = self.lock.acquire(block=block)
+        if status == True:
+            self.islocked = True 
+        return status
 
     def Release(self):
         """
         The function releases the lock
         """
-        self.lock.release()
+        if self.islocked == True:
+            self.lock.release()
+            self.islocked = False
+    
+    def IsLocked(self) -> bool:
+        return self.islocked
 
 if __name__ == "__main__":
     from threading import Thread

@@ -6,15 +6,21 @@ import selenium
 from selenium.webdriver.common.keys import Keys as webkeys
 from selenium.webdriver.firefox.options import Options as firefoxoptions
 
+from seleniumwire import webdriver as seleniumwirewebdriver
+from seleniumwire.utils import decode as decodeResponseBody
+
 import time
 import random
-
+import typing
 
 try:
     from ..Http import useragents 
     from .. import Lg
     from ..Thread import Thread
     from .URL import URL
+    from ..String import String 
+    from .. import Os
+    from ..File import File
 except:
     import sys 
     sys.path.append("..")
@@ -22,10 +28,67 @@ except:
     import Lg 
     from Thread import Thread
     from URL import URL
+    from String import String 
+    import Os
+    from File import File
 
+seleniumChromeWireSkipFilesSuffix = (
+    # 图片
+    '.png', 
+    '.jpg', 
+    '.gif', 
+    '.jpeg', 
+    '.tiff', 
+    '.psd', 
+    '.raw', 
+    '.webp', 
+    '.eps',
+    '.svg',
+    '.bmp',
+    '.pdf',
+    '.pcx',
+    '.tga',
+    '.exif',
+    '.fpx',
+    # 视频
+    '.avi',
+    '.wmv',
+    '.mpg',
+    '.mpeg',
+    '.mov',
+    '.rm',
+    '.rmvb',
+    '.swf',
+    '.flv',
+    '.mp4',
+    '.asf',
+    '.dat',
+    '.asx',
+    '.wvx',
+    '.mpe',
+    '.mpa',
+    # 音频
+    '.mp3',
+    '.wma',
+    '.wav',
+    '.mid',
+    '.ape',
+    '.flac',
+
+    # 其它
+    # '.aiff', # 声音文件
+    # '.aej', '.cab', '.rar', # 压缩文件
+    # '.awd', # 传真文件
+    # '.bak', #备份文件
+    # '.scr', #屏保文件
+    # '.sys', #系统文件
+    # '.ttf', '.font', #字体文件
+    # '.doc', #文档文件
+)
+    
 def retryOnError(func):
     def ware(self, *args, **kwargs): # self是类的实例
-        if self.browserName == "chrome":
+        if self.browserName in ["chrome", "chromewire"]:
             while True:
                 try:
                     res = func(self, *args, **kwargs)
@@ -150,7 +213,7 @@ class seleniumElement():
         """
         Click() is a function that clicks on an element
         """
-        if self.browserName == "chrome" and not self.browserName:
+        if self.browserName in ["chrome", "chromewire"] and not self.browserName:
             self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": random.choice(useragents)['user_agent']})
 
         self.element.click()
@@ -189,7 +252,7 @@ class seleniumElement():
         """
         Submit() is a function that submits the form that the element belongs to
         """
-        if self.browserName == "chrome" and not self.browserName:
+        if self.browserName in ["chrome", "chromewire"] and not self.browserName:
             self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": random.choice(useragents)['user_agent']})
         
         self.element.submit()
@@ -202,7 +265,7 @@ class seleniumElement():
         It takes the element that you want to press enter on and sends the enter key to it
         """
 
-        if self.browserName == "chrome" and not self.browserName:
+        if self.browserName  in ["chrome", "chromewire"] and not self.browserName:
             self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": random.choice(useragents)['user_agent']})
         
         self.element.send_keys(webkeys.ENTER)
@@ -350,7 +413,7 @@ class seleniumBase():
         :type url: str
         """
 
-        if self.browserName == "chrome" and self.randomUA:
+        if self.browserName in ["chrome", "chromewire"] and self.randomUA:
             if not self.browserRemote:
                 self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": random.choice(useragents)['user_agent']})
 
@@ -375,11 +438,13 @@ class seleniumBase():
         The function closes the browser window and quits the driver
         """
         self.closed = True
+        if self.browserName == "chromewire":
+            del(self.driver.requests)
         self.driver.close()
         self.driver.quit()
     
     def ClearIdent(self):
-        if self.browserName == "chrome":
+        if self.browserName in ["chrome", "chromewire"] :
             try:
                 self.driver.delete_all_cookies()
             except:
@@ -519,6 +584,197 @@ class Chrome(seleniumBase):
         self.browserRemote = seleniumServer != None 
         self.closed = False
 
+class seleniumFlowRequest():
+    def __init__(self) -> None:
+        self.Time:int = None 
+        self.Headers:dict = None 
+        self.Method:str = None 
+        self.URL:str = None 
+        self.BodyBytes:bytes = b'' 
+        self.Body:str = ''
+    
+    def __repr__(self) -> str:
+        body = String(String(self.Body).Repr()).Ommit(80)
+        return f"seleniumFlowRequest(Time={self.Time}, Method={self.Method}, URL={self.URL}, Headers={self.Headers} Body={body})"
+
+    def __repr__(self) -> str:
+        body = String(String(self.Body).Repr()).Ommit(80)
+        return f"seleniumFlowRequest(Time={self.Time}, Method={self.Method}, URL={self.URL}, Headers={self.Headers} Body={body})"
+
+class seleniumFlowResponse():
+    def __init__(self) -> None:
+        self.Time:int = None 
+        self.BodyBytes:bytes = b'' 
+        self.Body:str = '' 
+        self.StatusCode:int = None 
+        self.Headers:dict = None 
+    
+    def __repr__(self) -> str:
+        body = String(String(self.Body).Repr()).Ommit(80)
+        return f"seleniumFlowResponse(Time={self.Time}, StatusCode={self.StatusCode}, Headers={self.Headers} Body={body})"
+
+    def __str__(self) -> str:
+        body = String(String(self.Body).Repr()).Ommit(80)
+        return f"seleniumFlowResponse(Time={self.Time}, StatusCode={self.StatusCode}, Headers={self.Headers} Body={body})"
+
+class seleniumFlow():
+    def __init__(self, req:seleniumFlowRequest, resp:seleniumFlowResponse) -> None:
+        self.Request = req
+        self.Response = resp
+    
+    def __repr__(self) -> str:
+        return f"seleniumFlow(\n\tRequest={self.Request} \n\tResponse={self.Response}\n)" 
+
+class ChromeWire(seleniumBase):
+    def __init__(self, 
+            blockSuffix:tuple[str]=seleniumChromeWireSkipFilesSuffix,
+            maxRequests:int=None, 
+            requestStorage:str="disk", # memory
+            urlFilterRegex:list[str]=[], 
+            excludeHosts:list[str]=[], 
+            PACFileURL:str=None, 
+            httpProxy:str=None, 
+            sessionID=None, 
+            randomUA:bool=True):
+        
+        """
+        :param blockSuffix: A tuple of file suffixes to block. list是中括号, tuple是小括号
+        :type blockSuffix: tuple[str]
+        :param maxRequests: The maximum number of requests to store
+        :type maxRequests: int
+        :param requestStorage: The storage type for requests and responses. Can be either memory or disk, defaults to disk
+        :type requestStorage: str (optional)
+        :param urlFilterRegex: A list of regular expressions that will be used to filter requests
+        :type urlFilterRegex: list[str]
+        :param excludeHosts: A list of hosts to exclude from interception
+        :type excludeHosts: list[str]
+        :param PACFileURL: The URL of the PAC file to use
+        :type PACFileURL: str
+        :param httpProxy: The HTTP proxy to use
+        :type httpProxy: str
+        :param sessionID: If you want to use an existing session, you can pass the session ID here
+        :param randomUA: Whether to use a random user agent, defaults to True
+        :type randomUA: bool (optional)
+        """
+
+        options = webdriver.ChromeOptions()
+
+        # 防止通过navigator.webdriver来检测是否是被selenium操作
+        options.add_argument("--disable-blink-features")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+
+        if randomUA:
+            options.add_argument('--user-agent=' + random.choice(useragents)['user_agent'] + '')
+        self.randomUA = randomUA
+
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+
+        if PACFileURL:
+            options.add_argument("--proxy-pac-url=" + PACFileURL)
+        elif httpProxy:
+            options.add_argument('--proxy-server=' + httpProxy)
+
+        seleniumwire_options = {
+            # 'request_storage': 'memory',  # Store requests and responses in memory only
+            # 'request_storage_max_size': maxRequests  # Store no more than 100 requests in memory
+        }
+
+        if maxRequests != None:
+            seleniumwire_options['request_storage_max_size'] = maxRequests
+
+        if requestStorage == "memory":
+            seleniumwire_options['request_storage'] = requestStorage
+
+        if excludeHosts != []:
+            seleniumwire_options['exclude_hosts'] = excludeHosts
+        
+        self.driver = seleniumwirewebdriver.Chrome(
+            options=options,
+            seleniumwire_options=seleniumwire_options
+        )
+
+        if self.driver.scopes != []:
+            self.driver.scopes = urlFilterRegex
+            # [
+            #     '.*stackoverflow.*',
+            #     '.*github.*'
+            # ]
+        
+        def interceptor(request):
+            # Block PNG, JPEG and GIF images
+            if request.path.lower().endswith(blockSuffix):
+                request.abort()
+
+        if blockSuffix != None:
+            self.driver.request_interceptor = interceptor
+
+        if sessionID:
+            self.Close()
+            self.driver.session_id = sessionID
+        
+        self.browserName = "chromewire"
+        self.browserRemote = False
+        self.closed = False
+        self.blockSuffix = blockSuffix
+    
+    def Flows(self) -> typing.Iterable[seleniumFlow]:
+        """
+        > It iterates through all the requests made by the browser, and returns a `seleniumFlow` object
+        for each request. 
+        这个方法迭代现有的队列里面的数据, 当到达末尾的时候就结束迭代. 
+        可以多次调用这个方法来获取新的flow. 
+        注意打开某些页面之后, 浏览器会隔一段时间就发起一次请求, 及时没有新Get页面, 也会有新的flow出现. 
+        """
+        for req in self.driver.requests:
+            if req.response == None:
+                continue 
+
+            if req.path.lower().endswith(self.blockSuffix):
+                continue
+
+            resp = req.response
+
+            freq = seleniumFlowRequest()
+            freq.URL = req.url
+            freq.Time = req.date.timestamp()
+            freq.Method = req.method
+            freq.Headers = {}
+            for key in req.headers:
+                freq.Headers[key] = req.headers[key]
+            if req.body != None:
+                freq.BodyBytes = req.body
+                freq.Body = req.body.decode(errors="ignore")
+
+            fresp = seleniumFlowResponse()
+            fresp.Headers = {}
+            for key in resp.headers:
+                fresp.Headers[key] = resp.headers[key]
+            fresp.StatusCode = resp.status_code
+            fresp.Time = resp.date.timestamp()
+            if resp.body != None:
+                fresp.BodyBytes = decodeResponseBody(resp.body, resp.headers.get('Content-Encoding', 'identity'))
+                fresp.Body = fresp.BodyBytes.decode(errors="ignore")
+                # if 'content-encoding' not in fresp.Headers:
+                #     fresp.Body = resp.body.decode(errors="ignore")
+                #     fresp.BodyBytes = resp.body 
+                # else:
+                #     if fresp.Headers['content-encoding'].strip() == 'br':
+                #         # Lg.Trace("Before:", resp.body[:80])
+                #         fresp.BodyBytes = brotli.decompress(resp.body)
+                #         # Lg.Trace("After:", fresp.BodyBytes[:80])
+                #         fresp.Body = fresp.BodyBytes.decode(errors="ignore")
+                #     elif fresp.Headers['content-encoding'].strip() == 'gzip':
+                #         fresp.BodyBytes = gzip.decompress(resp.body)
+                #         fresp.Body = fresp.BodyBytes.decode(errors="ignore")
+                #     else:
+                #         Lg.Warn("未知的 Content-Encoding:", fresp.Headers['content-encoding'])
+                #         fresp.Body = resp.body.decode(errors="ignore")
+                #         fresp.BodyBytes = resp.body 
+
+            yield seleniumFlow(freq, fresp)
+        
+        del(self.driver.requests)
+
 if __name__ == "__main__":
     # Local 
     # with Chrome() as se:
@@ -563,8 +819,16 @@ if __name__ == "__main__":
         # button = se.Find('//*[@id="search-submit"]').Click()
         # print(se.PageSource())
 
-    with Chrome(httpProxy="http://192.168.1.186:8899", randomUA=True) as se:
-        se.Get("https://twitter.com/TommyBeFamous/status/1571969221919404032")
-        import ipdb
-        ipdb.set_trace()
-    
+    with ChromeWire(randomUA=False) as se:
+        se.Get("http://google.com")
+        while True:
+            for request in se.Flows():
+                ctype = request.Response.Headers['content-encoding'] if 'content-encoding' in request.Response.Headers else "plain"
+                Lg.Trace({
+                    "url": request.Request.URL,
+                    "content-encoding": ctype,
+                    "body": request.Response.BodyBytes[:80],
+                })
+
+            time.sleep(1)
+

@@ -2,7 +2,7 @@ from flask import Flask
 from flask import request
 import flask
 from flask import abort, redirect
-from flask import render_template
+from flask import render_template, send_file
 
 try:
     from .. import Random
@@ -14,6 +14,8 @@ except:
     import Random
     from Thread import Thread
     import Lg
+
+import logging 
     
 class LoggingMiddleware(object):
     def __init__(self, app):
@@ -30,11 +32,25 @@ class LoggingMiddleware(object):
         return self._app(env, log_response)
 
 class Response():
-    def Make(self, body:str) -> flask.Response:
-        return flask.Response(body)
+    def Body(self, body:str, statusCode:int=200, contentType:str=None, headers:dict=None) -> flask.Response:
+        resp = flask.Response(response=body, status=statusCode, content_type=contentType)
+        if headers != None:
+            for k in headers:
+                resp.headers[str(k)] = str(headers[k])
+        return resp
+    
+    def Status(self, statusCode:int, body:str=None, contentType:str=None, headers:dict=None) -> flask.Response:
+        resp = flask.Response(response=body, status=statusCode, content_type=contentType)
+        if headers != None:
+            for k in headers:
+                resp.headers[str(k)] = str(headers[k])
+        return resp
 
-    def Redirect(self, location:str, code:int=302):
+    def Redirect(self, location:str, code:int=302) -> flask.Response:
         return redirect(location, code)
+    
+    def SendFile(self, fpath:str) -> flask.Response:
+        return send_file(fpath)
 
     Abort = abort
     Render = render_template
@@ -63,7 +79,18 @@ class Request():
         return request.get_data().decode("utf-8")
 
 class WebServer():
-    def __init__(self, debug:bool=False, name:str=None):
+    def __init__(self, debug:bool=True, additionDebug:bool=False, name:str=None):
+        """
+        It creates a Flask app with a random name.
+        
+        :param debug: If set to True, the server will reload itself on code changes and provide a
+        helpful debugger in case of application errors, defaults to True
+        :type debug: bool (optional)
+        :param additionDebug: This will print out the request and response headers, defaults to False
+        :type additionDebug: bool (optional)
+        :param name: The name of the Flask app
+        :type name: str
+        """
         if not name:
             name = Random.String()
 
@@ -71,8 +98,12 @@ class WebServer():
         self.Route = self.app.route 
         self.Request = Request()
         self.Response = Response()
+
+        if debug == False:
+            log = logging.getLogger('werkzeug')
+            log.disabled = True
         
-        if debug:
+        if additionDebug:
             self.app.wsgi_app = LoggingMiddleware(self.app.wsgi_app)
         
     def Run(self, host:str="0.0.0.0", port:int=None, block:bool=True):
