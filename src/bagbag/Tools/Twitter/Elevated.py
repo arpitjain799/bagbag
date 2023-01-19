@@ -31,12 +31,9 @@ class twitterTweet():
     def __str__(self) -> str:
         return f"twitterTweet(ID={self.ID} Time={self.Time} Language={self.Language} Text={self.Text} User={self.User})"
 
-class Twitter():
-    def __init__(self, consumer_key:str, consumer_secret:str, access_token:str=None, access_token_secret:str=None) -> None:
-        if access_token != None:
-            auth = tweepy.OAuth1UserHandler(consumer_key, consumer_secret, access_token, access_token_secret)
-        else:
-            auth = tweepy.OAuth2AppHandler(consumer_key, consumer_secret)
+class Elevated():
+    def __init__(self, consumer_key:str, consumer_secret:str) -> None:
+        auth = tweepy.OAuth2AppHandler(consumer_key, consumer_secret)
 
         self.api = tweepy.API(auth, wait_on_rate_limit=True)
     

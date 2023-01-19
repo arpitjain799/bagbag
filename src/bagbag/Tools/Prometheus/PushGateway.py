@@ -43,7 +43,7 @@ class PushGateway():
             if data != "":
                 while True:
                     try:
-                        Http.PutRaw(self.address, data, TimeoutRetryTimes=9999)
+                        Http.PutRaw(self.address, data, timeoutRetryTimes=9999)
                         break 
                     except Exception as e:
                         time.sleep(1)

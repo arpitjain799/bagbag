@@ -8,7 +8,14 @@ class Reader():
         self.headers = next(self.csvrd)
     
     def Read(self) -> dict:
-        r = next(self.csvrd)
+        while True:
+            try:
+                r = next(self.csvrd)
+                break 
+            except StopIteration:
+                raise StopIteration
+            except Exception:
+                pass 
 
         row = {}
         for idx in range(len(self.headers)):

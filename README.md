@@ -16,6 +16,14 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
 
 # Library
 
+* Twitter
+  * Essential(bearerToken:str)
+    * Search(keyword:str, sinceID:int=None, tweetPerRequest:int=10) -> typing.Iterable[twitterTweet]
+    * Timeline(screename:str, sinceID:int=None, tweetPerRequest:int=10) -> typing.Iterable[twitterTweet]
+  * Elevated(consumer_key:str, consumer_secret:str)
+    * Search(keyword:str, days:int=7) -> typing.Iterable[twitterTweet]
+    * Timeline(screename:str) -> typing.Iterable[twitterTweet]
+    * Followers(screename:str) -> typing.Iterable[twitterUser]
 * Crypto
   * AES(key:str, mode:str="cfb")
     * Encrypt(raw:str) -> str

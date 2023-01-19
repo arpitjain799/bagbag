@@ -35,7 +35,7 @@ def IsDir(path:str) -> bool:
 def Basename(path:str) -> str:
     return os.path.basename(path)
 
-def GetSuffix(path:str) -> str:
+def Suffix(path:str) -> str:
     return os.path.splitext(path)[1]
 
 if __name__ == "__main__":

@@ -19,6 +19,8 @@ except:
     import Time
     import Lg
 
+import typing
+
 # class GithuException(Exception):
 #     pass 
 
@@ -94,7 +96,7 @@ class GithubSearchResults():
 
         item = self.items.pop(0)
 
-        url = item.html_url
+        url = str(item.html_url)
         rawurl = url.replace("https://github.com", "https://raw.githubusercontent.com").replace("blob/", "")
         content = Http.Get(rawurl).Content
 
@@ -108,7 +110,7 @@ class GithubSearchResults():
     def Total(self) -> int:
         return self.total
 
-    def __iter__(self) -> GithubSearchResult:
+    def __iter__(self) -> typing.Iterator[GithubSearchResult]:
         while True:
             res = self.Get()
             if res != None:

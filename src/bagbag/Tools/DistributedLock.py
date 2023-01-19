@@ -70,11 +70,18 @@ class distributedLockLock():
         :return: A boolean value.
         """
         while True:
-            resp = Http.PostJson(self.lockserver.server + "/lock/acquire", {
-                "password": self.lockserver.password,
-                "timeout": self.timeout,
-                "lockname": self.lockname,
-            }, timeout=5, timeoutRetryTimes=999999999)
+            while True:
+                try:
+                    resp = Http.PostJson(self.lockserver.server + "/lock/acquire", {
+                        "password": self.lockserver.password,
+                        "timeout": self.timeout,
+                        "lockname": self.lockname,
+                    }, timeout=5, timeoutRetryTimes=999999999)
+                    break 
+                except Exception as e:
+                    Time.Sleep(1)
+                    Lg.Warn("获取锁失败:", e)
+
             if resp.StatusCode == 200:
                 self.lockident = resp.Content
                 self.islocked = True
@@ -91,11 +98,18 @@ class distributedLockLock():
                 raise Exception(str(resp.StatusCode) + ": " + resp.Content)
 
     def Release(self):
-        resp = Http.PostJson(self.lockserver.server + "/lock/release", {
-            "password": self.lockserver.password,
-            "lockident": self.lockident,
-            "lockname": self.lockname,
-        }, timeout=5, timeoutRetryTimes=999999999)
+        while True:
+            try:
+                resp = Http.PostJson(self.lockserver.server + "/lock/release", {
+                    "password": self.lockserver.password,
+                    "lockident": self.lockident,
+                    "lockname": self.lockname,
+                }, timeout=5, timeoutRetryTimes=999999999)
+                break
+            except Exception as e:
+                    Time.Sleep(1)
+                    Lg.Warn("释放锁失败:", e)
+
         if resp.StatusCode != 200:
             raise Exception(str(resp.StatusCode) + ": " + resp.Content)
         self.islocked = False

@@ -66,7 +66,7 @@ class MatrixBotMessage():
     @retryOnNetworkError
     def Reply(self, message:str):
         resp = Http.PostForm(
-            self.mb.apiserver + "/send/text", 
+            self.mb.apiserver + "/matrix-bot/send/text", 
             {
                 "room": self.Room, 
                 'text': message,
@@ -78,7 +78,7 @@ class MatrixBotMessage():
     @retryOnNetworkError
     def ReplyImage(self, path:str):
         resp = Http.PostForm(
-            self.mb.apiserver + "/send/image", 
+            self.mb.apiserver + "/matrix-bot/send/image", 
             {
                 "room": self.Room, 
                 'image': Base64.Encode(open(path, 'rb').read()),
@@ -144,9 +144,9 @@ class MatrixBot():
             raise Exception("Need to set room first. ")
         
         if msgtype == "text":
-            url = "/send/text"
+            url = "/matrix-bot/send/text"
         else:
-            url = "/send/markdown"
+            url = "/matrix-bot/send/markdown"
 
         resp = Http.PostForm(
             self.apiserver + url, 
@@ -164,7 +164,7 @@ class MatrixBot():
             raise Exception("Need to set room first. ")
 
         resp = Http.PostForm(
-            self.apiserver + "/send/image", 
+            self.apiserver + "/matrix-bot/send/image", 
             {
                 "room": self.room, 
                 'image': Base64.Encode(open(path, 'rb').read()),
@@ -192,7 +192,7 @@ class MatrixBot():
             else:
                 room = self.room 
 
-        res = Http.Get(self.apiserver + "/get/message", {'password': self.password, 'num': str(num), "room": room}).Content
+        res = Http.Get(self.apiserver + "/matrix-bot/get/message", {'password': self.password, 'num': str(num), "room": room}).Content
         # Lg.Trace(res)
         res = Json.Loads(res)
         resm = []
