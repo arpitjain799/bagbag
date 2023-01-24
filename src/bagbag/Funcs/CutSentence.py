@@ -9,7 +9,7 @@ except:
     sys.path.append("..")
     import Re
     import String
-    from CutSentenceStopWords import stopwords
+    from .CutSentenceStopWords import stopwords
 
 def __make_words(s:str) -> list[str]:
         ss = []

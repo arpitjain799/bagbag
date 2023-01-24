@@ -381,6 +381,29 @@ class mySQLSQLiteTable():
                 res.append({'name': i["name"], 'type': i["type"]})
         return res
 
+class mySQLSQLiteKeyValueTableKey():
+    def __init__(self, kv:mySQLSQLiteKeyValueTable|mySQLSQLiteKeyValueTableNamespaced, key:str) -> None:
+        self.key = key 
+        self.kv = kv
+    
+    def Set(self, value:typing.Any):
+        self.kv.Set(self.key, value)
+    
+    def Get(self, default:typing.Any=None):
+        return self.kv.Get(self.key, default)
+    
+    def Add(self, num:int|float) -> mySQLSQLiteKeyValueTableKey:
+        n = self.kv.Get(self.key, 0)
+        n += num 
+        self.kv.Set(self.key, n)
+        return self
+    
+    def __add__(self, num:int|float) -> mySQLSQLiteKeyValueTableKey:
+        return self.Add(num)
+    
+    def __iadd__(self, num:int|float) -> mySQLSQLiteKeyValueTableKey:
+        return self.Add(num)
+
 class mySQLSQLiteKeyValueTable():
     def __init__(self, db:MySQLSQLiteBase, tbname:str) -> None:
         self.db = db 
@@ -392,6 +415,9 @@ class mySQLSQLiteKeyValueTable():
         )
         self.tbname = tbname
         self.namespace = []
+    
+    def Key(self, key:str) -> mySQLSQLiteKeyValueTableKey:
+        return mySQLSQLiteKeyValueTableKey(self, key)
     
     def Namespace(self, namespace:str) -> mySQLSQLiteKeyValueTableNamespaced:
         if len(':'.join(self.namespace)) > 200:
@@ -833,18 +859,36 @@ if __name__ == "__main__":
     # idx, data = qnc.Get(False)
     # print(repr(data))
 
-    db = MySQL("192.168.1.224")
+    #################
 
+    # db = MySQL("192.168.1.224")
+
+    # kv = db.KeyValue()
+
+    # kv.Set("key", "no_namespace")
+
+    # kvns1 = kv.Namespace("ns1")
+    # kvns1.Set("key", "ns1_value")
+    # kvns12 = kvns1.Namespace("ns2")
+    # kvns12.Set("key", "ns12_value")
+
+    # kvns2 = kv.Namespace("ns2")
+    # kvns2.Set("key", "ns2_value")
+    # kvns22 = kvns2.Namespace("ns2")
+    # kvns22.Set("key", "ns22_value")
+
+    db = MySQL("192.168.1.224")
+    
     kv = db.KeyValue()
 
-    kv.Set("key", "no_namespace")
+    k = kv.Key("key")
 
-    kvns1 = kv.Namespace("ns1")
-    kvns1.Set("key", "ns1_value")
-    kvns12 = kvns1.Namespace("ns2")
-    kvns12.Set("key", "ns12_value")
+    k.Set(2.5)
 
-    kvns2 = kv.Namespace("ns2")
-    kvns2.Set("key", "ns2_value")
-    kvns22 = kvns2.Namespace("ns2")
-    kvns22.Set("key", "ns22_value")
+    k += 1
+
+    print(k.Get())
+
+    k = k + 19
+
+    print(k.Get())

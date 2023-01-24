@@ -1,8 +1,15 @@
 from pythonping import ping
 
-from ..Tools import Chan
-from .. import Re 
-from ..Thread import Thread
+try:
+    from ..Tools import Chan
+    from .. import Re 
+    from ..Thread import Thread
+except:
+    import sys
+    sys.path.append("..")
+    from Tools import Chan 
+    import Re  
+    from Thread import Thread
 
 class filelike():
     def __init__(self, c):

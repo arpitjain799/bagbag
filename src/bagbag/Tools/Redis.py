@@ -8,11 +8,13 @@ import time
 try:
     from .. import Funcs
     from .. import Lg
+    from .. import Base64
 except:
     import sys
     sys.path.append("..")
     import Funcs
     import Lg
+    import Base64
 
 class RedisException(Exception):
     pass 
@@ -223,6 +225,13 @@ class Redis():
         :type password: str
         """
         self.rdb = redis.Redis(host=host, port=port, db=database, password=password)
+        self.namespace = []
+
+    def __key(self, key:str) -> str:
+        if len(self.namespace) == 0:
+            return key 
+        else:
+            return ':'.join(self.namespace) + ":" + key
     
     def Ping(self) -> bool:
         """
@@ -247,7 +256,16 @@ class Redis():
         :type ttl: int
         :return: The return value is a boolean value.
         """
-        return self.rdb.set(key, pickle.dumps(value, protocol=2), ex=ttl)
+        if type(value) == int:
+            value = "i " + str(value)
+        elif type(value) == str:
+            value = "s " + str(value)
+        elif type(value) == float:
+            value = "f " + str(value)
+        else:
+            value = "p " + Base64.Encode(pickle.dumps(value, protocol=2))
+
+        return self.rdb.set(self.__key(key), value, ex=ttl)
     
     # https://redis.readthedocs.io/en/v4.3.4/commands.html#redis.commands.core.CoreCommands.get
     @RetryOnNetworkError
@@ -259,11 +277,23 @@ class Redis():
         :type key: str
         :return: A string or None
         """
-        res = self.rdb.get(key)
+        res = self.rdb.get(self.__key(key))
+
+        res = res.decode()
+
         if res != None:
-            res = pickle.loads(res)
+            if res[:2] == "i ":
+                res = int(res[2:])
+            elif res[:2] == "s ":
+                res = res[2:]
+            elif res[:2] == "f ":
+                res = float(res[2:])
+            elif res[:2] == "p ":
+                res = pickle.loads(Base64.Decode(res[2:])) 
+            else:
+                res = pickle.loads(Base64.Decode(res)) # 为了兼容之前的代码
         else:
-            res = default
+            res = default 
 
         return res
 
@@ -277,7 +307,7 @@ class Redis():
         :type key: str
         :return: The return value is a boolean value.
         """
-        return self.rdb.delete(key) == 1
+        return self.rdb.delete(self.__key(key)) == 1
     
     @RetryOnNetworkError
     def Exists(self, key:str) -> bool:
@@ -288,7 +318,7 @@ class Redis():
         :type key: str
         :return: A boolean value.
         """
-        return self.rdb.exists(key) == True
+        return self.rdb.exists(self.__key(key)) == True
     
     # https://redis.readthedocs.io/en/latest/connections.html?highlight=lock#redis.Redis.lock
     @RetryOnNetworkError
@@ -300,7 +330,7 @@ class Redis():
         :type key: str
         :return: A RedisLock object.
         """
-        return RedisLock(self.rdb.lock("redis_lock:" + key))
+        return RedisLock(self.rdb.lock("redis_lock:" + self.__key(key)))
     
     @RetryOnNetworkError
     def Queue(self, name:str, length:int=0) -> redisQueue:
@@ -311,7 +341,7 @@ class Redis():
         :type key: str
         :return: redisQueue
         """
-        return redisQueue(self.rdb, name, length)
+        return redisQueue(self.rdb, self.__key(name), length)
 
     def QueueConfirm(self, name:str, length:int=0, timeout:int=300) -> redisQueueConfirm:
         """
@@ -324,25 +354,67 @@ class Redis():
         :type length: int (optional)
         :return: A redisQueueConfirm object.
         """
-        return redisQueueConfirm(self.rdb, name, length, timeout)
+        return redisQueueConfirm(self.rdb, self.__key(name), length, timeout)
+    
+    def Key(self, key:str) -> redisKey: 
+        return redisKey(self, key) 
+
+    def Namespace(self, namespace:str) -> redisNamespaced:
+        return redisNamespaced(self.rdb, namespace)
+
+class redisNamespaced(Redis):
+    def __init__(self, rdb:Redis, namespace:str) -> None:
+        self.rdb = rdb
+        self.namespace = [namespace]
+    
+    def Namespace(self, namespace: str) -> redisNamespaced:
+        self.namespace.append(namespace)
+        return self
+
+class redisKey():
+    def __init__(self, kv:Redis, key:str) -> None:
+        self.key = key 
+        self.kv = kv
+    
+    def Set(self, value:typing.Any):
+        self.kv.Set(self.key, value)
+    
+    def Get(self, default:typing.Any=None):
+        return self.kv.Get(self.key, default)
+    
+    def Add(self, num:int|float) -> redisKey:
+        n = self.kv.Get(self.key, 0)
+        n += num 
+        self.kv.Set(self.key, n)
+        return self
+    
+    def __add__(self, num:int|float) -> redisKey:
+        return self.Add(num)
+    
+    def __iadd__(self, num:int|float) -> redisKey:
+        return self.Add(num)
 
 if __name__ == "__main__":
-    r = Redis("192.168.1.139")
-    r.Ping()
-    print(1, r.Get("key"))
-    print(2, r.Set("key", "value"))
-    print(3, r.Get("key"))
-    print(4, r.Del("key"))
-    print(5, r.Get("key"))
-    l = r.Lock("lock_key")
-    l.Acquire()
-    l.Release()
+    # r = Redis("192.168.1.224")
+    # r.Ping()
+    # print(1, r.Get("key"))
+    # print(2, r.Set("key", "value"))
+    # print(3, r.Get("key"))
+    # print(4, r.Del("key"))
+    # print(5, r.Get("key"))
+    # l = r.Lock("lock_key")
+    # l.Acquire()
+    # l.Release()
 
-    q = r.Queue('queue')
-    q.Put('1')
-    q.Put('2')
+    # q = r.Queue('queue')
+    # q.Put('1')
+    # q.Put('2')
 
-    for v in q:
-        print("value: ", v)
+    # for v in q:
+    #     print("value: ", v)
 
+    r = Redis("192.168.168.21")
+    rns = r.Namespace("ns1")
+    rnsk = rns.Key("key1")
+    rnsk += 1
 
