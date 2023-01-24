@@ -31,13 +31,13 @@ class ElasticsearchCollection():
     @retryOnNetworkError
     def Index(self, id:int|str, data:dict, refresh:bool=False, Timeout:int=15):
         url = self.baseurl + "/_doc/" + str(id) + ("?refresh" if refresh else "")
-        r = Http.PostJson(url, data, Timeout=Timeout)
+        r = Http.PostJson(url, data, timeout=Timeout)
         if r.StatusCode != 201 and r.StatusCode != 200:
             raise Exception("插入到Elasticsearch出错: 状态码不是201或者200")
     
     @retryOnNetworkError
     def Refresh(self, Timeout:int=15):
-        Http.PostRaw(self.baseurl+"/_refresh", "", Timeout=Timeout)
+        Http.PostRaw(self.baseurl+"/_refresh", "", timeout=Timeout)
     
     @retryOnNetworkError
     def Delete(self, id:int|str):

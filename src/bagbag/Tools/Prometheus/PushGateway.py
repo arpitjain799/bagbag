@@ -11,15 +11,24 @@ try:
 except:
     from metrics import * 
 
-from bagbag import Http, Tools, Lg
+from bagbag import Http, Tools, Lg, Base64
 
 class PushGateway():
-    def __init__(self, address:str, job:str, pushinterval:int=15, instance:str=None):
+    def __init__(self, address:str, job:str, pushinterval:int=15, instance:str=None, basicAuthUser:str=None, basicAuthPass:str=None):
         self.job = job 
         self.instance = instance if instance != None else socket.gethostname()
         self.address = address 
         self.registry = pc.CollectorRegistry()
         self.pushinterval = pushinterval
+
+        self.basicAuthUser = basicAuthUser
+        self.basicAuthPass = basicAuthPass
+        if self.basicAuthUser != None and self.basicAuthPass != None:
+            self.headers = {
+                "Authorization": "Basic " + Base64.Encode(self.basicAuthUser+":"+self.basicAuthPass)
+            }
+        else:
+            self.headers = {}
 
         # print("address:", address)
 
@@ -43,7 +52,7 @@ class PushGateway():
             if data != "":
                 while True:
                     try:
-                        Http.PutRaw(self.address, data, timeoutRetryTimes=9999)
+                        Http.PutRaw(self.address, data, headers=self.headers, timeoutRetryTimes=9999)
                         break 
                     except Exception as e:
                         time.sleep(1)

@@ -112,10 +112,15 @@ class NLLB():
             "src_lang": self.From,
             "tgt_lang": self.To, 
             "source": text
-        }, Timeout=60)
+        }, timeout=180, timeoutRetryTimes=3)
         # Lg.Trace(res.Content)
 
-        res = Json.Loads(res.Content)
+        try:
+            res = Json.Loads(res.Content)
+        except Exception as e:
+            Lg.Trace(res.Content)
+            Lg.Error("载入返回内容错误")
+            raise e
         
         return res["translation"][0]
 

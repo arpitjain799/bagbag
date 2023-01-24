@@ -393,11 +393,10 @@ class mySQLSQLiteKeyValueTable():
         self.tbname = tbname
         self.namespace = []
     
-    def Namespace(self, namespace:str) -> mySQLSQLiteKeyValueTable:
+    def Namespace(self, namespace:str) -> mySQLSQLiteKeyValueTableNamespaced:
         if len(':'.join(self.namespace)) > 200:
             raise Exception("Namespace too long: " + str(len(':'.join(self.namespace))))
-        self.namespace.append(namespace)
-        return self
+        return mySQLSQLiteKeyValueTableNamespaced(self.db, self.tbname, namespace)
     
     def __key(self, key:str) -> str:
         if len(self.namespace) == 0:
@@ -455,6 +454,15 @@ class mySQLSQLiteKeyValueTable():
     def Del(self, key:str):
         tb = self.db.Table(self.tbname)
         tb.Where("key", "=", self.__key(key)).Delete()
+
+class mySQLSQLiteKeyValueTableNamespaced(mySQLSQLiteKeyValueTable):
+    def __init__(self, db: MySQLSQLiteBase, tbname: str, namespace: str) -> None:
+        super().__init__(db, tbname)
+        self.namespace = [namespace]
+    
+    def Namespace(self, namespace: str) -> mySQLSQLiteKeyValueTableNamespaced:
+        self.namespace.append(namespace)
+        return self
 
 class mySQLSQLiteConfirmQueue():
     def __init__(self, db:MySQL|SQLite, name:str, timeout:int, size:int) -> None:
@@ -668,7 +676,7 @@ class MySQLSQLiteBase():
     def Close(self):
         self.db.disconnect()
     
-    def KeyValue(self, tbname:str) -> mySQLSQLiteKeyValueTable:
+    def KeyValue(self, tbname:str="kv") -> mySQLSQLiteKeyValueTable:
         return mySQLSQLiteKeyValueTable(self, tbname)
     
     def BeginTransaction(self):
@@ -790,35 +798,53 @@ if __name__ == "__main__":
 
     # Lg.Trace(db.Table("chainabuse").Columns())
 
-    db = MySQL("192.168.1.230")
+    ##############
 
-    qn = db.Queue("queue_test")
-    qn.Put(b'\x00\x00\x00\x1cftypisom\x00\x00\x02\x00isom')
-    print(qn.Size())
-    print(repr(qn.Get()))
+    # db = MySQL("192.168.1.230")
 
-    print("开启一个需要确认任务完成的队列, 3秒超时")
-    qnc = db.QueueConfirm("queue_confirm_test", timeout=3)
-    qnc.Put(b'\x00\x00\x00\x1cftypisom\x00\x00\x02\x00isom')
+    # qn = db.Queue("queue_test")
+    # qn.Put(b'\x00\x00\x00\x1cftypisom\x00\x00\x02\x00isom')
+    # print(qn.Size())
+    # print(repr(qn.Get()))
 
-    print("获取任务内容")
-    idx, data = qnc.Get()
-    print(repr(data))
+    # print("开启一个需要确认任务完成的队列, 3秒超时")
+    # qnc = db.QueueConfirm("queue_confirm_test", timeout=3)
+    # qnc.Put(b'\x00\x00\x00\x1cftypisom\x00\x00\x02\x00isom')
 
-    print("等待5秒")
-    Time.Sleep(5)
+    # print("获取任务内容")
+    # idx, data = qnc.Get()
+    # print(repr(data))
 
-    print("再次获取任务")
-    idx, data = qnc.Get()
-    print(repr(data))
+    # print("等待5秒")
+    # Time.Sleep(5)
 
-    print("确认任务完成")
-    Time.Sleep(1)
-    qnc.Done(idx)
+    # print("再次获取任务")
+    # idx, data = qnc.Get()
+    # print(repr(data))
 
-    print("等待5秒")
-    Time.Sleep(5)
+    # print("确认任务完成")
+    # Time.Sleep(1)
+    # qnc.Done(idx)
 
-    print("再次获取任务, 不等待")
-    idx, data = qnc.Get(False)
-    print(repr(data))
+    # print("等待5秒")
+    # Time.Sleep(5)
+
+    # print("再次获取任务, 不等待")
+    # idx, data = qnc.Get(False)
+    # print(repr(data))
+
+    db = MySQL("192.168.1.224")
+
+    kv = db.KeyValue()
+
+    kv.Set("key", "no_namespace")
+
+    kvns1 = kv.Namespace("ns1")
+    kvns1.Set("key", "ns1_value")
+    kvns12 = kvns1.Namespace("ns2")
+    kvns12.Set("key", "ns12_value")
+
+    kvns2 = kv.Namespace("ns2")
+    kvns2.Set("key", "ns2_value")
+    kvns22 = kvns2.Namespace("ns2")
+    kvns22.Set("key", "ns22_value")
