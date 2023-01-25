@@ -89,12 +89,12 @@ class Elevated():
         for status in tweepy.Cursor(self.api.search_tweets, q=keyword, tweet_mode='extended').items():
             yield self._wrapStatus(status)
     
-    def Timeline(self, screename:str) -> typing.Iterable[twitterTweet]:
-        for status in tweepy.Cursor(self.api.user_timeline, screen_name=screename, tweet_mode='extended').items():
+    def Timeline(self, screename:str, countPerRequest:int=40) -> typing.Iterable[twitterTweet]:
+        for status in tweepy.Cursor(self.api.user_timeline, screen_name=screename, tweet_mode='extended', count=countPerRequest).items():
             yield self._wrapStatus(status)
     
-    def Followers(self, screename:str) -> typing.Iterable[twitterUser]:
-        for user in tweepy.Cursor(self.api.get_followers, screen_name=screename).items():
+    def Followers(self, screename:str, countPerRequest:int=40) -> typing.Iterable[twitterUser]:
+        for user in tweepy.Cursor(self.api.get_followers, screen_name=screename, count=countPerRequest).items():
             yield self._wrapUser(user)
 
 if __name__ == "__main__":
@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
     cfg = json.loads(open('twitter.ident').read())
 
-    twitter = Twitter(cfg['consumer_key'], cfg['consumer_secret'])
+    twitter = Elevated(cfg['consumer_key'], cfg['consumer_secret'])
     
     print("search")
     for i in twitter.Search("coinsbee"):

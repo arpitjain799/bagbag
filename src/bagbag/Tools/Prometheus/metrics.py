@@ -3,9 +3,20 @@ import prometheus_client as pc
 class PrometheusCounter():
     def __init__(self, name:str, help:str, registry:pc.CollectorRegistry) -> None:
         self.c = pc.Counter(name, help, registry=registry)
+        self.current = 0
     
     def Add(self, num:int|float=1):
         self.c.inc(num)
+    
+    def Set(self, num:int|float=1):
+        if num < self.current:
+            raise Exception(f"Count类型只能设置更大类型的值, 当前值和想设置的值为: {self.current}, {num}")
+        
+        if num == self.current:
+            return 
+
+        self.c.inc(num - self.current)
+        self.current = num
 
 class PrometheusCounterVec():
     def __init__(self, name:str, labels:list[str], help:str, registry:pc.CollectorRegistry) -> None:

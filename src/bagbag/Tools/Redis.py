@@ -279,9 +279,8 @@ class Redis():
         """
         res = self.rdb.get(self.__key(key))
 
-        res = res.decode()
-
         if res != None:
+            res = res.decode()
             if res[:2] == "i ":
                 res = int(res[2:])
             elif res[:2] == "s ":
@@ -291,7 +290,11 @@ class Redis():
             elif res[:2] == "p ":
                 res = pickle.loads(Base64.Decode(res[2:])) 
             else:
-                res = pickle.loads(Base64.Decode(res)) # 为了兼容之前的代码
+                # 为了兼容之前的代码
+                try:
+                    res = pickle.loads(Base64.Decode(res)) 
+                except:
+                    res = pickle.loads(res)
         else:
             res = default 
 
@@ -413,8 +416,13 @@ if __name__ == "__main__":
     # for v in q:
     #     print("value: ", v)
 
-    r = Redis("192.168.168.21")
-    rns = r.Namespace("ns1")
-    rnsk = rns.Key("key1")
-    rnsk += 1
+    # r = Redis("192.168.168.21")
+    # rns = r.Namespace("ns1")
+    # rnsk = rns.Key("key1")
+    # rnsk += 1
 
+    r = Redis("192.168.1.224")
+
+    k = r.Key("testkey")
+    k.Set(1)
+    k.Get()
