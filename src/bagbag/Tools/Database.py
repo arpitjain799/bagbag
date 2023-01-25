@@ -392,7 +392,7 @@ class mySQLSQLiteKeyValueTableKey():
     def Get(self, default:typing.Any=None):
         return self.kv.Get(self.key, default)
     
-    def Add(self, num:int|float) -> mySQLSQLiteKeyValueTableKey:
+    def Add(self, num:int|float=1) -> mySQLSQLiteKeyValueTableKey:
         n = self.kv.Get(self.key, 0)
         n += num 
         self.kv.Set(self.key, n)

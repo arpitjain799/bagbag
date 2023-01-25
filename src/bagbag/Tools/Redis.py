@@ -382,7 +382,7 @@ class redisKey():
     def Get(self, default:typing.Any=None):
         return self.kv.Get(self.key, default)
     
-    def Add(self, num:int|float) -> redisKey:
+    def Add(self, num:int|float=1) -> redisKey:
         n = self.kv.Get(self.key, 0)
         n += num 
         self.kv.Set(self.key, n)
