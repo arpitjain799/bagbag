@@ -1,7 +1,7 @@
 import prometheus_client as pc
 
 class PrometheusCounter():
-    def __init__(self, name:str, help:str, registry:pc.CollectorRegistry) -> None:
+    def __init__(self, name:str, help:str, registry:pc.CollectorRegistry=None) -> None:
         self.c = pc.Counter(name, help, registry=registry)
         self.current = 0
     
@@ -19,7 +19,7 @@ class PrometheusCounter():
         self.current = num
 
 class PrometheusCounterVec():
-    def __init__(self, name:str, labels:list[str], help:str, registry:pc.CollectorRegistry) -> None:
+    def __init__(self, name:str, labels:list[str], help:str, registry:pc.CollectorRegistry=None) -> None:
         self.labels = labels 
         self.c = pc.Counter(name, help, labels, registry=registry)
         self.current = {}
@@ -89,14 +89,14 @@ class PrometheusCounterVec():
         self.current[lbr] = num
 
 class PrometheusGauge:
-    def __init__(self, name:str, help:str, registry:pc.CollectorRegistry) -> None:
+    def __init__(self, name:str, help:str, registry:pc.CollectorRegistry=None) -> None:
         self.g = pc.Gauge(name, help, registry=registry)
     
     def Set(self, num:int|float):
         self.g.set(num)
 
 class PrometheusGaugeVec():
-    def __init__(self, name:str, labels:list[str], help:str, registry:pc.CollectorRegistry) -> None:
+    def __init__(self, name:str, labels:list[str], help:str, registry:pc.CollectorRegistry=None) -> None:
         self.labels = labels 
         self.g = pc.Gauge(name, help, labels, registry=registry)
     
