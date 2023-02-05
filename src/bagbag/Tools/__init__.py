@@ -29,3 +29,5 @@ from .MatrixBot import MatrixBot
 from .Nslookup import Nslookup
 from . import Twitter
 from .DistributedLock import DistributedLock
+# from .Test import Test
+from . import BlockChain

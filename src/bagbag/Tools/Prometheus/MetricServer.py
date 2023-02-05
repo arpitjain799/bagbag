@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import prometheus_client as pc
 
 try:

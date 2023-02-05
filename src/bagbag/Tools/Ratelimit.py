@@ -7,17 +7,24 @@ except:
     sys.path.append("..")
     import Time 
 
-# sleep=True的时候会添加一个sleep, 可以把请求平均在时间段内. 在低速率的时候能限制准确. 高速率例如每秒50次以上, 实际速率会降低, 速率越高降低越多. 
-# sleep=False的时候没有sleep, 会全在一开始扔出去, 然后block住, 等下一个周期, 在需要速率很高的时候可以这样, 例如发包的时候, 一秒限制2000个包这样.
-# 
-# It takes a rate limit string in the form of "X/Y" where X is the number of requests and Y is the
-# duration. 
-# The duration can be specified in seconds (s), minutes (m), hours (h), or days (d). 
-#
-# The Take() method should be thread-safe.
-#
 class RateLimit:
     def __init__(self, rate:str, sleep:bool=True):
+        """
+        sleep=True的时候会添加一个sleep, 可以把请求平均在时间段内. 在低速率的时候能限制准确. 高速率例如每秒50次以上, 实际速率会降低, 速率越高降低越多. 
+        sleep=False的时候没有sleep, 会全在一开始扔出去, 然后block住, 等下一个周期, 在需要速率很高的时候可以这样, 例如发包的时候, 一秒限制2000个包这样.
+        
+        It takes a rate limit string in the form of "X/Y" where X is the number of requests and Y is the
+        duration. 
+        The duration can be specified in seconds (s), minutes (m), hours (h), or days (d). 
+        
+        The Take() method should be thread-safe.
+        
+        :param rate: The rate at which you want to limit the function calls
+        :type rate: str
+        :param sleep: If True, the rate limiter will sleep between requests. If False, it will not
+        sleep, defaults to True
+        :type sleep: bool (optional)
+        """
         self.history = None
         self.rate = rate
         self.num, self.duration = self._parse_rate()

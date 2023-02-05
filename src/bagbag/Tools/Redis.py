@@ -4,17 +4,18 @@ import redis
 import pickle
 import typing
 import time
+import shortuuid
 
 try:
-    from .. import Funcs
     from .. import Lg
     from .. import Base64
+    from ..Process import Process
 except:
     import sys
     sys.path.append("..")
-    import Funcs
     import Lg
     import Base64
+    from Process import Process
 
 class RedisException(Exception):
     pass 
@@ -83,6 +84,36 @@ class redisQueue():
 
         return pickle.loads(item)
     
+    @RetryOnNetworkError
+    def CheckNext(self, block:bool=True, timeout:int=None) -> typing.Any:
+        """
+        If the queue is empty, wait until it's not empty, then return the first item in the queue, will NOT pop out the item. 
+        
+        :param block: If True, the method will block until an item is available. If False, it will
+        return immediately, defaults to True
+        :type block: bool (optional)
+        :param timeout: The maximum time to wait for an item to be available
+        :type timeout: int
+        """
+        if block:
+            stime = time.time()
+            while True:
+                item = self.rdb.lindex(self.key, 0)
+                if item == None:
+                    time.sleep(0.2)
+                else:
+                    break 
+                if timeout != None:
+                    if time.time() - timeout > stime:
+                        return None
+        else:
+            item = self.rdb.lindex(self.key, 0)
+        
+        if item != None:
+            return pickle.loads(item)
+        else:
+            return None 
+    
     def Close(self):
         self.closed = True
 
@@ -105,6 +136,7 @@ class redisQueueConfirm():
         self.length = length
         self.timeout = timeout
         self.collectorLock = self.rdb.lock("redis_lock:redisQueueConfirmCollectorLock")
+        self.queueOperaLock = self.rdb.lock("redis_lock:%s:queueOperaLock" % name)
 
         self.rdb.config_set("notify-keyspace-events", "KEA")
         self.RunExpireCollector()
@@ -157,6 +189,9 @@ class redisQueueConfirm():
 
         If optional args block is true and timeout is None (the default), block
         if necessary until an item is available."""
+
+        self.queueOperaLock.acquire()
+
         if block:
             item = self.rdb.blpop(self.key, timeout=timeout)
             if item != None:
@@ -166,14 +201,46 @@ class redisQueueConfirm():
 
         # Lg.Trace(item)
         if item != None:
-            tid = Funcs.UUID()
+            tid = shortuuid.uuid()
 
             self.rdb.set(self.key + ":doing:" + tid, item)
             self.rdb.set(self.key + ":doing:shadow:" + tid, "", ex=self.timeout)
 
+            self.queueOperaLock.release()
             return tid, pickle.loads(item)
         else:
+            self.queueOperaLock.release()
             return None, None
+    
+    @RetryOnNetworkError
+    def CheckNext(self, block:bool=True, timeout:int=None) -> typing.Any:
+        """
+        If the queue is empty, wait until it's not empty, then return the first item in the queue, will NOT pop out the item. 
+        
+        :param block: If True, the method will block until an item is available. If False, it will
+        return immediately, defaults to True
+        :type block: bool (optional)
+        :param timeout: The maximum time to wait for an item to be available
+        :type timeout: int
+        """
+        if block:
+            stime = time.time()
+            while True:
+                item = self.rdb.lindex(self.key, 0)
+                if item == None:
+                    time.sleep(0.2)
+                else:
+                    break 
+                if timeout != None:
+                    if time.time() - timeout > stime:
+                        return None
+        else:
+            item = self.rdb.lindex(self.key, 0)
+        
+        if item != None:
+            return pickle.loads(item)
+        else:
+            return None 
     
     @RetryOnNetworkError
     def Done(self, tid:str):
@@ -280,14 +347,14 @@ class Redis():
         res = self.rdb.get(self.__key(key))
 
         if res != None:
-            res = res.decode()
-            if res[:2] == "i ":
+            # res = res.decode()
+            if res[:2] == b"i ":
                 res = int(res[2:])
-            elif res[:2] == "s ":
+            elif res[:2] == b"s ":
                 res = res[2:]
-            elif res[:2] == "f ":
+            elif res[:2] == b"f ":
                 res = float(res[2:])
-            elif res[:2] == "p ":
+            elif res[:2] == b"p ":
                 res = pickle.loads(Base64.Decode(res[2:])) 
             else:
                 # 为了兼容之前的代码
@@ -322,6 +389,10 @@ class Redis():
         :return: A boolean value.
         """
         return self.rdb.exists(self.__key(key)) == True
+    
+    @RetryOnNetworkError
+    def NotExists(self, key:str) -> bool:
+        return self.rdb.exists(self.__key(key)) == False
     
     # https://redis.readthedocs.io/en/latest/connections.html?highlight=lock#redis.Redis.lock
     @RetryOnNetworkError
@@ -360,7 +431,7 @@ class Redis():
         return redisQueueConfirm(self.rdb, self.__key(name), length, timeout)
     
     def Key(self, key:str) -> redisKey: 
-        return redisKey(self, key) 
+        return redisKey(self, key) # 之后会调用self的set, 会设置ns, 所以这里不用配置
 
     def Namespace(self, namespace:str) -> redisNamespaced:
         return redisNamespaced(self.rdb, namespace)
@@ -378,6 +449,7 @@ class redisKey():
     def __init__(self, kv:Redis, key:str) -> None:
         self.key = key 
         self.kv = kv
+        self.lock = self.kv.Lock("redis_key_lock:%s" % key)
     
     def Set(self, value:typing.Any):
         self.kv.Set(self.key, value)
@@ -386,9 +458,11 @@ class redisKey():
         return self.kv.Get(self.key, default)
     
     def Add(self, num:int|float=1) -> redisKey:
+        self.lock.Acquire()
         n = self.kv.Get(self.key, 0)
-        n += num 
-        self.kv.Set(self.key, n)
+        self.kv.Set(self.key, n + num)
+        self.lock.Release()
+
         return self
     
     def __add__(self, num:int|float) -> redisKey:
@@ -421,8 +495,9 @@ if __name__ == "__main__":
     # rnsk = rns.Key("key1")
     # rnsk += 1
 
-    r = Redis("192.168.1.224")
-
-    k = r.Key("testkey")
-    k.Set(1)
-    k.Get()
+    # r = Redis("10.129.129.224")
+    # k = r.Key("testkey")
+    # k.Set(1)
+    # k.Get()
+    pass
+    
