@@ -28,6 +28,10 @@ class tronAssetInfo():
         self.WhitePaper:str = None 
         self.TotalSupply:int = None 
         self.SocialMedia:list = None 
+        self.GreyTag:str = None 
+        self.RedTag:str = None 
+        self.PublicTag:str = None 
+        self.BlueTag:str = None 
     
     def __str__(self) -> str:
         m = f"tronAssetInfo("
@@ -44,7 +48,11 @@ class tronAssetInfo():
         m += f"OwnerAddress={self.OwnerAddress} "
         m += f"WhitePaper={self.WhitePaper} "
         m += f"TotalSupply={self.TotalSupply} "
-        m += f"SocialMedia={self.SocialMedia}"
+        m += f"SocialMedia={self.SocialMedia} "
+        m += f"GreyTag={self.GreyTag} "
+        m += f"RedTag={self.RedTag} "
+        m += f"PublicTag={self.PublicTag} "
+        m += f"BlueTag={self.BlueTag}"
         m += ")"
 
         return m
@@ -52,7 +60,6 @@ class tronAssetInfo():
 class TronAsset():
     def __init__(self, name:str) -> None:
         self.name = name 
-        
     
     def Name(self) -> str:
         return self.name 
@@ -86,6 +93,10 @@ class TronAsset():
         tronassetinfo.WhitePaper = rd['white_paper']
         tronassetinfo.TotalSupply = rd['totalSupply']
         tronassetinfo.SocialMedia = rd['social_media']
+        tronassetinfo.GreyTag = rd["greyTag"]
+        tronassetinfo.RedTag = rd["redTag"]
+        tronassetinfo.PublicTag = rd['publicTag']
+        tronassetinfo.BlueTag = rd['blueTag']
 
         return tronassetinfo
 
@@ -106,6 +117,10 @@ class tronContractInfo():
         self.WhitePaper:str = None 
         self.GitHub:str = None 
         self.TotalSupplyWithDecimals:int = None 
+        self.GreyTag:str = None 
+        self.RedTag:str = None 
+        self.PublicTag:str = None 
+        self.BlueTag:str = None 
     
     def __str__(self) -> str:
         m = "tronContractInfo("
@@ -122,7 +137,11 @@ class tronContractInfo():
         m += f"SocialMediaList={self.SocialMediaList} "
         m += f"WhitePaper={self.WhitePaper} "
         m += f"GitHub={self.GitHub} "
-        m += f"TotalSupplyWithDecimals={self.TotalSupplyWithDecimals}"
+        m += f"TotalSupplyWithDecimals={self.TotalSupplyWithDecimals} "
+        m += f"GreyTag={self.GreyTag} "
+        m += f"RedTag={self.RedTag} "
+        m += f"PublicTag={self.PublicTag} "
+        m += f"BlueTag={self.BlueTag}"
         m += ")"
 
         return m
@@ -162,6 +181,10 @@ class TronContract():
         troncontractinfo.WhitePaper = rd['white_paper']
         troncontractinfo.GitHub = rd['git_hub']
         troncontractinfo.TotalSupplyWithDecimals = rd['total_supply_with_decimals'] 
+        troncontractinfo.GreyTag = rd["greyTag"]
+        troncontractinfo.RedTag = rd["redTag"]
+        troncontractinfo.PublicTag = rd['publicTag']
+        troncontractinfo.BlueTag = rd['blueTag']
 
         return troncontractinfo
     
@@ -433,7 +456,9 @@ if __name__ == "__main__":
         if tx.TxID == '8e055811c777cd0cf5ec2b74f79a2cb4f1aaf143011e9afe468760d654f86465':
             Lg.Trace(tx)
             if tx.Asset != None:
+                Lg.Trace(tx.Asset)
                 Lg.Trace(tx.Asset.Info())
             if tx.Contract != None:
+                Lg.Trace(tx.Contract)
                 Lg.Trace(tx.Contract.Info())
             # ipdb.set_trace()

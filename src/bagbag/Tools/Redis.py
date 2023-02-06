@@ -135,8 +135,8 @@ class redisQueueConfirm():
         self.closed = False
         self.length = length
         self.timeout = timeout
-        self.collectorLock = self.rdb.lock("redis_lock:redisQueueConfirmCollectorLock")
-        self.queueOperaLock = self.rdb.lock("redis_lock:%s:queueOperaLock" % name)
+        self.collectorLock = self.rdb.lock("redis_lock:redisQueueConfirmdCollectorLock", timeout=120)
+        self.queueOperaLock = self.rdb.lock("redis_lock:%s:queueConfirmdOperaLock" % name, timeout=5)
 
         self.rdb.config_set("notify-keyspace-events", "KEA")
         self.RunExpireCollector()
@@ -396,7 +396,7 @@ class Redis():
     
     # https://redis.readthedocs.io/en/latest/connections.html?highlight=lock#redis.Redis.lock
     @RetryOnNetworkError
-    def Lock(self, key:str) -> RedisLock:
+    def Lock(self, key:str, timeout:int=300) -> RedisLock:
         """
         It returns a RedisLock object.
         
@@ -404,7 +404,7 @@ class Redis():
         :type key: str
         :return: A RedisLock object.
         """
-        return RedisLock(self.rdb.lock("redis_lock:" + self.__key(key)))
+        return RedisLock(self.rdb.lock("redis_lock:" + self.__key(key), timeout=300))
     
     @RetryOnNetworkError
     def Queue(self, name:str, length:int=0) -> redisQueue:
