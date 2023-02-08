@@ -1,1 +1,1 @@
-from .Tron import Tron
+from . import Tron

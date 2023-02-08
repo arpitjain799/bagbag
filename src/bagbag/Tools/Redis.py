@@ -193,9 +193,20 @@ class redisQueueConfirm():
         self.queueOperaLock.acquire()
 
         if block:
-            item = self.rdb.blpop(self.key, timeout=timeout)
-            if item != None:
-                item = item[1]
+            count = 0
+            while True:
+                item = self.rdb.lpop(self.key)
+                if item != None:
+                    break 
+                else:
+                    self.queueOperaLock.release()
+
+                    count += 1
+                    if timeout != None and count > timeout:
+                        break 
+  
+                    time.sleep(1)
+                    self.queueOperaLock.acquire()
         else:
             item = self.rdb.lpop(self.key)
 

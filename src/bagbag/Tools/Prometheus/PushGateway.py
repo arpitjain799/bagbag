@@ -14,7 +14,7 @@ except:
 from bagbag import Http, Tools, Lg, Base64
 
 class PushGateway():
-    def __init__(self, address:str, job:str, pushinterval:int=15, instance:str=None, basicAuthUser:str=None, basicAuthPass:str=None):
+    def __init__(self, address:str, job:str, pushinterval:int=15, basicAuthUser:str=None, basicAuthPass:str=None, instance:str=None):
         self.job = job 
         self.instance = instance if instance != None else socket.gethostname()
         self.address = address 

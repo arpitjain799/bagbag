@@ -6,7 +6,7 @@ from tronpy.providers import HTTPProvider
 
 import traceback
 
-from ... import Http, Json, Re, Lg, Time 
+from bagbag import Http, Json, Re, Lg, Time 
 
 assetDecimals = {}
 contractDecimals = {}
@@ -56,6 +56,9 @@ class tronAssetInfo():
         m += ")"
 
         return m
+    
+    def __repr__(self) -> str:
+        return self.__str__()
 
 class TronAsset():
     def __init__(self, name:str) -> None:
@@ -65,7 +68,7 @@ class TronAsset():
         return self.name 
     
     def Info(self) -> tronAssetInfo:
-        content = Http.Get("https://apilist.tronscanapi.com/api/token?id=%d&showAll=1" % self.name, timeoutRetryTimes=999).Content
+        content = Http.Get("https://apilist.tronscanapi.com/api/token?id=%s&showAll=1" % str(self.name), timeoutRetryTimes=999).Content
         contentj = Json.Loads(content)
 
         tronassetinfo = tronAssetInfo()
@@ -100,6 +103,32 @@ class TronAsset():
 
         return tronassetinfo
 
+# TLTPqeNi3DXgNdNiSYtx91nUK7PEk8siEx
+class tronContractTokenInfo():
+    def __init__(self) -> None:
+        self.raw_data:dict = None 
+        self.Address:str = None 
+        self.Abbr:str = None 
+        self.Name:str = None 
+        self.Decimal:int = None  
+        self.Type:str = None 
+        self.IssuerAddr:str = None 
+    
+    def __str__(self) -> str:
+        m = f"tronContractTokenInfo("
+        m += f"Address={self.Address} "
+        m += f"Abbr={self.Abbr} "
+        m += f"Name={self.Name} "
+        m += f"Decimal={self.Decimal} "
+        m += f"Type={self.Type} "
+        m += f"IssuerAddr={self.IssuerAddr}"
+        m += ")"
+
+        return m
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
 class tronContractInfo():
     def __init__(self) -> None:
         self.raw_data:dict = None 
@@ -121,6 +150,7 @@ class tronContractInfo():
         self.RedTag:str = None 
         self.PublicTag:str = None 
         self.BlueTag:str = None 
+        # self.TokenInfo:tronContractTokenInfo = None 
     
     def __str__(self) -> str:
         m = "tronContractInfo("
@@ -141,10 +171,14 @@ class tronContractInfo():
         m += f"GreyTag={self.GreyTag} "
         m += f"RedTag={self.RedTag} "
         m += f"PublicTag={self.PublicTag} "
-        m += f"BlueTag={self.BlueTag}"
+        m += f"BlueTag={self.BlueTag} "
+        # m += f"TokenInfo={self.TokenInfo}"
         m += ")"
 
         return m
+    
+    def __repr__(self) -> str:
+        return self.__str__()
 
 class TronContract():
     def __init__(self, address:str) -> None:
@@ -158,44 +192,88 @@ class TronContract():
         contentj = Json.Loads(content)
 
         troncontractinfo = tronContractInfo()
-        troncontractinfo.raw_data = contentj
 
         rd = None 
         for rd in contentj['trc20_tokens']:
             if self.address == rd['contract_address']:
                 break 
-        if rd == None:
-            raise Exception(f"找不到trc20的info:{self.address}\n服务器返回的数据为:\n{content}")
 
-        troncontractinfo.ContractAddress = rd['contract_address']
-        troncontractinfo.ContractName = rd['contract_name']
-        troncontractinfo.Symbol = rd['symbol']
-        troncontractinfo.Name = rd['name']
-        troncontractinfo.IssueAddress = rd['issue_address']
-        troncontractinfo.IssueTime = Time.Strptime(rd['issue_time'])
-        troncontractinfo.Decimals = rd['decimals']
-        troncontractinfo.HomePage = rd['home_page']
-        troncontractinfo.TokenDesc = rd['token_desc']
-        troncontractinfo.Email = rd['email']
-        troncontractinfo.SocialMediaList = rd['social_media_list']
-        troncontractinfo.WhitePaper = rd['white_paper']
-        troncontractinfo.GitHub = rd['git_hub']
-        troncontractinfo.TotalSupplyWithDecimals = rd['total_supply_with_decimals'] 
-        troncontractinfo.GreyTag = rd["greyTag"]
-        troncontractinfo.RedTag = rd["redTag"]
-        troncontractinfo.PublicTag = rd['publicTag']
-        troncontractinfo.BlueTag = rd['blueTag']
+        if rd != None:
+            troncontractinfo.raw_data = contentj
+
+            troncontractinfo.ContractAddress = rd['contract_address']
+            troncontractinfo.ContractName = rd['contract_name']
+            troncontractinfo.Symbol = rd['symbol']
+            troncontractinfo.Name = rd['name']
+            troncontractinfo.IssueAddress = rd['issue_address']
+            troncontractinfo.IssueTime = Time.Strptime(rd['issue_time'])
+            troncontractinfo.Decimals = rd['decimals']
+            troncontractinfo.HomePage = rd['home_page']
+            troncontractinfo.TokenDesc = rd['token_desc']
+            troncontractinfo.Email = rd['email']
+            troncontractinfo.SocialMediaList = rd['social_media_list']
+            troncontractinfo.WhitePaper = rd['white_paper']
+            troncontractinfo.GitHub = rd['git_hub']
+            troncontractinfo.TotalSupplyWithDecimals = rd['total_supply_with_decimals'] 
+            troncontractinfo.GreyTag = rd["greyTag"]
+            troncontractinfo.RedTag = rd["redTag"]
+            troncontractinfo.PublicTag = rd['publicTag']
+            troncontractinfo.BlueTag = rd['blueTag']
+        else:
+            content = Http.Get("https://apilist.tronscanapi.com/api/contract?contract=%s&type=contract" % self.address, timeoutRetryTimes=999).Content
+            contentj = Json.Loads(content)
+
+            rd = None 
+            for rd in contentj['data']:
+                if self.address == rd['address']:
+                    break 
+            
+            if rd != None:
+                troncontractinfo.ContractAddress = rd['address']
+                troncontractinfo.IssueTime = rd['date_created']
+                troncontractinfo.IssueAddress = rd['creator']['address']
+                troncontractinfo.Name = rd['name']
+                troncontractinfo.GreyTag = rd["greyTag"]
+                troncontractinfo.RedTag = rd["redTag"]
+                troncontractinfo.PublicTag = rd['publicTag']
+                troncontractinfo.BlueTag = rd['blueTag']
+                
+                # ti = tronContractTokenInfo()
+
+                # if 'tokenInfo' in rd:
+                #     tidi = rd['tokenInfo']
+                #     ti.raw_data = tidi
+
+                #     if 'tokenId' in tidi:
+                #         ti.Address = tidi['tokenId']
+                #     if 'tokenAbbr' in tidi:
+                #         ti.Abbr = tidi['tokenAbbr']
+                #     if 'tokenName' in tidi:
+                #         ti.Name = tidi['tokenName']
+                #     if 'tokenDecimal' in tidi:
+                #         ti.Decimal = tidi['tokenDecimal']
+                #     if 'tokenType' in tidi:
+                #         ti.Type = tidi['tokenType']
+                #     if 'issuerAddr' in tidi:
+                #         ti.IssuerAddr = tidi['issuerAddr']
+                
+                # troncontractinfo.TokenInfo = ti
+            else:
+                raise Exception(f"找不到trc20的info:{self.address}\n服务器返回的数据为:\n{content}")
 
         return troncontractinfo
     
     def __str__(self) -> str:
         return f"TronContract(Address={self.address})"
+    
+    def __repr__(self) -> str:
+        return self.__str__()
 
 class tronTranscation():
-    def __init__(self, trx:dict, tron:Tron, block:tronBlock) -> None:
+    def __init__(self, trx:dict, tron:TronClient, block:tronBlock) -> None:
         # Lg.Trace()
         self.block:tronBlock = block
-        self.tron:Tron = tron
+        self.tron:TronClient = tron
         self.trx:dict = trx
 
         self.contract:dict = trx["raw_data"]["contract"][0]
@@ -303,6 +381,9 @@ class tronTranscation():
         m += ")"
 
         return m
+    
+    def __repr__(self) -> str:
+        return self.__str__()
 
     def getAssetDecimals(self, assetName:str) -> int:
         data = Http.PostJson(self.tron.nodeServer + "/wallet/getassetissuebyid", {'value': assetName, 'visible': True}, timeoutRetryTimes=999999).Content.replace('\n', '')
@@ -407,6 +488,9 @@ class tronBlock():
         m += ")"
 
         return m
+    
+    def __repr__(self) -> str:
+        return self.__str__()
 
     def Transcations(self) -> list[tronTranscation]:
         """
@@ -437,10 +521,10 @@ class tronBlock():
 
         return trxs 
 
-class Tron():
-    def __init__(self, nodeServer:str) -> None:
-        self.nodeServer:str = nodeServer
-        self.tron = TronAPI(HTTPProvider(nodeServer))
+class TronClient():
+    def __init__(self, fullNodeServer:str) -> None:
+        self.nodeServer:str = fullNodeServer
+        self.tron = TronAPI(HTTPProvider(fullNodeServer))
     
     def Block(self, blockNumber:int) -> tronBlock:
         block = self.tron.get_block(blockNumber)
@@ -448,17 +532,20 @@ class Tron():
         return tronBlock(block, self)
 
 if __name__ == "__main__":
-    tttt = Tron("http://13.124.62.58:8090")
-    bdf = tttt.Block(48311298)
-    Lg.Trace(bdf)
-    txs = bdf.Transcations()
-    for tx in txs:
-        if tx.TxID == '8e055811c777cd0cf5ec2b74f79a2cb4f1aaf143011e9afe468760d654f86465':
-            Lg.Trace(tx)
-            if tx.Asset != None:
-                Lg.Trace(tx.Asset)
-                Lg.Trace(tx.Asset.Info())
-            if tx.Contract != None:
-                Lg.Trace(tx.Contract)
-                Lg.Trace(tx.Contract.Info())
-            # ipdb.set_trace()
+    # tttt = TronClient("http://13.124.62.58:8090")
+    # bdf = tttt.Block(48311298)
+    # Lg.Trace(bdf)
+    # txs = bdf.Transcations()
+    # for tx in txs:
+    #     if tx.TxID == '8e055811c777cd0cf5ec2b74f79a2cb4f1aaf143011e9afe468760d654f86465':
+    #         Lg.Trace(tx)
+    #         if tx.Asset != None:
+    #             Lg.Trace(tx.Asset)
+    #             Lg.Trace(tx.Asset.Info())
+    #         if tx.Contract != None:
+    #             Lg.Trace(tx.Contract)
+    #             Lg.Trace(tx.Contract.Info())
+    #         # ipdb.set_trace()
+
+    t = TronContract("TYb7JUsMo8Mev1Caxnzg1o1XuKuT3mMdhc")
+    Lg.Trace(t.Info())
