@@ -85,12 +85,12 @@ class Elevated():
 
         return t
     
-    def Search(self, keyword:str, days:int=7) -> typing.Iterable[twitterTweet]:
-        for status in tweepy.Cursor(self.api.search_tweets, q=keyword, tweet_mode='extended').items():
+    def Search(self, keyword:str, days:int=7, countPerRequest:int=40, sinceID:int=None) -> typing.Iterable[twitterTweet]:
+        for status in tweepy.Cursor(self.api.search_tweets, q=keyword, tweet_mode='extended', count=countPerRequest, since_id=sinceID).items():
             yield self._wrapStatus(status)
     
-    def Timeline(self, screename:str, countPerRequest:int=40) -> typing.Iterable[twitterTweet]:
-        for status in tweepy.Cursor(self.api.user_timeline, screen_name=screename, tweet_mode='extended', count=countPerRequest).items():
+    def Timeline(self, screename:str, countPerRequest:int=40, sinceID:int=None) -> typing.Iterable[twitterTweet]:
+        for status in tweepy.Cursor(self.api.user_timeline, screen_name=screename, tweet_mode='extended', count=countPerRequest, since_id=sinceID).items():
             yield self._wrapStatus(status)
     
     def Followers(self, screename:str, countPerRequest:int=40) -> typing.Iterable[twitterUser]:
@@ -118,3 +118,5 @@ if __name__ == "__main__":
     for i in twitter.Followers("asiwaju_wa"):
         print(i)
         break 
+
+    

@@ -76,9 +76,11 @@ class TronAsset():
         tronassetinfo.raw_data = contentj
 
         rd = None 
-        for rd in contentj['data']:
-            if self.name == rd['tokenID']:
+        for rr in contentj['data']:
+            if self.name == rr['tokenID']:
+                rd = rr
                 break 
+
         if rd == None:
             raise Exception(f"找不到trc10的info:{self.name}\n服务器返回的数据为:\n{content}")
 
@@ -150,6 +152,7 @@ class tronContractInfo():
         self.RedTag:str = None 
         self.PublicTag:str = None 
         self.BlueTag:str = None 
+        self.TokenType:str = None 
         # self.TokenInfo:tronContractTokenInfo = None 
     
     def __str__(self) -> str:
@@ -172,6 +175,7 @@ class tronContractInfo():
         m += f"RedTag={self.RedTag} "
         m += f"PublicTag={self.PublicTag} "
         m += f"BlueTag={self.BlueTag} "
+        m += f"TokenType={self.TokenType}"
         # m += f"TokenInfo={self.TokenInfo}"
         m += ")"
 
@@ -219,18 +223,25 @@ class TronContract():
             troncontractinfo.RedTag = rd["redTag"]
             troncontractinfo.PublicTag = rd['publicTag']
             troncontractinfo.BlueTag = rd['blueTag']
+            troncontractinfo.TokenType = rd['tokenType']
         else:
             content = Http.Get("https://apilist.tronscanapi.com/api/contract?contract=%s&type=contract" % self.address, timeoutRetryTimes=999).Content
             contentj = Json.Loads(content)
 
             rd = None 
-            for rd in contentj['data']:
-                if self.address == rd['address']:
+            for rr in contentj['data']:
+                if self.address == rr['address']:
+                    rd = rr
                     break 
             
             if rd != None:
+                troncontractinfo.raw_data = contentj
+
+                # Lg.Trace(self.address)
+                # Lg.Trace(rd)
+
                 troncontractinfo.ContractAddress = rd['address']
-                troncontractinfo.IssueTime = rd['date_created']
+                troncontractinfo.IssueTime = rd['date_created'] / 1000
                 troncontractinfo.IssueAddress = rd['creator']['address']
                 troncontractinfo.Name = rd['name']
                 troncontractinfo.GreyTag = rd["greyTag"]
@@ -274,7 +285,7 @@ class tronTranscation():
         # Lg.Trace()
         self.block:tronBlock = block
         self.tron:TronClient = tron
-        self.trx:dict = trx
+        self.raw_data:dict = trx
 
         self.contract:dict = trx["raw_data"]["contract"][0]
         
@@ -286,6 +297,10 @@ class tronTranscation():
         self.TxID:str = trx["txID"]
         self.Type:str = self.contract["type"]
         # Lg.Trace()
+
+        self.Amount:int = None
+        self.FromAddress:str = None 
+        self.ToAddress:str = None 
 
         self.Expiration:int = None 
         if 'expiration' in trx["raw_data"]:
@@ -450,11 +465,11 @@ class tronTranscation():
         return int(rd['decimals'])
 
 class tronBlock():
-    def __init__(self, block:dict, tron:Tron) -> None:
-        self.tron:Tron = tron
+    def __init__(self, block:dict, tron:TronClient) -> None:
+        self.tron:TronClient = tron
         # Lg.Trace()
 
-        self.block:dict = block 
+        self.raw_data:dict = block 
         self.BlockID:str = block['blockID']
         self.TxTrieRoot:str = block['block_header']['raw_data']['txTrieRoot']
         self.WitnessAddress:str = block['block_header']['raw_data']['witness_address']
@@ -498,12 +513,12 @@ class tronBlock():
         不会解析所有的transcation, 只会解析一部分交易相关的. 
         具体会解析哪些, 还需要看看源码. 
         """
-        # Lg.Trace(self.block)
+        # Lg.Trace(self.raw_data)
         trxs = []
-        if "transactions" not in self.block:
+        if "transactions" not in self.raw_data:
             return trxs 
 
-        for trx in self.block["transactions"]:
+        for trx in self.raw_data["transactions"]:
             txid = trx["txID"]
             contract = trx["raw_data"]["contract"][0]
 
@@ -547,5 +562,5 @@ if __name__ == "__main__":
     #             Lg.Trace(tx.Contract.Info())
     #         # ipdb.set_trace()
 
-    t = TronContract("TYb7JUsMo8Mev1Caxnzg1o1XuKuT3mMdhc")
+    t = TronContract("TS6dob4Cbrfvi1oSxm5WrbyZZQLCqgFjHV")
     Lg.Trace(t.Info())

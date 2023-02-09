@@ -126,7 +126,7 @@ class mySQLSQLiteTable():
             with self.schema.table(self.tbname) as table:
                 table.index(*cols)
         except Exception as e:
-            print(e)
+            # print(e)
             if "Duplicate key name" not in str(e) and "already exists" not in str(e):
                 raise e
 
