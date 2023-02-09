@@ -16,14 +16,6 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
 
 # Library
 
-* Twitter
-  * Essential(bearerToken:str)
-    * Search(keyword:str, sinceID:int=None, tweetPerRequest:int=10) -> typing.Iterable[twitterTweet]
-    * Timeline(screename:str, sinceID:int=None, tweetPerRequest:int=10) -> typing.Iterable[twitterTweet]
-  * Elevated(consumer_key:str, consumer_secret:str)
-    * Search(keyword:str, days:int=7) -> typing.Iterable[twitterTweet]
-    * Timeline(screename:str) -> typing.Iterable[twitterTweet]
-    * Followers(screename:str) -> typing.Iterable[twitterUser]
 * Crypto
   * AES(key:str, mode:str="cfb")
     * Encrypt(raw:str) -> str
@@ -125,6 +117,25 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * UUID() -> str
   * CutSentence(sentence:str, filter:bool=True) -> list[str]
 * Tools 一些工具
+  * BlockChain
+    * Tron
+      * TronClient(fullNodeServer:str)
+        * Block(blockNumber:int) -> tronBlock
+          * Transcations() -> list[tronTranscation]
+      * TronContract(address:str)
+        * Info()
+        * Address()
+      * TronAsset(name:str)
+        * Info()
+        * Name()
+  * Twitter
+    * Essential(bearerToken:str)
+      * Search(keyword:str, sinceID:int=None, tweetPerRequest:int=10) -> typing.Iterable[twitterTweet]
+      * Timeline(screename:str, sinceID:int=None, tweetPerRequest:int=10) -> typing.Iterable[twitterTweet]
+    * Elevated(consumer_key:str, consumer_secret:str)
+      * Search(keyword:str, days:int=7) -> typing.Iterable[twitterTweet]
+      * Timeline(screename:str) -> typing.Iterable[twitterTweet]
+      * Followers(screename:str) -> typing.Iterable[twitterUser]
   * Nslookup(server:list[str]=["8.8.8.8", "1.1.1.1", "8.8.4.4"], tcp:bool=False)
     * A(domain:str) -> list[str]
     * AAAA(domain:str) -> list[str]
