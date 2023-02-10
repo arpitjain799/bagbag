@@ -85,11 +85,41 @@ class Elevated():
 
         return t
     
-    def Search(self, keyword:str, days:int=7, countPerRequest:int=40, sinceID:int=None) -> typing.Iterable[twitterTweet]:
+    def Search(self, keyword:str, excludeRetweet:bool=True, days:int=7, countPerRequest:int=40, sinceID:int=None) -> typing.Iterable[twitterTweet]:
+        """
+        It takes a keyword, and returns an iterator of tweets that contain that keyword. 
+        tweet的ID是从大到小, 也就是数据的时间是从近到远
+        
+        :param keyword: The keyword to search for
+        :type keyword: str
+        :param days: How many days back to search, defaults to 7
+        :type days: int (optional)
+        :param countPerRequest: The number of tweets to return per request. The maximum is 100, defaults
+        to 40
+        :type countPerRequest: int (optional)
+        :param sinceID: The ID of the tweet to start from. If you want to start from the beginning, set
+        this to None
+        :type sinceID: int
+        """
+        if excludeRetweet:
+            keyword = keyword + " -filter:retweets"
+            
         for status in tweepy.Cursor(self.api.search_tweets, q=keyword, tweet_mode='extended', count=countPerRequest, since_id=sinceID).items():
             yield self._wrapStatus(status)
     
     def Timeline(self, screename:str, countPerRequest:int=40, sinceID:int=None) -> typing.Iterable[twitterTweet]:
+        """
+        tweet from the timeline of the user with the given screen name
+        tweet的ID是从大到小, 也就是数据的时间是从近到远
+        
+        :param screename: The screen name of the user
+        :type screename: str
+        :param countPerRequest: The number of tweets to return per request. The maximum is 200, defaults
+        to 40
+        :type countPerRequest: int (optional)
+        :param sinceID: If you want to get tweets since a certain ID, you can use this
+        :type sinceID: int
+        """
         for status in tweepy.Cursor(self.api.user_timeline, screen_name=screename, tweet_mode='extended', count=countPerRequest, since_id=sinceID).items():
             yield self._wrapStatus(status)
     
