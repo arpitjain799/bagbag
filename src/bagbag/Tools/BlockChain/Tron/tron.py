@@ -68,8 +68,12 @@ class TronAsset():
         return self.name 
     
     def Info(self) -> tronAssetInfo:
-        content = Http.Get("https://apilist.tronscanapi.com/api/token?id=%s&showAll=1" % str(self.name), timeoutRetryTimes=999).Content
-        contentj = Json.Loads(content)
+        hresp = Http.Get("https://apilist.tronscanapi.com/api/token?id=%s&showAll=1" % str(self.name), timeoutRetryTimes=999)
+        content = hresp.Content
+        try:
+            contentj = Json.Loads(content)
+        except Exception as e:
+            raise Exception("服务器返回的状态码为: " + str(hresp.StatusCode) + "\n\n服务器返回的数据为:\n\n" + content + "\n\n" + traceback.format_exc())
 
         tronassetinfo = tronAssetInfo()
 
@@ -77,7 +81,7 @@ class TronAsset():
 
         rd = None 
         for rr in contentj['data']:
-            if self.name == rr['tokenID']:
+            if self.name == str(rr['tokenID']):
                 rd = rr
                 break 
 
@@ -192,8 +196,12 @@ class TronContract():
         return self.address 
     
     def Info(self) -> tronContractInfo:
-        content = Http.Get("https://apilist.tronscanapi.com/api/token_trc20?contract=%s&showAll=1" % self.address, timeoutRetryTimes=999).Content
-        contentj = Json.Loads(content)
+        hresp = Http.Get("https://apilist.tronscanapi.com/api/token_trc20?contract=%s&showAll=1" % self.address, timeoutRetryTimes=999)
+        content = hresp.Content
+        try:
+            contentj = Json.Loads(content)
+        except Exception as e:
+            raise Exception("服务器返回的状态码为: " + str(hresp.StatusCode) + "\n\n服务器返回的数据为:\n\n" + content + "\n\n" + traceback.format_exc())
 
         troncontractinfo = tronContractInfo()
 
@@ -344,42 +352,47 @@ class tronTranscation():
             if 'data' in self.contract["parameter"]["value"]:
                 data = self.contract["parameter"]["value"]['data'] 
 
-                if data[:8] in [
-                    "a9059cbb", # transfer 
-                    "23b872dd", # transferFrom
-                ]:
-                    if self.Contract.Address() not in contractDecimals:
-                        try:
-                            contractDecimals[self.Contract.Address()] = self.getContractDecimals(self.Contract.Address())
-                        except Exception as e:
-                            Lg.Warn(f"获取合约{self.Contract.Address()}精度失败:\n" + traceback.format_exc())
-                            contractDecimals[self.Contract.Address()] = None 
+                # 这个交易的data只有8个字符的长度
+                # b9fdb6cfc13845fce23da0762393482c145bbb8c2ac6094faf3a67ae3f389649
+                # 'contractRet': 'REVERT'
+                # 'data': 'a9059cbb',
+                if len(data) != 8:
+                    if data[:8] in [
+                        "a9059cbb", # transfer 
+                        "23b872dd", # transferFrom
+                    ]:
+                        if self.Contract.Address() not in contractDecimals:
+                            try:
+                                contractDecimals[self.Contract.Address()] = self.getContractDecimals(self.Contract.Address())
+                            except Exception as e:
+                                Lg.Warn(f"获取合约{self.Contract.Address()}精度失败:\n" + traceback.format_exc())
+                                contractDecimals[self.Contract.Address()] = None 
 
-                # transfer
-                if data[:8] == "a9059cbb":
-                    # Lg.Trace()
-                    self.FromAddress:str = self.contract["parameter"]["value"]["owner_address"]
-                    self.ToAddress:str = tronpy.keys.to_base58check_address('41' + (data[8:72])[-40:])
-                    self.Amount:int = int(data[-64:], 16)
+                    # transfer
+                    if data[:8] == "a9059cbb":
+                        # Lg.Trace()
+                        self.FromAddress:str = self.contract["parameter"]["value"]["owner_address"]
+                        self.ToAddress:str = tronpy.keys.to_base58check_address('41' + (data[8:72])[-40:])
+                        self.Amount:int = int(data[-64:], 16)
 
-                    # if contractDecimals[self.ContractAddress] != None:
-                    #     # Lg.Trace()
-                    #     if contractDecimals[self.ContractAddress] <= 18:
-                    #         self.Decimals = 10 ** contractDecimals[self.ContractAddress] 
-                    #         # Lg.Trace()
-                    self.Decimals:int = contractDecimals[self.Contract.Address()]
+                        # if contractDecimals[self.ContractAddress] != None:
+                        #     # Lg.Trace()
+                        #     if contractDecimals[self.ContractAddress] <= 18:
+                        #         self.Decimals = 10 ** contractDecimals[self.ContractAddress] 
+                        #         # Lg.Trace()
+                        self.Decimals:int = contractDecimals[self.Contract.Address()]
 
-                # transferFrom
-                elif data[:8] == "23b872dd":
-                    self.FromAddress:str = tronpy.keys.to_base58check_address('41' + (data[8:72])[-40:])
-                    self.ToAddress:str = tronpy.keys.to_base58check_address('41' + (data[72:136])[-40:])
-                    self.Amount:int = int(data[-64:], 16) 
+                    # transferFrom
+                    elif data[:8] == "23b872dd":
+                        self.FromAddress:str = tronpy.keys.to_base58check_address('41' + (data[8:72])[-40:])
+                        self.ToAddress:str = tronpy.keys.to_base58check_address('41' + (data[72:136])[-40:])
+                        self.Amount:int = int(data[-64:], 16) 
 
-                    # if contractDecimals[self.ContractAddress] != None:
-                    #     if contractDecimals[self.ContractAddress] <= 18:
-                    #         self.Decimals = 10 ** contractDecimals[self.ContractAddress]
-                    self.Decimals:int = contractDecimals[self.Contract.Address()]
-    
+                        # if contractDecimals[self.ContractAddress] != None:
+                        #     if contractDecimals[self.ContractAddress] <= 18:
+                        #         self.Decimals = 10 ** contractDecimals[self.ContractAddress]
+                        self.Decimals:int = contractDecimals[self.Contract.Address()]
+        
     def __str__(self) -> str:
         m = "tronTranscation("
         m += f"TxID={self.TxID} "
