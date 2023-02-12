@@ -6,6 +6,7 @@ try:
     from .. import Lg
     from .. import Base64
     from .. import Time 
+    from .Redis import redisKey
 except:
     import orator
     from Lock import Lock
@@ -381,6 +382,72 @@ class mySQLSQLiteTable():
             for i in self.db.db.select("PRAGMA table_info(`"+self.tbname+"`);"):
                 res.append({'name': i["name"], 'type': i["type"]})
         return res
+    
+    @initTableObj
+    @avoidError
+    def _get_do_not_clean(self) -> list[dict]:
+        lastqueryiserror = False 
+        while True:
+            try:
+                res = [dict(i) for i in self.table[self._id()].get()]
+                if lastqueryiserror and len(res) == 0:
+                    Time.Sleep(0.5)
+                else:
+                    break 
+            except pymysql.err.OperationalError as e:  
+                if e.args[0] == 2003:
+                    lastqueryiserror = True 
+                    Time.Sleep(1)
+                else:
+                    raise e 
+
+        return res
+    
+    @initTableObj
+    def Iterate(self, chunksize:int=200, seekobj:mySQLSQLiteKeyValueTableKey|redisKey=None) -> typing.Iterable[dict]:
+        """
+        迭代小批次的取出大批量的数据, 不是使用offset, 会对id进行where判断来提取, 所以速度会很快.
+        因为会对id进行比对来提取数据, 所以其它地方设置的select中的对id的where条件会被清除. 
+        seekobj需要实现两个方法, Set和Get, 会用来保存上次提取的进度, 如果为None就不会持久化的保存进度.
+        因为每次返回一条数据之后都会调用seekobj的Set方法, 所以最好是使用redis来存储进度.
+        如果有传入seekobj, 因为Set方法的调用是在yield语句之后, 所以如果处理当前数据抛异常导致中断, 就不会执行到Set方法, 所以下次再次启动程序仍然会返回当前的这条数据. 
+
+        :param chunksize: 每次从数据库select的数据的量
+        :type chunksize: int (optional)
+        :param seekobj: The object that stores the last idx
+        :type seekobj: mySQLSQLiteKeyValueTableKey|redisKey
+        :return: A generator object.
+        """
+        if seekobj == None:
+            idx = 0
+        else:
+            idx = seekobj.Get(0)
+        
+        while True:
+            # 如果有where语句作用id字段里面, 在sql的builder里面, 就删掉它, 和它binding的值
+            if len(self.table[self._id()].wheres) != 0:
+                widx = 0
+                while True:
+                    if self.table[self._id()].wheres[widx]['column'] == "id":
+                        self.table[self._id()].wheres.pop(widx)
+                        self.table[self._id()]._bindings['where'].pop(widx)
+                    else:
+                        widx += 1
+
+                    # print("widx:", widx, "len:", len(self.table[self._id()].wheres))
+                    if widx >= len(self.table[self._id()].wheres):
+                        break  
+
+            rs = self.Where("id", ">", idx).Limit(chunksize).OrderBy("id")._get_do_not_clean()
+            if len(rs) == 0:
+                return 
+
+            for r in rs:
+                yield dict(r)
+                idx = r['id']
+                if seekobj != None:
+                    print("set to id:", id)
+                    seekobj.Set(idx)
 
 class mySQLSQLiteKeyValueTableKey():
     def __init__(self, kv:mySQLSQLiteKeyValueTable|mySQLSQLiteKeyValueTableNamespaced, key:str) -> None:
@@ -878,18 +945,27 @@ if __name__ == "__main__":
     # kvns22 = kvns2.Namespace("ns2")
     # kvns22.Set("key", "ns22_value")
 
+    #########3
+
     db = MySQL("192.168.1.224")
     
-    kv = db.KeyValue()
+    # kv = db.KeyValue()
 
-    k = kv.Key("key")
+    # k = kv.Key("key")
 
-    k.Set(2.5)
+    # k.Set(2.5)
 
-    k += 1
+    # k += 1
 
-    print(k.Get())
+    # print(k.Get())
 
-    k = k + 19
+    # k = k + 19
 
-    print(k.Get())
+    # print(k.Get())
+
+    seek = db.KeyValue().Namespace("test").Key("iterateIdx")
+
+    tb = db.Table("websites")
+
+    for i in tb.Where("id", ">", "123").Where("alive", "=", "no").Where("note", "like", "Traceback%").Iterate(2, seek):
+        Lg.Trace(i)

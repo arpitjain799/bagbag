@@ -32,6 +32,11 @@ class ProgressBar():
         self.total = total if total != None else 0
         self.current = 0
 
+        try:
+            iter(self.iterable)
+        except TypeError:
+            raise Exception("可迭代的参数没有传入, 需要传入, 例如Tools.ProgressBar(range(10))")
+
     def Add(self, num:int=1):
         self.current = self.current + num
         self.tqdm.update(num)
@@ -64,9 +69,6 @@ class ProgressBar():
         return self.total - self.current 
 
     def __iter__(self):
-        if not self.iterable:
-            raise Exception("可迭代的参数没有传入, 需要传入, 例如Tools.ProgressBar(range(10))")
-
         for obj in self.iterable:
             # print("update")
             self.tqdm.update(1)

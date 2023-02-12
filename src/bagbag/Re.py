@@ -55,8 +55,6 @@ def FindAll(pattern:str, string:str, multiline=False) -> list[list[str]]:
 
     return res 
 
-
-
 if __name__ == "__main__":
     print(FindAll("([a-z])([a-z])[0-9]+", "ac123bd456"))    # ==> [['ac123', 'a', 'c'], ['bd456', 'b', 'd']]
     print(FindAll("([a-z])[0-9]+", "c123d456"))             # ==> [['c123', 'c'], ['d456', 'd']]

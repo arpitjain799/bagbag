@@ -1060,6 +1060,7 @@ class QueryBuilder(object):
         :return: The result
         :rtype: list
         """
+        # print(self.to_sql(), self.get_bindings())
         return self._connection.select(
             self.to_sql(), self.get_bindings(), not self._use_write_connection
         )
