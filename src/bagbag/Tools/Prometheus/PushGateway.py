@@ -56,7 +56,7 @@ class PushGateway():
                         break 
                     except Exception as e:
                         time.sleep(1)
-                        print(e)
+                        # print(e)
         
     def NewCounter(self, name:str, help:str) -> PrometheusCounter:
         return PrometheusCounter(name, help, self.registry)

@@ -15,6 +15,7 @@ def download_file(url, dest):
                 progress_bar.update(len(chunk))
                 f.write(chunk)
         progress_bar.close()
+        print(progress_bar.n, total_size_in_bytes)
         if total_size_in_bytes != 0 and progress_bar.n != total_size_in_bytes:
             raise Exception("Download error")
 

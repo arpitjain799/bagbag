@@ -81,7 +81,7 @@ class TronAsset():
 
         rd = None 
         for rr in contentj['data']:
-            if self.name == str(rr['tokenID']):
+            if str(self.name) == str(rr['tokenID']):
                 rd = rr
                 break 
 

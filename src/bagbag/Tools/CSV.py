@@ -1,13 +1,15 @@
 import csv 
 
 class Reader():
-    def __init__(self, fpath:str):
+    def __init__(self, fpath:str, withHeader:bool=True):
         self.fpath = fpath 
         self.fd = open(self.fpath)
         self.csvrd = csv.reader(self.fd, delimiter=',', quotechar='"', escapechar='\\')
-        self.headers = next(self.csvrd)
+        self.withHeader = withHeader
+        if self.withHeader:
+            self.headers = next(self.csvrd)
     
-    def Read(self) -> dict:
+    def Read(self) -> dict | list:
         while True:
             try:
                 r = next(self.csvrd)
@@ -16,13 +18,16 @@ class Reader():
                 raise StopIteration
             except Exception:
                 pass 
-
-        row = {}
-        for idx in range(len(self.headers)):
-            try:
-                row[self.headers[idx]] = r[idx]
-            except IndexError:
-                row[self.headers[idx]] = "" 
+        
+        if self.withHeader:
+            row = {}
+            for idx in range(len(self.headers)):
+                try:
+                    row[self.headers[idx]] = r[idx]
+                except IndexError:
+                    row[self.headers[idx]] = "" 
+        else:
+            return r 
         
         return row
     

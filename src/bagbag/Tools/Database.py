@@ -21,6 +21,7 @@ import typing
 import bagbag
 import pymysql
 import threading
+import copy
 import multiprocessing
 
 class mySQLSQLiteTable():
@@ -409,8 +410,8 @@ class mySQLSQLiteTable():
         迭代小批次的取出大批量的数据, 不是使用offset, 会对id进行where判断来提取, 所以速度会很快.
         因为会对id进行比对来提取数据, 所以其它地方设置的select中的对id的where条件会被清除. 
         seekobj需要实现两个方法, Set和Get, 会用来保存上次提取的进度, 如果为None就不会持久化的保存进度.
-        因为每次返回一条数据之后都会调用seekobj的Set方法, 所以最好是使用redis来存储进度.
-        如果有传入seekobj, 因为Set方法的调用是在yield语句之后, 所以如果处理当前数据抛异常导致中断, 就不会执行到Set方法, 所以下次再次启动程序仍然会返回当前的这条数据. 
+        如果有传入seekobj, 每一个批次之后都会调用Set方法, 所以如果这个批次没有处理完程序就退出了, 下次将会继续这个批次.
+        由于在当前函数内部会保存链式调用的状态, 所以可以在for循环的迭代和循环体当中使用同一个table对象, 不会扰乱当前迭代的状态. 
 
         :param chunksize: 每次从数据库select的数据的量
         :type chunksize: int (optional)
@@ -423,20 +424,26 @@ class mySQLSQLiteTable():
         else:
             idx = seekobj.Get(0)
         
-        while True:
-            # 如果有where语句作用id字段里面, 在sql的builder里面, 就删掉它, 和它binding的值
-            if len(self.table[self._id()].wheres) != 0:
-                widx = 0
-                while True:
-                    if self.table[self._id()].wheres[widx]['column'] == "id":
-                        self.table[self._id()].wheres.pop(widx)
-                        self.table[self._id()]._bindings['where'].pop(widx)
-                    else:
-                        widx += 1
+        # 如果有where语句作用id字段里面, 在sql的builder里面, 就删掉它, 和它binding的值
+        if len(self.table[self._id()].wheres) != 0:
+            widx = 0
+            while True:
+                if self.table[self._id()].wheres[widx]['column'] == "id":
+                    self.table[self._id()].wheres.pop(widx)
+                    self.table[self._id()]._bindings['where'].pop(widx)
+                else:
+                    widx += 1
 
-                    # print("widx:", widx, "len:", len(self.table[self._id()].wheres))
-                    if widx >= len(self.table[self._id()].wheres):
-                        break  
+                # print("widx:", widx, "len:", len(self.table[self._id()].wheres))
+                if widx >= len(self.table[self._id()].wheres):
+                    break  
+
+        # 保存当前状态
+        tobj = copy.deepcopy(self.table[self._id()])
+
+        while True:
+            # 恢复之前的链式调用的状态
+            self.table[self._id()] = copy.deepcopy(tobj)
 
             rs = self.Where("id", ">", idx).Limit(chunksize).OrderBy("id")._get_do_not_clean()
             if len(rs) == 0:
@@ -445,9 +452,10 @@ class mySQLSQLiteTable():
             for r in rs:
                 yield dict(r)
                 idx = r['id']
-                if seekobj != None:
-                    print("set to id:", id)
-                    seekobj.Set(idx)
+
+            if seekobj != None:
+                # print("set to id:", id)
+                seekobj.Set(idx)
 
 class mySQLSQLiteKeyValueTableKey():
     def __init__(self, kv:mySQLSQLiteKeyValueTable|mySQLSQLiteKeyValueTableNamespaced, key:str) -> None:
