@@ -2,13 +2,13 @@
 
 An all in one python library
 
-# Install 
+# Install
 
 ```bash
 pip3 install bagbag --upgrade
 ```
 
-# Docker 
+# Docker
 
 ```bash
 docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bagbag:latest
@@ -17,13 +17,16 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
 # Library
 
 * Crypto
+
   * AES(key:str, mode:str="cfb")
     * Encrypt(raw:str) -> str
     * Decrypt(enc:str) -> str
 * File(path:str)
+
   * Write(data:str)
   * Append(data:str)
 * Lg 日志模块
+
   * Lg.SetLevel(level:日志级别:str)
   * Lg.SetFile(path:日志路径:str, size:文件大小，MB:int, during:日志保留时间，天:int, color:是否带ANSI颜色:bool=True, json:是否格式化为json:bool=False)
   * Lg.Debug(message:str)
@@ -32,6 +35,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * Lg.Warn(message:str)
   * Lg.Error(message:str)
 * String(string:str) 一些字符串处理函数
+
   * HasChinese() -> bool 是否包含中文
   * Language() -> str 语言
   * Repr() -> str
@@ -42,31 +46,37 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * Len() -> int
   * IsIPAddress() -> bool
 * Time 时间
+
   * Strftime(timestamp:float|int, format:str="%Y-%m-%d %H:%M:%S") -> str
   * Strptime(timestring:str, format:str=None) -> int
 * Re 正则
   """
   If the message is too long, split it into chunks of 4096 characters and send them one by one
-  
+
   :param msg: the message to be sent
   :type msg: str
   :param : `chatid` - the chat ID of the chat you want to send messages to
   :type : str
   """
+
   * FindAll(pattern: str | Pattern[str], string: str, flags: _FlagsType = ...) -> list
 * Base64
+
   * Encode(s:str|bytes) -> str
   * Decode(s:str) -> str|bytes
 * Json
+
   * Dumps(obj, indent=4, ensure_ascii=False) -> str
   * Loads(s:str) -> list | dict
   * ExtraValueByKey(obj:list|dict, key:str) -> list
 * Hash
+
   * Md5sum(string:str) -> str
   * Md5sumFile(fpath:str, block_size=2**20) -> str
   * Sha256sum(data:str|bytes) -> str
   * Sha256sumFile(fpath:str, block_size=2**20) -> str
 * Os
+
   * Exit(num:int=0)
   * Mkdir(path:str)
   * Getenv(varname:str, defaultValue:str=None) -> str | None
@@ -82,6 +92,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
     * IsDir(path:str) -> bool
     * Basename(path:str) -> str
 * Http
+
   * Head(url:str, Timeout:str=None, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False)
   * Get(url:str, Timeout:str=None, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None,  TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False)
   * PostRaw(url:str, Data:str, Timeout:str=None, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False)
@@ -92,6 +103,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * PutRaw(url:str, Data:str, Timeout:str=None, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False, Debug:bool=False)
   * PutJson(url:str, Json:dict, Timeout:str=None, ReadBodySize:int=None, FollowRedirect:bool=True, HttpProxy:str=None, TimeoutRetryTimes:int=0, InsecureSkipVerify:int=False,Debug:bool=False)
 * Socket
+
   * TCP
     * Listen(host:str, port:int, waitQueue:int=5)
       * Accept() -> Chan[StreamConnection]
@@ -104,11 +116,13 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
       * RecvBytes(length:int) -> bytes
       * Close()
 * Random
+
   * Int(min:int, max:int) -> int
   * Choice(obj:list|str) -> Any
   * String(length:int, charset:str="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") -> str
   * Shuffle(li:list) -> list
 * Funcs
+
   * Markdown2Html(text:str) -> str
   * Wget(url:str, dest:str=None, override=True)
   * IP2Int(ip:str) -> int
@@ -117,6 +131,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * UUID() -> str
   * CutSentence(sentence:str, filter:bool=True) -> list[str]
 * Tools 一些工具
+
   * BlockChain
     * Tron
       * TronClient(fullNodeServer:str)
@@ -128,6 +143,9 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
       * TronAsset(name:str)
         * Info()
         * Name()
+    * Binance
+      * OfficalAccountVertify
+        * Twitter(account:str, waiteOnRateLimit:bool=True) -> bool
   * Twitter
     * Essential(bearerToken:str)
       * Search(keyword:str, sinceID:int=None, tweetPerRequest:int=10) -> typing.Iterable[twitterTweet]
@@ -175,7 +193,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
       * SetLang(To:str="zh", From:str="auto") -> Baidu
       * Translate(text:str) -> dict
     * Google(httpProxy:str=None)
-      * SetLang(To:str="zh-CN", From:str="auto") -> Google 
+      * SetLang(To:str="zh-CN", From:str="auto") -> Google
       * Translate(text:str, format:str="html") -> str
   * XPath(html:str)
     * Find(xpath:str) -> XPath | None
@@ -239,7 +257,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
       * Args()
         * Get(name:str, default:str="") -> str | None # 获取URL的参数
   * Chan() 内存队列, 跟go的chan一样
-  * RateLimit(rate:str, sleep:bool=True) rate可以是 次数/时间区间, 时间可以是s, m, h, d, 即秒,分,时,天. 例如一分钟限制五次: 5/m. 在低速率的时候能限制准确, 例如低于1秒10次. 高速率例如每秒50次以上, 实际速率会降低, 速率越高降低越多. 
+  * RateLimit(rate:str, sleep:bool=True) rate可以是 次数/时间区间, 时间可以是s, m, h, d, 即秒,分,时,天. 例如一分钟限制五次: 5/m. 在低速率的时候能限制准确, 例如低于1秒10次. 高速率例如每秒50次以上, 实际速率会降低, 速率越高降低越多.
     * Take() sleep=True的时候会添加一个sleep, 可以把请求平均在时间段内. 在低速率的时候能限制准确. 高速率例如每秒50次以上, 实际速率会降低, 速率越高降低越多. sleep=False的时候没有sleep, 会全在一开始扔出去, 然后block住, 等下一个周期, 在需要速率很高的时候可以这样, 例如发包的时候, 一秒限制2000个包这样.
   * URL(url:str)
     * Parse() -> URLParseResult
@@ -289,7 +307,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
         * ScrollIntoElement() -> SeleniumElement
   * Telegram(appid:str, apphash:str, sessionString:str=None)
     * SessionString() -> str
-    * ResolvePeerByUsername(username:str) -> TelegramPeer | None 
+    * ResolvePeerByUsername(username:str) -> TelegramPeer | None
     * PeerByIDAndHash(ID:int, Hash:int, Type:str="channel") -> TelegramPeer | None
       * Resolve() # 如果手动根据ID初始化一个TelegramPeer实例, 调用这个函数可以补全这个ID对应的Peer的信息
       * SendMessage(message:str)

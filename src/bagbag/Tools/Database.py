@@ -456,6 +456,13 @@ class mySQLSQLiteTable():
             if seekobj != None:
                 # print("set to id:", id)
                 seekobj.Set(idx)
+    
+    def LatestID(self) -> int:
+        """
+        It returns the last id of the data in the table
+        :return: The last id of the data in in the table.
+        """
+        return self.OrderBy("id", "desc").First()["id"]
 
 class mySQLSQLiteKeyValueTableKey():
     def __init__(self, kv:mySQLSQLiteKeyValueTable|mySQLSQLiteKeyValueTableNamespaced, key:str) -> None:
