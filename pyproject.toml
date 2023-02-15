@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bagbag"
-version = "0.54.47"
+version = "0.54.48"
 description = "An all in one python library"
 
 license = "MIT"
@@ -69,6 +69,10 @@ selenium-wire = ">=5.1.0"
 tweepy = ">=4.12.1"
 vaderSentiment = ">=3.3.2"
 tronpy = ">=0.2.6"
+python-magic = ">=0.4.27"
+
+# 额外的, 为了方便, 但是这个包里面没用到
+
 
 # orator 
 # Fix bug in mysql8.0: https://github.com/sdispater/orator/issues/361

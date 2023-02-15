@@ -42,6 +42,8 @@ class distributedLockLock():
                 Time.Sleep(10, bar=False)
             elif self.timeout / 3 < 10:
                 Time.Sleep(10, bar=False)
+            elif self.timeout / 3 < 1:
+                Time.Sleep(1)
             else:
                 Time.Sleep(self.timeout / 3, bar=False)
             
@@ -107,8 +109,8 @@ class distributedLockLock():
                 }, timeout=5, timeoutRetryTimes=999999999)
                 break
             except Exception as e:
-                    Time.Sleep(1)
-                    Lg.Warn("释放锁失败:", e)
+                Time.Sleep(1)
+                Lg.Warn("释放锁失败:", e)
 
         if resp.StatusCode != 200:
             raise Exception(str(resp.StatusCode) + ": " + resp.Content)

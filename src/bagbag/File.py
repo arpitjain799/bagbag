@@ -1,4 +1,5 @@
 import os
+import magic
 
 class File():
     def __init__(self, path:str):
@@ -45,3 +46,12 @@ class File():
                 yield next(fd)
             except StopIteration:
                 return 
+    
+    def Type(self) -> str:
+        """
+        Example: PDF document, version 1.2
+        """
+        if not os.path.exists(self.path) or not os.path.isfile(self.path):
+            raise Exception("文件不存在:", self.path)
+        
+        return magic.from_file(self.path)

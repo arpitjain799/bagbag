@@ -51,3 +51,6 @@ selenium-wire >= 5.1.0
 tweepy >= 4.12.1
 vaderSentiment >= 3.3.2
 tronpy >= 0.2.6
+python-magic >= 0.4.27
+
+python-magic==0.4.27

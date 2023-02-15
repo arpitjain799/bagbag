@@ -4,11 +4,15 @@ import telebot # https://github.com/eternnoir/pyTelegramBotAPI
 
 try:
     from .Ratelimit import RateLimit
+    from .Lock import Lock 
+    from .DistributedLock import DistributedLock
 except:
     from Ratelimit import RateLimit
+    from Lock import Lock
+    from DistributedLock import DistributedLock
 
 class TelegramBot():
-    def __init__(self, token:str, ratelimit:str="20/m"):
+    def __init__(self, token:str, ratelimit:str="20/m", lock:Lock|DistributedLock=None):
         """
         :param token: The token of your bot
         :type token: str
@@ -24,6 +28,21 @@ class TelegramBot():
             self.rl = RateLimit(ratelimit)
         else:
             self.rl = None 
+        self.lock = lock
+
+    def getLock(func): # func是被包装的函数
+        def ware(self, *args, **kwargs): # self是类的实例
+            if self.lock != None:
+                self.lock.Acquire()
+
+            res = func(self, *args, **kwargs)
+
+            if self.lock != None:
+                self.lock.Release()
+            
+            return res
+
+        return ware
     
     def rateLimit(func): # func是被包装的函数
         def ware(self, *args, **kwargs): # self是类的实例
@@ -36,40 +55,45 @@ class TelegramBot():
 
         return ware
 
-    @rateLimit
     def GetMe(self) -> telebot.types.User:
         return self.tb.get_me()
     
-    @rateLimit
     def SetChatID(self, chatid:int) -> TelegramBot:
         self.chatid = chatid
         return self
     
+    @getLock
     @rateLimit
     def SendFile(self, path:str):
         self.tb.send_document(self.chatid, open(path, 'rb')) 
 
+    @getLock
     @rateLimit
     def SendImage(self, path:str):
         self.tb.send_photo(self.chatid, open(path, 'rb'))
 
+    @getLock
     @rateLimit
     def SendVideo(self, path:str):
         self.tb.send_video(self.chatid, open(path, 'rb')) 
 
+    @getLock
     @rateLimit
     def SendAudio(self, path:str):
         self.tb.send_audio(self.chatid, open(path, 'rb')) 
 
+    @getLock
     @rateLimit
     def SendLocation(self, latitude:float, longitude:float):
         self.tb.send_location(self.chatid, latitude, longitude)
     
+    @getLock
     @rateLimit
     def SetTags(self, *tags:str) -> TelegramBot:
         self.tags = tags
         return self 
 
+    @getLock
     @rateLimit
     def SendMsg(self, msg:str, *tags:str):
         """
