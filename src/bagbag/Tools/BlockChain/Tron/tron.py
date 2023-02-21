@@ -6,7 +6,22 @@ from tronpy.providers import HTTPProvider
 
 import traceback
 
-from bagbag import Http, Json, Re, Lg, Time 
+from bagbag import Http, Json, Re, Lg, Time, Random
+
+tronOfficialNodes = [
+    '3.225.171.164',
+    '52.53.189.99',
+    '18.196.99.16',
+    '34.253.187.192',
+    '35.180.51.163',
+    '54.252.224.209',
+    '52.15.93.92',
+    '34.220.77.106',
+    '13.124.62.58',
+    '18.209.42.127',
+    '3.218.137.187',
+    '34.237.210.82'
+]
 
 assetDecimals = {}
 contractDecimals = {}
@@ -550,12 +565,25 @@ class tronBlock():
         return trxs 
 
 class TronClient():
-    def __init__(self, fullNodeServer:str) -> None:
-        self.nodeServer:str = fullNodeServer
-        self.tron = TronAPI(HTTPProvider(fullNodeServer))
+    def __init__(self, fullNodeServer:str=None) -> None:
+        if fullNodeServer != None:
+            self.nodeServer:str = fullNodeServer
+            self.tron = TronAPI(HTTPProvider(self.nodeServer))
+        else:
+            while True:
+                try:
+                    self.nodeServer:str = 'http://' + Random.Choice(tronOfficialNodes) + ":8090"
+                    self.tron = TronAPI(HTTPProvider(self.nodeServer))
+                    self.tron.get_latest_block()
+                    break 
+                except:
+                    pass 
     
-    def Block(self, blockNumber:int) -> tronBlock:
-        block = self.tron.get_block(blockNumber)
+    def Block(self, blockNumber:int=None) -> tronBlock:
+        if blockNumber == None:
+            block = self.tron.get_latest_block()
+        else:
+            block = self.tron.get_block(blockNumber)
         # Lg.Trace(block)
         return tronBlock(block, self)
 

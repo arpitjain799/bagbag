@@ -22,6 +22,8 @@ from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
 from telethon.tl.types import DocumentAttributeVideo
 
+from bagbag import Funcs
+
 try:
     from .. import Os
     from .Database import SQLite
@@ -29,6 +31,7 @@ try:
     from .. import Lg
     from .. import Re
     from ..File import File
+    from .Ratelimit import RateLimit
 except:
     import sys 
     sys.path.append("..")
@@ -38,6 +41,7 @@ except:
     import Lg
     import Re
     from File import File
+    from Ratelimit import RateLimit
 
 class TelegramGeo():
     def __init__(self):
@@ -57,10 +61,6 @@ class TelegramPhoto():
         self.AccessHash = 0
         self.message = None 
     
-    def callback(self, current, total):
-        self.pbar.update(current-self.prev_curr)
-        self.prev_curr = current
-    
     def Save(self, fpath:str=None) -> str:
         if fpath == None:
             fpath = "photo.jpg"
@@ -69,10 +69,7 @@ class TelegramPhoto():
 
         fpath = Os.Path.Uniquify(fpath)
 
-        self.prev_curr = 0
-        self.pbar = tqdm.tqdm(total=self.Size, unit='B', unit_scale=True)
-        self.message.download_media(file=fpath, progress_callback=self.callback)
-        self.pbar.close()
+        self.message.download_media(file=fpath)
 
         return fpath
     
@@ -86,25 +83,30 @@ class TelegramPhoto():
 class TelegramFile():
     def __init__(self):
         self.message:telethon.tl.patched.Message = None 
-        self.Name = ""
-        self.Size = 0
-        self.ID = None 
-        self.AccessHash = 0
-        self.MimeType = None 
+        self.Name:str = ""
+        self.Size:int = 0
+        self.ID:int = None 
+        self.AccessHash:int = 0
+        self.MimeType:str = None 
         # mimetype = video
-        self.VideoDuration = None 
-        self.VideoWidth = None 
-        self.VideoHeight = None 
+        self.VideoDuration:int = None 
+        self.VideoWidth:int = None 
+        self.VideoHeight:int = None 
     
     def callback(self, current, total):
         self.pbar.update(current-self.prev_curr)
         self.prev_curr = current
     
     def Save(self, fpath:str=None) -> str:
+        if self.Name.strip() == "":
+            name = Funcs.UUID() + ".mp4"
+        else:
+            name = self.Name + ".mp4"
+
         if fpath == None:
-            fpath = self.Name
+            fpath = name
         elif Os.Path.IsDir(fpath):
-            fpath = Os.Path.Join(fpath, self.Name)
+            fpath = Os.Path.Join(fpath, name)
 
         fpath = Os.Path.Uniquify(fpath)
 
@@ -155,6 +157,7 @@ class TelegramMessage():
         self.User:TelegramPeer = None
         self.Buttons:List[List[TelegramButton]] = None
         self.MessageRaw:str = None 
+        self.GroupedID:int = None # 如果是同一条消息的多个图片, 会有相同的GroupedID
     
     def ForwardTo(self, Username:str|TelegramPeer, HideSenderName:bool=True):
         if type(Username) == str:
@@ -266,6 +269,7 @@ class TelegramPeer():
         msg.Chat = self 
         msg.ID = message.id 
         msg.Time = int(message.date.timestamp())
+        msg.GroupedID = message.grouped_id
         if message.action:
             msg.Action = message.action.to_dict()["_"]
         if message.media:
@@ -421,11 +425,13 @@ class TelegramPeer():
         :return: A list of TelegramMessage objects
         """
 
+        rl = RateLimit("60/m")
         msgs = self.Messages(filter=filter)
         while len(msgs) != 0:
             for msg in msgs:
                 yield msg 
 
+            rl.Take()
             msgs = self.Messages(offset=msgs[-1].ID, filter=filter)
 
         return 

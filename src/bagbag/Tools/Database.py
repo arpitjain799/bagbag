@@ -457,6 +457,9 @@ class mySQLSQLiteTable():
                 # print("set to id:", id)
                 seekobj.Set(idx)
     
+    def Truncate(self):
+        self.db.db.table(self.tbname).truncate()
+    
     def LatestID(self) -> int:
         """
         It returns the last id of the data in the table

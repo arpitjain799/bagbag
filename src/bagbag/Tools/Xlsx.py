@@ -76,6 +76,15 @@ class Writer():
     
     def Flush(self):
         self.wb.save(self.fpath)
+    
+    def __enter__(self):
+        return self 
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+            self.Close()
+        except:
+            pass
 
 if __name__ == "__main__":
     w = Writer("test.xlsx")

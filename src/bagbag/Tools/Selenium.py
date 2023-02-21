@@ -510,6 +510,19 @@ class seleniumBase():
         for i in self.driver.window_handles:
             if i not in tabs:
                 return i
+     
+    def Screenshot(self, filepath:str) -> str:
+        """
+        It takes a screenshot of the current page and saves it to the filepath.
+        只支持PNG. 
+        
+        :param filepath: The path to save the screenshot to
+        :type filepath: str
+        :return: The filepath of the screenshot.
+        """
+        filepath = Os.Path.Uniquify(filepath)
+        self.driver.save_screenshot(filepath)
+        return filepath
     
     def __enter__(self):
         return self 

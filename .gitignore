@@ -14,3 +14,5 @@ src/test*.py
 *.xlsx
 *.session-journal
 log
+*.png
+*.mp4
