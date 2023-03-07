@@ -8,6 +8,9 @@ from . import Re
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from collections import OrderedDict
 
+from lxml import etree, html
+import bs4
+
 sentimentAnalyzer = SentimentIntensityAnalyzer()
 
 addrPattern = OrderedDict({
@@ -172,6 +175,14 @@ class String():
     
     def URLDecode(self) -> str:
         return unquote(self.string)
+
+    def FormatHTML(self) -> str:
+        try:
+            document_root = html.fromstring(self.string)
+            return etree.tostring(document_root, encoding='unicode', pretty_print=True)
+        except:
+            soup = bs4.BeautifulSoup(self.string, 'html.parser')
+            return soup.prettify()
 
 if __name__ == "__main__":
     print(1, String("ABC").HasChinese())

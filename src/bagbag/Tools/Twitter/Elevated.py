@@ -10,12 +10,16 @@ class twitterUser():
         self.RegisterTime:int = None 
         self.Description:str = None 
         self.URL:str = None
+        self.FollowersCount:int = None 
+        self.StatusesCount:int = None 
+        self.Verified:bool = None 
+        self.raw_data:dict = None 
         
     def __repr__(self) -> str:
-        return f"twitterUser(ID={self.ID} Name={self.Name} ScreenName={self.ScreenName} Location={self.Location} RegisterTime={self.RegisterTime} URL={self.URL} Description={self.Description})"
+        return f"twitterUser(ID={self.ID} Name={self.Name} ScreenName={self.ScreenName} Location={self.Location} RegisterTime={self.RegisterTime} URL={self.URL} Description={self.Description} FollowersCount={self.FollowersCount} StatusesCount={self.StatusesCount} Verified={self.Verified})"
 
     def __str__(self) -> str:
-        return f"twitterUser(ID={self.ID} Name={self.Name} ScreenName={self.ScreenName} Location={self.Location} RegisterTime={self.RegisterTime} URL={self.URL} Description={self.Description})"
+        return f"twitterUser(ID={self.ID} Name={self.Name} ScreenName={self.ScreenName} Location={self.Location} RegisterTime={self.RegisterTime} URL={self.URL} Description={self.Description} FollowersCount={self.FollowersCount} StatusesCount={self.StatusesCount} Verified={self.Verified})"
 
 class twitterTweet():
     def __init__(self) -> None:
@@ -37,15 +41,19 @@ class Elevated():
 
         self.api = tweepy.API(auth, wait_on_rate_limit=True)
     
-    def _wrapUser(self, author) -> twitterUser:
+    def _wrapUser(self, user) -> twitterUser:
         u = twitterUser()
-        u.ID = author.id
-        u.Name = author.name
-        u.ScreenName = author.screen_name
-        u.Location = author.location
-        u.Description = author.description
-        u.URL = author.url
-        u.RegisterTime = int(author.created_at.timestamp())
+        u.ID = user.id
+        u.Name = user.name
+        u.ScreenName = user.screen_name
+        u.Location = user.location
+        u.Description = user.description
+        u.URL = user.url
+        u.RegisterTime = int(user.created_at.timestamp())
+        u.FollowersCount = user.followers_count
+        u.StatusesCount = user.statuses_count
+        u.Verified = user.verified
+        u.raw_data = user._json
 
         return u
     
@@ -111,6 +119,7 @@ class Elevated():
         """
         tweet from the timeline of the user with the given screen name
         tweet的ID是从大到小, 也就是数据的时间是从近到远
+        如果有sinceID, 就返回比这个sinceID更新的tweets, 不包括这个tweet
         
         :param screename: The screen name of the user
         :type screename: str
@@ -125,7 +134,25 @@ class Elevated():
     
     def Followers(self, screename:str, countPerRequest:int=40) -> typing.Iterable[twitterUser]:
         for user in tweepy.Cursor(self.api.get_followers, screen_name=screename, count=countPerRequest).items():
+            # import ipdb
+            # ipdb.set_trace()
             yield self._wrapUser(user)
+    
+    def User(self, screenameOrID:str|int) -> twitterUser:
+        """
+        It takes a screen name or id and returns a twitterUser object
+        
+        :param screename: The screen name of the user for whom to return results for
+        :type screename: str
+        :return: A twitterUser object
+        """
+        if type(screenameOrID) == str:
+            user = self.api.get_user(screen_name=screenameOrID)
+        else:
+            user = self.api.get_user(user_id=screenameOrID)
+        # import ipdb
+        # ipdb.set_trace()
+        return self._wrapUser(user)
 
 if __name__ == "__main__":
     import json 
@@ -133,20 +160,27 @@ if __name__ == "__main__":
     cfg = json.loads(open('twitter.ident').read())
 
     twitter = Elevated(cfg['consumer_key'], cfg['consumer_secret'])
-    
-    print("search")
-    for i in twitter.Search("coinsbee"):
-        print(i)
-        break 
 
-    print('timeline')
-    for i in twitter.Timeline("asiwaju_wa"):
-        print(i)
-        break 
+    # print("user")
+    # u = twitter.User("asiwaju_wa")
+    # print(u)
     
-    print("followers")
-    for i in twitter.Followers("asiwaju_wa"):
-        print(i)
-        break 
+    # print("search")
+    # for i in twitter.Search("coinsbee"):
+    #     print(i)
+    #     break 
+
+    idx = 0
+    print('timeline')
+    for i in twitter.Timeline("asiwaju_wa", sinceID=1632984909387120640):
+        idx += 1
+        print(i.ID, i.Time)
+        if idx == 10:
+            break 
+    
+    # print("followers")
+    # for i in twitter.Followers("asiwaju_wa"):
+    #     print(i)
+    #     break 
 
     

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bagbag"
-version = "0.54.61"
+version = "0.54.74"
 description = "An all in one python library"
 
 license = "MIT"
@@ -70,6 +70,7 @@ tweepy = ">=4.12.1"
 vaderSentiment = ">=3.3.2"
 tronpy = ">=0.2.6"
 python-magic = ">=0.4.27"
+beautifulsoup4 = ">=4.11.1"
 
 # 额外的, 为了方便, 但是这个包里面没用到
 

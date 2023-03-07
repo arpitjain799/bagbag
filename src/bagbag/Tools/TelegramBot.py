@@ -6,10 +6,16 @@ try:
     from .Ratelimit import RateLimit
     from .Lock import Lock 
     from .DistributedLock import DistributedLock
+    from .. import Lg
 except:
     from Ratelimit import RateLimit
     from Lock import Lock
     from DistributedLock import DistributedLock
+    import sys
+    sys.path.append("..")
+    import Lg
+
+import time
 
 class TelegramBot():
     def __init__(self, token:str, ratelimit:str="20/m", lock:Lock|DistributedLock=None):
@@ -29,6 +35,24 @@ class TelegramBot():
         else:
             self.rl = None 
         self.lock = lock
+    
+    def retryOnError(func): # func是被包装的函数
+        def ware(self, *args, **kwargs): # self是类的实例
+            errc = 0
+            while True:
+                try:
+                    res = func(self, *args, **kwargs)
+                    break
+                except Exception as e:
+                    Lg.Trace(str(e))
+                    time.sleep(3)
+                    errc += 1
+                    if errc > 100:
+                        raise e
+
+            return res
+    
+        return ware
 
     def getLock(func): # func是被包装的函数
         def ware(self, *args, **kwargs): # self是类的实例
@@ -55,6 +79,7 @@ class TelegramBot():
 
         return ware
 
+    @retryOnError
     def GetMe(self) -> telebot.types.User:
         return self.tb.get_me()
     
@@ -62,37 +87,44 @@ class TelegramBot():
         self.chatid = chatid
         return self
     
+    @retryOnError
     @getLock
     @rateLimit
     def SendFile(self, path:str):
         self.tb.send_document(self.chatid, open(path, 'rb')) 
 
+    @retryOnError
     @getLock
     @rateLimit
     def SendImage(self, path:str):
         self.tb.send_photo(self.chatid, open(path, 'rb'))
 
+    @retryOnError
     @getLock
     @rateLimit
     def SendVideo(self, path:str):
         self.tb.send_video(self.chatid, open(path, 'rb')) 
 
+    @retryOnError
     @getLock
     @rateLimit
     def SendAudio(self, path:str):
         self.tb.send_audio(self.chatid, open(path, 'rb')) 
 
+    @retryOnError
     @getLock
     @rateLimit
     def SendLocation(self, latitude:float, longitude:float):
         self.tb.send_location(self.chatid, latitude, longitude)
     
+    @retryOnError
     @getLock
     @rateLimit
     def SetTags(self, *tags:str) -> TelegramBot:
         self.tags = tags
         return self 
 
+    @retryOnError
     @getLock
     @rateLimit
     def SendMsg(self, msg:str, *tags:str):
@@ -117,7 +149,6 @@ class TelegramBot():
         else:
             for m in telebot.util.smart_split(msg, 4096 - len(tag)):
                 self.tb.send_message(self.chatid, m.strip() + tag) 
-
 
 if __name__ == "__main__":
     token, chatid = open("TelegramBot.ident").read().strip().split("\n")

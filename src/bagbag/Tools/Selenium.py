@@ -413,9 +413,13 @@ class seleniumBase():
         :type url: str
         """
 
-        if self.browserName in ["chrome", "chromewire"] and self.randomUA:
-            if not self.browserRemote:
-                self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": random.choice(useragents)['user_agent']})
+        if self.browserName in ["chrome", "chromewire"]:
+            # if self.userAgent != None:
+            #     self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": self.userAgent})
+            if self.userAgent == None and self.randomUA:
+                if not self.browserRemote:
+                    self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": random.choice(useragents)['user_agent']})
+            
 
         self.driver.get(url)
     
@@ -559,16 +563,31 @@ class Firefox(seleniumBase):
         self.browserRemote = seleniumServer != None 
 
 class Chrome(seleniumBase):
-    def __init__(self, seleniumServer:str=None, PACFileURL:str=None, httpProxy:str=None, sessionID=None, randomUA:bool=True):
+    def __init__(
+            self, 
+            seleniumServer:str=None, 
+            PACFileURL:str=None, 
+            httpProxy:str=None, 
+            sessionID=None, 
+            randomUA:bool=True,
+            userAgent:str=None,
+        ):
         options = webdriver.ChromeOptions()
 
         # 防止通过navigator.webdriver来检测是否是被selenium操作
         options.add_argument("--disable-blink-features")
         options.add_argument("--disable-blink-features=AutomationControlled")
 
-        if randomUA:
+        if Os.GetUID() == 0:
+            options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+
+        if userAgent != None:
+            options.add_argument('--user-agent=' + userAgent + '')
+        elif randomUA:
             options.add_argument('--user-agent=' + random.choice(useragents)['user_agent'] + '')
         self.randomUA = randomUA
+        self.userAgent = userAgent
 
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
 
@@ -648,7 +667,8 @@ class ChromeWire(seleniumBase):
             PACFileURL:str=None, 
             httpProxy:str=None, 
             sessionID=None, 
-            randomUA:bool=True):
+            randomUA:bool=True,
+            userAgent:str=None):
         
         """
         :param blockSuffix: A tuple of file suffixes to block. list是中括号, tuple是小括号
@@ -676,9 +696,16 @@ class ChromeWire(seleniumBase):
         options.add_argument("--disable-blink-features")
         options.add_argument("--disable-blink-features=AutomationControlled")
 
-        if randomUA:
+        if Os.GetUID() == 0:
+            options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+
+        if userAgent != None:
+            options.add_argument('--user-agent=' + userAgent + '')
+        elif randomUA:
             options.add_argument('--user-agent=' + random.choice(useragents)['user_agent'] + '')
         self.randomUA = randomUA
+        self.userAgent = userAgent
 
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
 

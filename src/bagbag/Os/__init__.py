@@ -104,6 +104,9 @@ def Walk(path:str, type:str=None) -> str:
             for name in dirs:
                 yield os.path.join(root, name)
 
+def GetUID() -> int:
+    return os.getuid()
+
 if __name__ == "__main__":
     # Move("a", "b") # 移动当前目录的a到b
     # Move("b", "c/d/e") # 移动b到c/d/e, 会先递归创建目录c/d

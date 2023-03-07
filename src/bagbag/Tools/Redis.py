@@ -288,6 +288,56 @@ class RedisLock():
         """
         self.lock.release()
 
+class redisHashMap():
+    def __init__(self, rdb:redis.Redis, key:str, ttl:int=None) -> None:
+        self.rdb = rdb
+        self.key = key 
+        self.ttl = ttl
+
+        self.hlen = self.rdb.hlen(key)
+    
+    @RetryOnNetworkError
+    def Set(self, key:str, value:typing.Any):
+        if type(value) == int:
+            value = "i " + str(value)
+        elif type(value) == str:
+            value = "s " + str(value)
+        elif type(value) == float:
+            value = "f " + str(value)
+        else:
+            value = "p " + Base64.Encode(pickle.dumps(value, protocol=2))
+        
+        self.rdb.hset(self.key, key, value)
+        if self.hlen == 0 and self.ttl != None:
+            # Lg.Trace("set expire:", self.ttl)
+            self.rdb.expire(name=self.key, time=self.ttl)
+        
+        self.hlen = self.rdb.hlen(self.key)
+    
+    @RetryOnNetworkError
+    def Get(self, key:str, default:typing.Any=None) -> typing.Any:
+        res = self.rdb.hget(self.key, key)
+
+        if res != None:
+            if res[:2] == b"i ":
+                res = int(res[2:])
+            elif res[:2] == b"s ":
+                res = res[2:]
+            elif res[:2] == b"f ":
+                res = float(res[2:])
+            elif res[:2] == b"p ":
+                res = pickle.loads(Base64.Decode(res[2:])) 
+            else:
+                res = pickle.loads(Base64.Decode(res)) 
+        else:
+            res = default 
+        
+        return res
+
+    @RetryOnNetworkError
+    def Delete(self):
+        self.rdb.delete(self.key)
+
 class Redis():
     def __init__(self, host: str, port: int = 6379, database: int = 0, password: str = ""):
         """
@@ -310,6 +360,20 @@ class Redis():
             return key 
         else:
             return ':'.join(self.namespace) + ":" + key
+        
+    def HashMap(self, key:str, ttl:int=None) -> redisHashMap:
+        """
+        It returns a redisHashMap object.
+        如果hashmap不存且ttl不为None在则在设置第一个元素的时候设置这个map的ttl.
+        如果hashmap已存在则不设置ttl.
+        
+        :param key: The key to use for the hashmap
+        :type key: str
+        :param ttl: Time to live in seconds for the hashmap object since it created. If not specified, the key will never expire
+        :type ttl: int
+        :return: A redisHashMap object
+        """
+        return redisHashMap(self.rdb, self.__key(key), ttl)
     
     def Ping(self) -> bool:
         """
