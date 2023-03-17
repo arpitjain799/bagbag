@@ -1,5 +1,6 @@
 import os
 import magic
+import mimetypes
 
 class File():
     def __init__(self, path:str):
@@ -47,11 +48,31 @@ class File():
             except StopIteration:
                 return 
     
-    def Type(self) -> str:
+    def TypeDescription(self) -> str:
         """
+        根据文件内容生成描述
         Example: PDF document, version 1.2
         """
         if not os.path.exists(self.path) or not os.path.isfile(self.path):
             raise Exception("文件不存在:", self.path)
         
         return magic.from_file(self.path)
+    
+    def MimeType(self) -> str:
+        """
+        根据文件内容生存mime类型
+        """
+        if not os.path.exists(self.path) or not os.path.isfile(self.path):
+            raise Exception("文件不存在:", self.path)
+        
+        mime = magic.Magic(mime=True)
+        return mime.from_file(self.path)
+    
+    def GuessSuffix(self) -> str:
+        """
+        根据文件内容生成扩展名
+        返回值包括前置"."
+        例如: .jpg
+        :return: The file extension of the file.
+        """
+        return mimetypes.guess_extension(self.MimeType())

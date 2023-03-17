@@ -54,3 +54,5 @@ tronpy >= 0.2.6
 python-magic >= 0.4.27
 lxml >= 4.9.1
 beautifulsoup4 >= 4.11.1
+validators >= 0.20.0
+Js2Py >= 0.74

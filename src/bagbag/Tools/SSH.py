@@ -1,5 +1,4 @@
 import stat
-from socket import IP_DEFAULT_MULTICAST_LOOP
 import paramiko
 
 try:

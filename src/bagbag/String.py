@@ -11,6 +11,8 @@ from collections import OrderedDict
 from lxml import etree, html
 import bs4
 
+import validators
+
 sentimentAnalyzer = SentimentIntensityAnalyzer()
 
 addrPattern = OrderedDict({
@@ -154,13 +156,6 @@ class String():
     
     def Len(self) -> int:
         return len(self.string)
-
-    def IsIPAddress(self) -> bool:
-        try:
-            ipaddress.ip_address(self.string)
-            return True 
-        except ValueError:
-            return False 
     
     def PinYin(self) -> str:
         res = pypinyin.lazy_pinyin(self.string, style=pypinyin.Style.TONE3)
@@ -183,6 +178,99 @@ class String():
         except:
             soup = bs4.BeautifulSoup(self.string, 'html.parser')
             return soup.prettify()
+    
+    def IsURL(self, public:bool=False) -> bool:
+        return validators.url(self.string, public=public) == True
+
+    def IsDomain(self) -> bool:
+        return validators.domain(self.string) == True
+    
+    def IsEmail(self) -> bool:
+        return validators.email(self.string) == True 
+    
+    def IsIBAN(self) -> bool:
+        return validators.iban(self.string) == True 
+
+    def IsIPAddress(self) -> bool:
+        try:
+            ipaddress.ip_address(self.string)
+            return True 
+        except ValueError:
+            return False 
+    
+    def IsIPv4(self) -> bool:
+        return validators.ipv4(self.string) == True
+    
+    def IsIPv4CIDR(self) -> bool:
+        """
+        Returns True if the string is a valid IPv4 CIDR notation, otherwise returns False
+        
+        >>> IsIPv4CIDR('1.1.1.1/8')
+        True
+        
+        :return: True or False
+        """
+        return validators.ipv4_cidr(self.string) == True
+
+    def IsIPv6(self) -> bool:
+        return validators.ipv6(self.string) == True
+    
+    def IsIPv6CIDR(self) -> bool:
+        """
+        Returns True if the string is a valid IPv6 CIDR notation, otherwise False
+        
+        >>> ipv6_cidr('::1/128')
+        True
+        
+        :return: True or False
+        """
+        return validators.ipv6_cidr(self.string) == True
+    
+    def IsMacAddress(self) -> bool:
+        return validators.mac_address(self.string) == True
+
+    def IsUUID(self) -> bool:
+        return validators.uuid(self.string) == True 
+    
+    def IsMD5(self) -> bool:
+        return validators.md5(self.string) == True 
+    
+    def IsSHA1(self) -> bool:
+        return validators.sha1(self.string) == True 
+    
+    def IsSHA224(self) -> bool:
+        return validators.sha224(self.string) == True 
+    
+    def IsSHA256(self) -> bool:
+        return validators.sha256(self.string) == True 
+    
+    def IsSHA512(self) -> bool:
+        return validators.sha512(self.string) == True 
+    
+    def IsJCBCardNumber(self) -> bool:
+        """
+        It checks if the card number is a JCB card number.
+        :return: True or False
+        """
+        return validators.jcb(self.string) == True 
+    
+    def IsDinersClubCardNumber(self) -> bool:
+        return validators.diners(self.string) == True 
+    
+    def IsMastercardCardNumber(self) -> bool:
+        return validators.mastercard(self.string) == True 
+
+    def IsUnionpayCardNumber(self) -> bool:
+        return validators.unionpay(self.string) == True 
+
+    def IsUnionpayCardNumber(self) -> bool:
+        return validators.unionpay(self.string) == True 
+    
+    def IsAmericanExpressCardNumber(self) -> bool:
+        return validators.amex(self.string) == True 
+
+    def IsVisaCardNumber(self) -> bool:
+        return validators.visa(self.string) == True
 
 if __name__ == "__main__":
     print(1, String("ABC").HasChinese())

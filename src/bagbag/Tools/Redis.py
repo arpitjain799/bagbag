@@ -297,7 +297,7 @@ class redisHashMap():
         self.hlen = self.rdb.hlen(key)
     
     @RetryOnNetworkError
-    def Set(self, key:str, value:typing.Any):
+    def Set(self, key:str, value:typing.Any=None):
         if type(value) == int:
             value = "i " + str(value)
         elif type(value) == str:
@@ -333,10 +333,15 @@ class redisHashMap():
             res = default 
         
         return res
+    
+    @RetryOnNetworkError
+    def Exists(self, key:str) -> bool:
+        return self.rdb.hexists(self.key, key)
 
     @RetryOnNetworkError
-    def Delete(self):
-        self.rdb.delete(self.key)
+    def Delete(self, key:str):
+        # self.rdb.delete(self.key)
+        self.rdb.hdel(self.key, key)
 
 class Redis():
     def __init__(self, host: str, port: int = 6379, database: int = 0, password: str = ""):

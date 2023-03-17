@@ -2,7 +2,7 @@ from kafka import KafkaProducer as kkp
 from kafka import KafkaConsumer as kkc
 import json
 
-class KafkaProducer():
+class kafkaProducer():
     def __init__(self, topic:str, servers:str|list, value_serializer):
         self.kp = kkp(bootstrap_servers=servers, value_serializer=value_serializer)
         self.topic = topic
@@ -10,7 +10,7 @@ class KafkaProducer():
     def Send(self, data:dict):
         self.kp.send(self.topic, data)
 
-class KafkaConsumer():
+class kafkaConsumer():
     def __init__(self, topic:str, servers:str|list, group_id:str=None, auto_offset_reset:str='earliest'):
         self.kc = kkc(topic, bootstrap_servers=servers, group_id=group_id, auto_offset_reset=auto_offset_reset)
     
@@ -38,11 +38,11 @@ class Kafka():
         self.topic = topic
         self.servers = servers 
     
-    def Producer(self, value_serializer=lambda m: json.dumps(m).encode()) -> KafkaProducer:
-        return KafkaProducer(self.topic, self.servers, value_serializer)
+    def Producer(self, value_serializer=lambda m: json.dumps(m).encode()) -> kafkaProducer:
+        return kafkaProducer(self.topic, self.servers, value_serializer)
 
-    def Consumer(self, group_id:str=None, auto_offset_reset:str='earliest') -> KafkaConsumer:
-        return KafkaConsumer(self.topic, self.servers, group_id, auto_offset_reset)
+    def Consumer(self, group_id:str=None, auto_offset_reset:str='earliest') -> kafkaConsumer:
+        return kafkaConsumer(self.topic, self.servers, group_id, auto_offset_reset)
 
 if __name__ == "__main__":
     import time 

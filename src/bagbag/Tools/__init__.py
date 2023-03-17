@@ -22,7 +22,7 @@ from . import Translater
 from .SSH import SSH
 # from .TelegramAsync import TelegramAsync
 from .Github import Github
-from .Kafka import Kafka
+from .Kafka import Kafka, kafkaProducer, kafkaConsumer
 from .Queue import Queue
 from . import RSS
 from .MatrixBot import MatrixBot
@@ -31,3 +31,4 @@ from . import Twitter
 from .DistributedLock import DistributedLock
 # from .Test import Test
 from . import BlockChain
+from .JavaScript import JavaScript

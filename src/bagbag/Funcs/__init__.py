@@ -7,5 +7,5 @@ from .CutSentence import CutSentence
 from .UUID import UUID
 from .Markdown import Markdown2Html, Html2Markdown
 from . import Format
-from .FileType import FileType
+# from .FileType import FileType
 from .FakeIdentity import FakeIdentity

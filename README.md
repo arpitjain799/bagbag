@@ -132,6 +132,8 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
   * CutSentence(sentence:str, filter:bool=True) -> list[str]
 * Tools 一些工具
 
+  * JavaScript
+    * Eval(code:str)
   * BlockChain
     * Tron
       * TronClient(fullNodeServer:str)

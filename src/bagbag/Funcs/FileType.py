@@ -16,5 +16,7 @@ def FileType(file:str) -> str:
 
     return contenttype
 
+
+
 if __name__ == "__main__":
     print(FileType("FileType.py"))

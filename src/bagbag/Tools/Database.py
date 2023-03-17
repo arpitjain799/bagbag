@@ -138,7 +138,9 @@ class mySQLSQLiteTable():
     # 所以为每个线程生成一个orator的table对象
     def initTableObj(func): # func是被包装的函数
         def ware(self, *args, **kwargs): # self是类的实例
+            # print("initTableObj", self._id(), self.table)
             if self._id() not in self.table:
+                # print("初始化:", self._id())
                 self.table[self._id()] = self.db.db.table(self.tbname)
             
             res = func(self, *args, **kwargs)
@@ -424,6 +426,10 @@ class mySQLSQLiteTable():
         else:
             idx = seekobj.Get(0)
         
+        if self._id() not in self.table:
+            # print("初始化:", self._id())
+            self.table[self._id()] = self.db.db.table(self.tbname)
+
         # 如果有where语句作用id字段里面, 在sql的builder里面, 就删掉它, 和它binding的值
         if len(self.table[self._id()].wheres) != 0:
             widx = 0

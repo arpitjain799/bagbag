@@ -14,12 +14,26 @@ class twitterUser():
         self.StatusesCount:int = None 
         self.Verified:bool = None 
         self.raw_data:dict = None 
+
+    # def Tweet(self, )
         
     def __repr__(self) -> str:
         return f"twitterUser(ID={self.ID} Name={self.Name} ScreenName={self.ScreenName} Location={self.Location} RegisterTime={self.RegisterTime} URL={self.URL} Description={self.Description} FollowersCount={self.FollowersCount} StatusesCount={self.StatusesCount} Verified={self.Verified})"
 
     def __str__(self) -> str:
         return f"twitterUser(ID={self.ID} Name={self.Name} ScreenName={self.ScreenName} Location={self.Location} RegisterTime={self.RegisterTime} URL={self.URL} Description={self.Description} FollowersCount={self.FollowersCount} StatusesCount={self.StatusesCount} Verified={self.Verified})"
+
+class twitterUserMention():
+    def __init__(self) -> None:
+        self.ScreenName:str = None 
+        self.Name:str = None 
+        self.ID:int = None 
+    
+    def __repr__(self) -> str:
+        return f"twitterUserMention(ID={self.ID} ScreenName={self.ScreenName} Name={self.Name})"
+    
+    def __str__(self) -> str:
+        return self.__repr__()
 
 class twitterTweet():
     def __init__(self) -> None:
@@ -28,12 +42,19 @@ class twitterTweet():
         self.Time:int = None 
         self.Text:str = None 
         self.Language:str = None 
+        self.FavoriteCount:int = None 
+        self.RetweetCount:int = None 
+        self.Mentions:list[twitterUserMention] = []
+        self.Urls:list[str] = []
+        self.Media:list[str] = []
+        self.Tag:list[str] = []
+        self.raw_data:dict = None 
     
     def __repr__(self) -> str:
-        return f"twitterTweet(ID={self.ID} Time={self.Time} Language={self.Language} Text={self.Text} User={self.User})"
+        return f"twitterTweet(ID={self.ID} Time={self.Time} Language={self.Language} Text={self.Text} User={self.User} FavoriteCount={self.FavoriteCount} RetweetCount={self.RetweetCount} UserMentions={self.UserMentions} Urls={self.Urls} Media={self.Media} Tags={self.Tags})"
     
     def __str__(self) -> str:
-        return f"twitterTweet(ID={self.ID} Time={self.Time} Language={self.Language} Text={self.Text} User={self.User})"
+        return self.__repr__()
 
 class Elevated():
     def __init__(self, consumer_key:str, consumer_secret:str) -> None:
@@ -65,6 +86,9 @@ class Elevated():
 
         t.ID = status.id # https://twitter.com/saepudin1991/status/1613434061741260803
         t.Time = int(status.created_at.timestamp())
+        t.FavoriteCount = status.favorite_count
+        t.RetweetCount = status.retweet_count
+        t.raw_data = status._json
 
         if hasattr(status, 'retweeted_status'):
             # 由于如果是转推, 那么status.full_text会被截断到140个字符, 而完整的推文在status.retweeted_status.full_text
@@ -91,9 +115,32 @@ class Elevated():
 
         t.Language = status.lang
 
+        if hasattr(status, 'entities'):
+            if 'user_mentions' in status.entities and len(status.entities['user_mentions']) != 0:
+                for u in status.entities['user_mentions']:
+                    tuum = twitterUserMention()
+
+                    tuum.ID = u['id']
+                    tuum.Name = u['name']
+                    tuum.ScreenName = u["screen_name"]
+
+                    t.Mentions.append(tuum)
+
+            if 'urls' in status.entities and len(status.entities['urls']) != 0:
+                for u in status.entities['urls']:
+                    t.Urls.append(u['expanded_url'])
+
+            if 'media' in status.entities and len(status.entities['media']) != 0:
+                for u in status.entities['media']:
+                    t.Media.append(u['media_url'])
+
+            if 'hashtags' in status.entities and len(status.entities['hashtags']) != 0:
+                for u in status.entities['hashtags']:
+                    t.Tag.append(u['text'])
+
         return t
     
-    def Search(self, keyword:str, excludeRetweet:bool=True, days:int=7, countPerRequest:int=40, sinceID:int=None) -> typing.Iterable[twitterTweet]:
+    def Search(self, keyword:str, includeReTweets:bool=False, days:int=7, countPerRequest:int=40, sinceID:int=None) -> typing.Iterable[twitterTweet]:
         """
         It takes a keyword, and returns an iterator of tweets that contain that keyword. 
         tweet的ID是从大到小, 也就是数据的时间是从近到远
@@ -109,13 +156,15 @@ class Elevated():
         this to None
         :type sinceID: int
         """
-        if excludeRetweet:
+        if includeReTweets == False:
             keyword = keyword + " -filter:retweets"
             
         for status in tweepy.Cursor(self.api.search_tweets, q=keyword, tweet_mode='extended', count=countPerRequest, since_id=sinceID).items():
+            # import ipdb
+            # ipdb.set_trace()
             yield self._wrapStatus(status)
     
-    def Timeline(self, screename:str, countPerRequest:int=40, sinceID:int=None) -> typing.Iterable[twitterTweet]:
+    def Timeline(self, screenameOrID:str|int, countPerRequest:int=40, sinceID:int=None, includeReTweets:bool=False) -> typing.Iterable[twitterTweet]:
         """
         tweet from the timeline of the user with the given screen name
         tweet的ID是从大到小, 也就是数据的时间是从近到远
@@ -129,8 +178,12 @@ class Elevated():
         :param sinceID: If you want to get tweets since a certain ID, you can use this
         :type sinceID: int
         """
-        for status in tweepy.Cursor(self.api.user_timeline, screen_name=screename, tweet_mode='extended', count=countPerRequest, since_id=sinceID).items():
-            yield self._wrapStatus(status)
+        if type(screenameOrID) == str:
+            for status in tweepy.Cursor(self.api.user_timeline, screen_name=screenameOrID, tweet_mode='extended', count=countPerRequest, since_id=sinceID, include_rts=includeReTweets).items():
+                yield self._wrapStatus(status)
+        elif type(screenameOrID) == int:
+            for status in tweepy.Cursor(self.api.user_timeline, user_id=screenameOrID, tweet_mode='extended', count=countPerRequest, since_id=sinceID, include_rts=includeReTweets).items():
+                yield self._wrapStatus(status)
     
     def Followers(self, screename:str, countPerRequest:int=40) -> typing.Iterable[twitterUser]:
         for user in tweepy.Cursor(self.api.get_followers, screen_name=screename, count=countPerRequest).items():
@@ -148,11 +201,14 @@ class Elevated():
         """
         if type(screenameOrID) == str:
             user = self.api.get_user(screen_name=screenameOrID)
-        else:
+        elif type(screenameOrID) == int:
             user = self.api.get_user(user_id=screenameOrID)
         # import ipdb
         # ipdb.set_trace()
         return self._wrapUser(user)
+
+    def Tweet(self, tid:int) -> twitterTweet:
+        return self._wrapStatus(self.api.get_status(tid, tweet_mode = "extended"))
 
 if __name__ == "__main__":
     import json 
@@ -170,17 +226,18 @@ if __name__ == "__main__":
     #     print(i)
     #     break 
 
-    idx = 0
-    print('timeline')
-    for i in twitter.Timeline("asiwaju_wa", sinceID=1632984909387120640):
-        idx += 1
-        print(i.ID, i.Time)
-        if idx == 10:
-            break 
+    # idx = 0
+    # print('timeline')
+    # for i in twitter.Timeline(722784576):
+    #     idx += 1
+    #     print(i.ID, i.Time, i.Text)
+    #     if idx == 10:
+    #         break 
     
     # print("followers")
     # for i in twitter.Followers("asiwaju_wa"):
     #     print(i)
     #     break 
 
-    
+    import ipdb
+    ipdb.set_trace()
