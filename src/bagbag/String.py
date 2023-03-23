@@ -162,7 +162,7 @@ class String():
         py = String(('-'.join(res)).replace(" ", "-")).Filter('1234567890qwertyuioplkjhgfdsazxcvbnmQWERTYUIOPLKJHGFDSAZXCVBNM -').replace('--', '-')
         return py
     
-    def RemoveNonUTF8Characters(self) -> str:
+    def EnsureUTF8(self) -> str:
         return self.string.encode('utf-8', errors='ignore').decode('utf-8')
 
     def URLEncode(self) -> str:

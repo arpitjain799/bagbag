@@ -19,6 +19,7 @@ class JavaScript():
         u'12'
         >>> add.constructor
         function Function() { [python code] }
+        
         NOTE: For Js Number, String, Boolean and other base types returns appropriate python BUILTIN type. For Js functions and objects, returns Python wrapper - basically behaves like normal python object. If you really want to convert object to python dict you can use to_dict method.
         
         :param code: The code to be evaluated

@@ -32,3 +32,4 @@ from .DistributedLock import DistributedLock
 # from .Test import Test
 from . import BlockChain
 from .JavaScript import JavaScript
+from . import ComputerVision

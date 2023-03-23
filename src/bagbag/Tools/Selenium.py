@@ -280,7 +280,7 @@ class seleniumElement():
         return self.element.get_attribute('innerHTML')
 
 class seleniumBase():
-    def Find(self, xpath:str, timeout:int=60, scrollIntoElement:bool=True) -> seleniumElement|None:
+    def Find(self, xpath:str, timeout:int=60, scrollIntoElement:bool=True, retryOnError:int=5) -> seleniumElement|None:
         """
         > Finds an element by xpath, waits for it to appear, and returns it
         
@@ -294,6 +294,7 @@ class seleniumBase():
         :return: seleniumElement
         """
         waited = 0
+        errcount = 0
         while True:
             try:
                 el = self.driver.find_element(webby.XPATH, xpath)
@@ -310,6 +311,14 @@ class seleniumBase():
                     waited += 1
                     if waited > timeout:
                         return None 
+            except Exception as e:
+                if retryOnError != 0:
+                    errcount += 1
+                    if errcount > retryOnError:
+                        raise e 
+                    time.sleep(1)
+                else:
+                    raise e 
 
         # import ipdb
         # ipdb.set_trace()
@@ -582,6 +591,8 @@ class Chrome(seleniumBase):
             options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
+        options.add_argument("--ignore-certificate-errors")
+
         if userAgent != None:
             options.add_argument('--user-agent=' + userAgent + '')
         elif randomUA:
@@ -650,12 +661,13 @@ class seleniumFlowResponse():
         return f"seleniumFlowResponse(Time={self.Time}, StatusCode={self.StatusCode}, Headers={self.Headers} Body={body})"
 
 class seleniumFlow():
-    def __init__(self, req:seleniumFlowRequest, resp:seleniumFlowResponse) -> None:
+    def __init__(self,id:str, req:seleniumFlowRequest, resp:seleniumFlowResponse) -> None:
         self.Request = req
         self.Response = resp
+        self.ID = id
     
     def __repr__(self) -> str:
-        return f"seleniumFlow(\n\tRequest={self.Request} \n\tResponse={self.Response}\n)" 
+        return f"seleniumFlow(\n\tID={self.ID} \n\tRequest={self.Request} \n\tResponse={self.Response}\n)" 
 
 class ChromeWire(seleniumBase):
     def __init__(self, 
@@ -699,6 +711,8 @@ class ChromeWire(seleniumBase):
         if Os.GetUID() == 0:
             options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+
+        options.add_argument("--ignore-certificate-errors")
 
         if userAgent != None:
             options.add_argument('--user-agent=' + userAgent + '')
@@ -757,20 +771,20 @@ class ChromeWire(seleniumBase):
         self.closed = False
         self.blockSuffix = blockSuffix
     
-    def Flows(self) -> typing.Iterable[seleniumFlow]:
+    def Flows(self, clean:bool=True) -> typing.Iterable[seleniumFlow]:
         """
         > It iterates through all the requests made by the browser, and returns a `seleniumFlow` object
         for each request. 
         这个方法迭代现有的队列里面的数据, 当到达末尾的时候就结束迭代. 
         可以多次调用这个方法来获取新的flow. 
         注意打开某些页面之后, 浏览器会隔一段时间就发起一次请求, 及时没有新Get页面, 也会有新的flow出现. 
+        如果是发起了请求, 但是还在等待回复, 或者正在传送大的回复回来, 则response为None, 在控制台看到的是在pending. 拿到完整的回复才会显示, 一瞬间刷出来.
+        如果是连接出错, 有request, 但response也还是为None. 
         """
         for req in self.driver.requests:
-            if req.response == None:
-                continue 
-
-            if req.path.lower().endswith(self.blockSuffix):
-                continue
+            if self.blockSuffix != None and len(self.blockSuffix) != 0:
+                if req.path.lower().endswith(self.blockSuffix):
+                    continue
 
             resp = req.response
 
@@ -785,35 +799,39 @@ class ChromeWire(seleniumBase):
                 freq.BodyBytes = req.body
                 freq.Body = req.body.decode(errors="ignore")
 
-            fresp = seleniumFlowResponse()
-            fresp.Headers = {}
-            for key in resp.headers:
-                fresp.Headers[key] = resp.headers[key]
-            fresp.StatusCode = resp.status_code
-            fresp.Time = resp.date.timestamp()
-            if resp.body != None:
-                fresp.BodyBytes = decodeResponseBody(resp.body, resp.headers.get('Content-Encoding', 'identity'))
-                fresp.Body = fresp.BodyBytes.decode(errors="ignore")
-                # if 'content-encoding' not in fresp.Headers:
-                #     fresp.Body = resp.body.decode(errors="ignore")
-                #     fresp.BodyBytes = resp.body 
-                # else:
-                #     if fresp.Headers['content-encoding'].strip() == 'br':
-                #         # Lg.Trace("Before:", resp.body[:80])
-                #         fresp.BodyBytes = brotli.decompress(resp.body)
-                #         # Lg.Trace("After:", fresp.BodyBytes[:80])
-                #         fresp.Body = fresp.BodyBytes.decode(errors="ignore")
-                #     elif fresp.Headers['content-encoding'].strip() == 'gzip':
-                #         fresp.BodyBytes = gzip.decompress(resp.body)
-                #         fresp.Body = fresp.BodyBytes.decode(errors="ignore")
-                #     else:
-                #         Lg.Warn("未知的 Content-Encoding:", fresp.Headers['content-encoding'])
-                #         fresp.Body = resp.body.decode(errors="ignore")
-                #         fresp.BodyBytes = resp.body 
+            if resp != None:
+                fresp = seleniumFlowResponse()
+                fresp.Headers = {}
+                for key in resp.headers:
+                    fresp.Headers[key] = resp.headers[key]
+                fresp.StatusCode = resp.status_code
+                fresp.Time = resp.date.timestamp()
+                if resp.body != None:
+                    fresp.BodyBytes = decodeResponseBody(resp.body, resp.headers.get('Content-Encoding', 'identity'))
+                    fresp.Body = fresp.BodyBytes.decode(errors="ignore")
+                    # if 'content-encoding' not in fresp.Headers:
+                    #     fresp.Body = resp.body.decode(errors="ignore")
+                    #     fresp.BodyBytes = resp.body 
+                    # else:
+                    #     if fresp.Headers['content-encoding'].strip() == 'br':
+                    #         # Lg.Trace("Before:", resp.body[:80])
+                    #         fresp.BodyBytes = brotli.decompress(resp.body)
+                    #         # Lg.Trace("After:", fresp.BodyBytes[:80])
+                    #         fresp.Body = fresp.BodyBytes.decode(errors="ignore")
+                    #     elif fresp.Headers['content-encoding'].strip() == 'gzip':
+                    #         fresp.BodyBytes = gzip.decompress(resp.body)
+                    #         fresp.Body = fresp.BodyBytes.decode(errors="ignore")
+                    #     else:
+                    #         Lg.Warn("未知的 Content-Encoding:", fresp.Headers['content-encoding'])
+                    #         fresp.Body = resp.body.decode(errors="ignore")
+                    #         fresp.BodyBytes = resp.body 
+            else:
+                fresp = None 
 
-            yield seleniumFlow(freq, fresp)
+            yield seleniumFlow(req.id, freq, fresp)
         
-        del(self.driver.requests)
+        if clean:
+            del(self.driver.requests)
 
 if __name__ == "__main__":
     # Local 
