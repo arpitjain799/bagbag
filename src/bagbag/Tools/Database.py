@@ -57,23 +57,53 @@ class mySQLSQLiteTable():
         
         return ''.join(nl)
 
-    def AddColumn(self, colname: str, coltype: str, default=None, nullable:bool = True) -> mySQLSQLiteTable:
+    def AddColumn(self, colname: str | list[str], coltype: str, default=None, nullable:bool = True) -> mySQLSQLiteTable:
         """
-        添加一个字段, 如果字段存在就跳过, 不会修改.
+        添加字段, 如果字段存在就跳过, 不会修改. 
+        可以是list也可以是str, 如果是str就添加一个字段, 如果是list就添加多个字段
 
         :param colname: The name of the column to add
-        :type colname: str
+        :type colname: str, list[str]
         :param coltype: int, string, float, text
         :type coltype: str
         :param default: The default value for the column
         :param nullable: Whether the column can be null, defaults to True
         :type nullable: bool (optional)
         """
-        if self.schema.has_table(self.tbname):
-            with self.schema.table(self.tbname) as table:
-                exists = self.schema.has_column(self.tbname, colname)
+        if type(colname) == str:
+            colnames = [colname]
+        else:
+            colnames = colname
 
-                if not exists:
+        for colname in colnames:
+            if self.schema.has_table(self.tbname):
+                with self.schema.table(self.tbname) as table:
+                    exists = self.schema.has_column(self.tbname, colname)
+
+                    if not exists:
+                        if coltype in ["int", "integer"]:
+                            col = table.big_integer(colname)
+                        elif coltype in ["string", "str", "varchar"] :
+                            col = table.string(colname, 256)
+                        elif coltype in ["float", "double"]:
+                            col = table.double(colname)
+                        elif coltype in ["text", "longtext"]:
+                            col = table.long_text(colname)
+                        else:
+                            raise Exception("列的类型可选为: int, string, float, text")
+                        
+                        if default != None:
+                            col.default(default)
+                        
+                        if nullable:
+                            col.nullable()
+                    
+                    # if exists:
+                    #     col.change()
+            else:
+                with self.schema.create(self.tbname) as table:
+                    table.increments('id')
+
                     if coltype in ["int", "integer"]:
                         col = table.big_integer(colname)
                     elif coltype in ["string", "str", "varchar"] :
@@ -85,34 +115,11 @@ class mySQLSQLiteTable():
                     else:
                         raise Exception("列的类型可选为: int, string, float, text")
                     
-                    if default != None:
+                    if default:
                         col.default(default)
                     
                     if nullable:
                         col.nullable()
-                
-                # if exists:
-                #     col.change()
-        else:
-            with self.schema.create(self.tbname) as table:
-                table.increments('id')
-
-                if coltype in ["int", "integer"]:
-                    col = table.big_integer(colname)
-                elif coltype in ["string", "str", "varchar"] :
-                    col = table.string(colname, 256)
-                elif coltype in ["float", "double"]:
-                    col = table.double(colname)
-                elif coltype in ["text", "longtext"]:
-                    col = table.long_text(colname)
-                else:
-                    raise Exception("列的类型可选为: int, string, float, text")
-                
-                if default:
-                    col.default(default)
-                
-                if nullable:
-                    col.nullable()
 
         return self
     

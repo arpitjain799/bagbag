@@ -75,7 +75,15 @@ class cvStreamFrameObjectDetectionResult():
         return frame
 
     def Objects(self) -> dict:
-        pass 
+        resp = {}
+
+        for i in np.arange(0, self.detections.shape[2]):
+            confidence = self.detections[0, 0, i, 2]
+            idx = int(self.detections[0, 0, i, 1])
+            name = objectClasses[idx]
+            resp[name] = confidence
+        
+        return resp
 
 class cvStreamFrameDifference():
     def __init__(self, cnts) -> None:
@@ -88,6 +96,9 @@ class cvStreamFrameDifference():
                 cv2.rectangle(frame.frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
         
         return frame
+
+    def HasDifference(self) -> bool:
+        return len(self.cnts) != 0
 
 class cvStreamFrame():
     def __init__(self, frame) -> None:
@@ -176,9 +187,14 @@ class cvStreamFrame():
         frame = cv2.flip(cv2.transpose(self.frame), side)
         return cvStreamFrame(frame)
 
-    def Text(self, text:str) -> cvStreamFrame:
-        cv2.putText(self.frame, text, (10, self.frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 2)
+    def Text(self, text:str, x:int=None, y:int=None) -> cvStreamFrame:
+        x = 10 if x == None else x 
+        y = self.frame.shape[0] - 10 if y == None else y
+        cv2.putText(self.frame, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 2)
         return self
+    
+    def Size(self) -> typing.Tuple[int, int]:
+        return self.frame.shape[0], self.frame.shape[1]
 
 class Stream():
     def __init__(self, source:int|str) -> None:
@@ -249,16 +265,20 @@ class Stream():
         except:
             pass
 
-class ViewoWriter():
+class VideoWriter():
     def __init__(self, path:str, fps:int, width:int, height:int) -> None:
-        self.fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-        self.writer = cv2.VideoWriter(path, self.fourcc, fps, (width, height))
+        fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
+        self.writer = cv2.VideoWriter(path, fourcc, fps, (height, width))
+        self.closed = False
 
     def Write(self, frame:cvStreamFrame):
-        self.writer.write(frame.frame) 
+        if self.closed == True:
+            self.writer.write(frame.frame) 
 
     def Close(self):
-        self.writer.release() 
+        if self.closed == False:
+            self.closed = True 
+            self.writer.release() 
 
 if __name__ == "__main__":
     import os
@@ -273,17 +293,26 @@ if __name__ == "__main__":
     # print(stream.FPS())
 
     # Video file
-    # stream = Stream(os.getenv("HOME") + "/Desktop/1080p/2022-12-04.19.37.08.mp4")
+    stream = Stream(os.getenv("HOME") + "/Desktop/1080p/2022-12-04.19.37.08.mp4")
 
     # bg = stream.Get()
     # for frame in stream:
     #     frame.Compare(bg).Draw(frame).Text(datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p")).Show("test")
 
-    bg = stream.Get().Bright(5).Rotate(0)
-    for frame in stream:
-        frame = frame.Bright(5).Rotate(0)
-        frame.Compare(bg).Draw(frame).Text(datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p")).Show("test")
-
+    # bg = stream.Get().Bright(5).Rotate(0)
+    # for frame in stream:
+    #     frame = frame.Bright(5).Rotate(0)
+    #     frame.Compare(bg).Draw(frame).Text(datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p")).Show("test")
 
     # for frame in stream:
     #     frame.Objects().Draw(frame, filterAbove=70).Show("")
+
+    frame = stream.Get()
+    w, h = frame.Size()
+    print(w,h )
+    writer = VideoWriter("video.mp4", 25, w, h)
+
+    for _ in range(0, 250):
+        writer.Write(stream.Get())
+    
+    writer.Close()

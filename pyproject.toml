@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bagbag"
-version = "0.56.6"
+version = "0.56.20"
 description = "An all in one python library"
 
 license = "MIT"
@@ -73,6 +73,8 @@ python-magic = ">=0.4.27"
 beautifulsoup4 = ">=4.11.1"
 validators = ">=0.20.0"
 Js2Py = ">=0.74" 
+opencv-python = ">=4.6.0.66"
+tld = ">=0.13"
 
 # 额外的, 为了方便, 但是这个包里面没用到
 
