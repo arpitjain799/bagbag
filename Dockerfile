@@ -1,7 +1,7 @@
 FROM python:3.10
 
 RUN apt update; \
-    apt install opencc vim -y; \
+    apt install opencc vim ffmpeg libsm6 libxext6 -y; \
     apt clean
 
 COPY requirements.txt /tmp/requirements.txt

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bagbag"
-version = "0.56.20"
+version = "0.56.21"
 description = "An all in one python library"
 
 license = "MIT"
