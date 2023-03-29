@@ -17,8 +17,9 @@ def Exit(num:int=0):
 def System(cmd:str) -> int:
     return subprocess.call(cmd, stderr=sys.stderr, stdout=sys.stdout, shell=True)
 
-def Mkdir(path:str):
-    os.makedirs(path, exist_ok=True)
+def Mkdir(*path:str):
+    for p in path:
+        os.makedirs(p, exist_ok=True)
 
 def ListDir(path:str=".") -> list[str]:
     return os.listdir(path)

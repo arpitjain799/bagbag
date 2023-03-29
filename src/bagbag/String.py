@@ -4,7 +4,12 @@ import opencc
 import ipaddress
 import pypinyin
 from urllib.parse import quote_plus, unquote
-from . import Re
+try:
+    from . import Re
+    from .Tools import URL
+except:
+    import Re
+    from Tools import URL
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from collections import OrderedDict
 
@@ -12,6 +17,7 @@ from lxml import etree, html
 import bs4
 
 import validators
+import tld
 
 sentimentAnalyzer = SentimentIntensityAnalyzer()
 
@@ -76,7 +82,7 @@ class String():
 
         return resr
     
-    def CryptoAddress(self) -> list[cryptoAddress]:
+    def GetCryptoAddress(self) -> list[cryptoAddress]:
         resca = []
 
         for ctype in addrPattern:
@@ -112,6 +118,43 @@ class String():
                     resca.append(cryptoAddress(ctype, address))
         
         return resca
+    
+    def GetURL(self) -> list[str]:
+        urls = re.findall('(?:http|ftp|https|ssh|ftps|sftp)://(?:[-\w./]|(?:%[\da-fA-F]{2}/))+', self.string)
+        urls = list(set(urls))
+
+        return urls
+    
+    def IsASCII(self) -> bool:
+        return self.string.isascii()
+    
+    def GetDomain(self) -> list[str]:
+        dms = []
+        for u in self.GetURL():
+            h = URL.URL(u).Parse().Host
+            if h.strip() != "" and h.strip() not in dms and tld.get_tld(h.strip(), fix_protocol=True, fail_silently=True) != None:
+                dms.append(h.strip())
+        
+        for i in self.string.split():
+            if validators.domain(i) == True and tld.get_tld(i, fix_protocol=True, fail_silently=True) != None and i.strip() not in dms:
+                    dms.append(i.strip())
+        
+        return dms
+    
+    def GetFirstLevelDomain(self) -> str | list[str]:
+        res = []
+        for dm in self.GetDomain():
+            r = tld.get_fld(dm, fix_protocol=True, fail_silently=True)
+            if r != None:
+                res.append(r)
+        
+        if len(res) == 0:
+            return None 
+        elif len(res) == 1:
+            return res[0]
+        else:
+            return res
+
 
     def HasChinese(self) -> bool:
         return len(re.findall(r'[\u4e00-\u9fff]+', self.string)) != 0
@@ -183,7 +226,11 @@ class String():
         return validators.url(self.string, public=public) == True
 
     def IsDomain(self) -> bool:
-        return validators.domain(self.string) == True
+        if validators.domain(self.string) == True:
+            if tld.get_tld(self.string, fix_protocol=True, fail_silently=True) != None:
+                return True 
+            
+        return False
     
     def IsEmail(self) -> bool:
         return validators.email(self.string) == True 
