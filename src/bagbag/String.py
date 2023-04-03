@@ -131,7 +131,10 @@ class String():
     def GetDomain(self) -> list[str]:
         dms = []
         for u in self.GetURL():
-            h = URL.URL(u).Parse().Host
+            try:
+                h = URL.URL(u).Parse().Host
+            except:
+                continue 
             if h.strip() != "" and h.strip() not in dms and tld.get_tld(h.strip(), fix_protocol=True, fail_silently=True) != None:
                 dms.append(h.strip())
         

@@ -10,6 +10,7 @@ from .URL import URL
 from .Ratelimit import RateLimit
 from .Chan import Chan
 from .WebServer import WebServer
+from .TelegramBotOfficial import TelegramBotOfficial
 from .TelegramBot import TelegramBot
 from . import CSV
 from .Argparser import Argparser

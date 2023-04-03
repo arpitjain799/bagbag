@@ -1,4 +1,6 @@
 import os
+import time
+import typing
 import magic
 import mimetypes
 
@@ -91,3 +93,45 @@ class File():
         :return: The file extension of the file.
         """
         return mimetypes.guess_extension(self.MimeType())
+    
+    def Tailf(self, fromBegin:bool=False, separator:str='\n', interval:int|float=1) -> typing.Iterable[str]:
+        """
+        It reads the file in chunks of 4096 bytes, and yields the lines as they are read.
+        Waiting for new lines come when reach the end of the file.
+        
+        :param fromBegin: If True, the tail will start from the beginning of the file, defaults to False
+        :type fromBegin: bool (optional)
+        :param separator: The separator to use when splitting the file, defaults to \n
+        :type separator: str (optional)
+        :param interval: The time to wait between checking the file for new lines, defaults to 1 second
+        :type interval: int|float (optional)
+        """
+        lfsize = self.Size()
+
+        stream = open(self.path)
+        if not fromBegin:
+            stream.seek(0, os.SEEK_END)
+
+        buffer = ''
+        while True:
+            fsize = self.Size()
+            print(lfsize, fsize)
+            if lfsize > fsize:
+                buffer = ''
+                stream.close()
+                stream = open(self.path)
+            
+            lfsize = fsize 
+
+            chunk = stream.read(4096)
+            if not chunk:
+                time.sleep(interval)
+                continue
+            buffer += chunk
+            while True:
+                try:
+                    part, buffer = buffer.split(separator, 1)
+                except ValueError:
+                    break
+                else:
+                    yield part

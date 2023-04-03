@@ -1,158 +1,56 @@
 from __future__ import annotations
+from bagbag import Http, Lg, Time, Base64
 
-import telebot # https://github.com/eternnoir/pyTelegramBotAPI
-
-try:
-    from .Ratelimit import RateLimit
-    from .Lock import Lock 
-    from .DistributedLock import DistributedLock
-    from .. import Lg
-except:
-    from Ratelimit import RateLimit
-    from Lock import Lock
-    from DistributedLock import DistributedLock
-    import sys
-    sys.path.append("..")
-    import Lg
-
-import time
+# 配合这个镜像使用
+# 
+# version: '3'
+# services:
+#   telegram_bot:
+#     image: darren2046/telegram-bot
+#     #ports:
+#     #   - "7767:7767" 
+#     environment:
+#       API_PASS: password_string
+#       TELEGRAM_BOT_TOKEN: token_string
+    
+#     volumes:
+#       - /data/cr-volumes/telegram-bot/:/data/
 
 class TelegramBot():
-    def __init__(self, token:str, ratelimit:str="20/m", lock:Lock|DistributedLock=None):
-        """
-        :param token: The token of your bot
-        :type token: str
-        :param ratelimit: The ratelimit for the bot. This is a string in the format of "x/y" where x is
-        the number of messages and y is the time period. For example, "20/m" means 20 messages per
-        minute, defaults to 20/m. There is no limit if set to None.
-        :type ratelimit: str (optional)
-        """
-        self.token = token 
-        self.tb = telebot.TeleBot(self.token)
-        self.tags:list[str] = []
-        if ratelimit != None:
-            self.rl = RateLimit(ratelimit)
-        else:
-            self.rl = None 
-        self.lock = lock
-    
-    def retryOnError(func): # func是被包装的函数
-        def ware(self, *args, **kwargs): # self是类的实例
-            errc = 0
-            while True:
-                try:
-                    res = func(self, *args, **kwargs)
-                    break
-                except Exception as e:
-                    Lg.Trace(str(e))
-                    time.sleep(3)
-                    errc += 1
-                    if errc > 100:
-                        raise e
+    def __init__(self, apiserver:str, apipass:str) -> None:
+        self.server = apiserver.rstrip("/")
+        self.password = apipass
+        self.chat = None 
 
-            return res
-    
-        return ware
+        if not self.server.startswith("http"):
+            self.server = 'https://' + self.server
 
-    def getLock(func): # func是被包装的函数
-        def ware(self, *args, **kwargs): # self是类的实例
-            if self.lock != None:
-                self.lock.Acquire()
-
-            res = func(self, *args, **kwargs)
-
-            if self.lock != None:
-                self.lock.Release()
-            
-            return res
-
-        return ware
-    
-    def rateLimit(func): # func是被包装的函数
-        def ware(self, *args, **kwargs): # self是类的实例
-            if self.rl != None:
-                self.rl.Take()
-
-            res = func(self, *args, **kwargs)
-            
-            return res
-
-        return ware
-
-    @retryOnError
-    def GetMe(self) -> telebot.types.User:
-        return self.tb.get_me()
-    
-    def SetChatID(self, chatid:int) -> TelegramBot:
-        self.chatid = chatid
+    def SetChat(self, chat:str) -> TelegramBot:
+        self.chat = chat 
         return self
-    
-    @retryOnError
-    @getLock
-    @rateLimit
-    def SendFile(self, path:str):
-        self.tb.send_document(self.chatid, open(path, 'rb')) 
 
-    @retryOnError
-    @getLock
-    @rateLimit
+    def Send(self, message:str, mode:str="text", webPreview:bool=True):
+        while True:
+            try:
+                resp = Http.PostJson(self.server + "/telegram-bot/send/text", {"chat": self.chat, "message": message, "password": self.password, "mode": mode, "webPreview": webPreview})
+                if resp.StatusCode != 200:
+                    Lg.Warn("发送消息出错:", resp)
+                else:
+                    return 
+            except Exception as e:
+                Lg.Warn("发送消息出错:", e)
+
+            Time.Sleep(30, title="等待重试发送消息")
+    
     def SendImage(self, path:str):
-        self.tb.send_photo(self.chatid, open(path, 'rb'))
+        while True:
+            try:
+                resp = Http.PostJson(self.server + "/telegram-bot/send/image", {"chat": self.chat, "image": Base64.Encode(open(path, 'rb').read()), "password": self.password})
+                if resp.StatusCode != 200:
+                    Lg.Warn("发送消息出错:", resp)
+                else:
+                    return 
+            except Exception as e:
+                Lg.Warn("发送消息出错:", e)
 
-    @retryOnError
-    @getLock
-    @rateLimit
-    def SendVideo(self, path:str):
-        self.tb.send_video(self.chatid, open(path, 'rb')) 
-
-    @retryOnError
-    @getLock
-    @rateLimit
-    def SendAudio(self, path:str):
-        self.tb.send_audio(self.chatid, open(path, 'rb')) 
-
-    @retryOnError
-    @getLock
-    @rateLimit
-    def SendLocation(self, latitude:float, longitude:float):
-        self.tb.send_location(self.chatid, latitude, longitude)
-    
-    @retryOnError
-    @getLock
-    @rateLimit
-    def SetTags(self, *tags:str) -> TelegramBot:
-        self.tags = tags
-        return self 
-
-    @retryOnError
-    @getLock
-    @rateLimit
-    def SendMsg(self, msg:str, *tags:str):
-        """
-        It sends a message to a chat, and if there are tags, it adds them to the end of the message
-        
-        :param msg: The message to be sent
-        :type msg: str
-        :param : chatid: the chat id of the chat you want to send the message to
-        :type : str
-        """
-        if len(tags) != 0:
-            tag = '\n\n' + ' '.join(['#' + t for t in tags])
-        else:
-            if len(self.tags) != 0:
-                tag = '\n\n' + ' '.join(['#' + t for t in self.tags])
-            else:
-                tag = ""
-        
-        if len(msg) <= 4096 - len(tag):
-            self.tb.send_message(self.chatid, msg.strip() + tag) 
-        else:
-            for m in telebot.util.smart_split(msg, 4096 - len(tag)):
-                self.tb.send_message(self.chatid, m.strip() + tag) 
-
-if __name__ == "__main__":
-    token, chatid = open("TelegramBot.ident").read().strip().split("\n")
-    t = TelegramBot(token).SetChatID(int(chatid))
-    # t.SendMsg(open("Telegram.py").read(), "tag1", "tag2")
-    t.SendMsg("test")
-    # t.SendFile("URL.py")
+            Time.Sleep(30, title="等待重试发送消息")

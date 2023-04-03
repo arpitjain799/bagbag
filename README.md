@@ -318,7 +318,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
         * Refresh() -> TelegramMessage # 有时候同一个id, 被编辑了, 刷新一下返回最新的消息
         * ClickButton(buttonText:str) -> bool
         * Delete()
-  * TelegramBot(token:str)
+  * TelegramBotOfficial(token:str)
     * GetMe() -> telebot.types.User
     * SetChatID(chatid:int) -> TelegramBot
     * SetTags(*tags:str) -> TelegramBot
