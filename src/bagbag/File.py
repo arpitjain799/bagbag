@@ -98,6 +98,7 @@ class File():
         """
         It reads the file in chunks of 4096 bytes, and yields the lines as they are read.
         Waiting for new lines come when reach the end of the file.
+        Will read from the beginning of the file if the file gets truncate.
         
         :param fromBegin: If True, the tail will start from the beginning of the file, defaults to False
         :type fromBegin: bool (optional)
@@ -115,7 +116,7 @@ class File():
         buffer = ''
         while True:
             fsize = self.Size()
-            print(lfsize, fsize)
+            #print(lfsize, fsize)
             if lfsize > fsize:
                 buffer = ''
                 stream.close()
