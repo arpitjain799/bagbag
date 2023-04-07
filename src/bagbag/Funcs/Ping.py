@@ -2,14 +2,14 @@ from pythonping import ping
 
 try:
     from ..Tools import Chan
-    from .. import Re 
     from ..Thread import Thread
+    from ..String import String
 except:
     import sys
     sys.path.append("..")
     from Tools import Chan 
-    import Re  
     from Thread import Thread
+    from String import String
 
 class filelike():
     def __init__(self, c):
@@ -21,7 +21,7 @@ class filelike():
             if 'timed out' in msg:
                 self.c.Put("timeout")
             else:
-                self.c.Put(float(Re.FindAll("Reply from .+?, .+? bytes in (.+)ms", msg)[0][0]))
+                self.c.Put(float(String(msg).RegexFind("Reply from .+?, .+? bytes in (.+)ms")[0][0]))
 
 def Ping(host, timeout:int=3, count:int=None, interval:int=1):
     c = Chan(0)

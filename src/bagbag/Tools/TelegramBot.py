@@ -42,6 +42,9 @@ class TelegramBot():
 
             Time.Sleep(30, title="等待重试发送消息")
     
+    def SendMsg(self, message:str, mode:str="text", webPreview:bool=True):
+        self.Send(message, mode, webPreview)
+    
     def SendImage(self, path:str):
         while True:
             try:

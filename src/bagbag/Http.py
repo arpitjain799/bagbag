@@ -76,7 +76,7 @@ class responseStream(object):
 
 class Response():
     def __init__(self):
-        self.headers:dict = None # dict[str]str
+        self.Headers:dict = None # dict[str]str
         self.Content:str = None # str 
         self.StatusCode:int = None # int
         self.URL:str = None # str
@@ -97,7 +97,7 @@ class Response():
                 Content = String(self.Content[:160]).Repr() + "..."
             else:
                 Content = String(self.Content[:160]).Repr()
-        return f"Http.Response(\n    URL={self.URL}, \n    StatusCode={self.StatusCode}, \n    headers={self.headers}, \n    Debug={Debug}, \n    Content={Content}\n)"
+        return f"Http.Response(\n    URL={self.URL}, \n    StatusCode={self.StatusCode}, \n    headers={self.Headers}, \n    Debug={Debug}, \n    Content={Content}\n)"
 
     def __repr__(self) -> str:
         return str(self)
@@ -118,7 +118,7 @@ def makeResponse(response:requests.Response, Debug:bool, readBodySize:int) -> Re
         resp.Content = content.decode("utf-8", errors="ignore")
         resp.ContentBytes = content
     
-    resp.headers = response.headers 
+    resp.Headers = response.headers 
     resp.StatusCode = response.status_code
     resp.URL = response.url 
     

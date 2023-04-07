@@ -1,14 +1,12 @@
 import jieba 
 
 try:
-    from .. import Re
-    from .. import String
+    from ..String import String
     from .CutSentenceStopWords import stopwords
 except:
     import sys 
     sys.path.append("..")
-    import Re
-    import String
+    from String import String
     from .CutSentenceStopWords import stopwords
 
 def __make_words(s:str) -> list[str]:
@@ -18,7 +16,7 @@ def __make_words(s:str) -> list[str]:
             if last == " " and i == " ":
                 continue 
 
-            if String(i).HasChinese() or Re.FindAll("[0-9a-zA-Z]", i) or i == " ":
+            if String(i).HasChinese() or String(i).RegexFind("[0-9a-zA-Z]") or i == " ":
                 ss.append(i)
 
                 last = i 

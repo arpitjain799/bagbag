@@ -29,7 +29,7 @@ try:
     from .Database import SQLite
     from .. import Time
     from .. import Lg
-    from .. import Re
+    from ..String import String
     from ..File import File
     from .Ratelimit import RateLimit
 except:
@@ -39,7 +39,7 @@ except:
     from Database import SQLite
     import Time
     import Lg
-    import Re
+    from String import String
     from File import File
     from Ratelimit import RateLimit
 
@@ -465,7 +465,7 @@ class Telegram():
                     res = func(self, *args, **kwargs)
                     return res
                 except telethon.errors.rpcerrorlist.FloodWaitError as e:
-                    sleepsec = int(Re.FindAll("A wait of (.+?) seconds is required", e.args[0])[0][1]) + 1
+                    sleepsec = int(String(e.args[0]).RegexFind("A wait of (.+?) seconds is required")[0][1]) + 1
                     Lg.Warn(f"捕获FloodWaitError错误, 休眠{sleepsec}秒")
                     Time.Sleep(sleepsec)
 

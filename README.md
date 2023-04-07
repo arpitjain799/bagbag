@@ -49,17 +49,6 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
 
   * Strftime(timestamp:float|int, format:str="%Y-%m-%d %H:%M:%S") -> str
   * Strptime(timestring:str, format:str=None) -> int
-* Re 正则
-  """
-  If the message is too long, split it into chunks of 4096 characters and send them one by one
-
-  :param msg: the message to be sent
-  :type msg: str
-  :param : `chatid` - the chat ID of the chat you want to send messages to
-  :type : str
-  """
-
-  * FindAll(pattern: str | Pattern[str], string: str, flags: _FlagsType = ...) -> list
 * Base64
 
   * Encode(s:str|bytes) -> str

@@ -5,9 +5,9 @@ from dateutil.parser import parse as dateparser
 from dateutil.parser import ParserError
 
 try:
-    from . import Re
+    from .String import String
 except:
-    import Re
+    from String import String
 
 def FormatDuration(seconds:int) -> str:
     return time.strftime("%H:%M:%S", time.gmtime(seconds))
@@ -62,7 +62,7 @@ def parseTimeago(timestring:str) -> int|None:
     if timestring == "just now":
         return int(Now())
     
-    res = Re.FindAll('([0-9]+)([smhdw])', timestring)
+    res = String(timestring).RegexFind('([0-9]+)([smhdw])')
     # print(res)
     if len(res) != 0:
         sm = {
@@ -96,7 +96,7 @@ def parseTimeago(timestring:str) -> int|None:
         for f in formates:
             f = f % s 
 
-            res = Re.FindAll(f, timestring)
+            res = String(timestring).RegexFind(f)
             if len(res) != 0:
                 duration = step[s]
                 num = int(res[0][1])
@@ -120,7 +120,7 @@ def Strptime(timestring:str, format:str=None) -> int:
     if format:
         dtimestamp = datetime.datetime.strptime(timestring, format).timestamp()
     else:
-        if len(Re.FindAll('([0-9]+)([smhdw])', timestring)) != 0:
+        if len(String(timestring).RegexFind('([0-9]+)([smhdw])')) != 0:
             dtimestamp = parseTimeago(timestring)
             if not dtimestamp:
                 raise Exception(f"不能解析时间字符串: {timestring}")

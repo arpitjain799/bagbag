@@ -1,15 +1,11 @@
+from bagbag import Tools
+
 import re
 import langid
 import opencc
 import ipaddress
 import pypinyin
 from urllib.parse import quote_plus, unquote
-try:
-    from . import Re
-    from .Tools import URL
-except:
-    import Re
-    from Tools import URL
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from collections import OrderedDict
 
@@ -89,30 +85,30 @@ class String():
             pattern = addrPattern[ctype]
             text = self.string
 
-            res = Re.FindAll(pattern, text)
+            res = String(text).RegexFind(pattern)
             if len(res) != 0:
                 for r in res:
                     address = r[0]
 
-                    if len(Re.FindAll("[@_/#A-Za-z0-9]" + address, text)) != 0 or len(Re.FindAll(address + "[_/#A-Za-z0-9]", text)) != 0:
+                    if len(String(text).RegexFind("[@_/#A-Za-z0-9]" + address)) != 0 or len(String(text).RegexFind(address + "[_/#A-Za-z0-9]")) != 0:
                         continue 
 
-                    if len(Re.FindAll("[0-9]", address)) == 0:
+                    if len(String(address).RegexFind("[0-9]")) == 0:
                         continue 
 
-                    if len(Re.FindAll("[A-Z]", address)) == 0:
+                    if len(String(address).RegexFind("[A-Z]")) == 0:
                         continue 
 
-                    if len(Re.FindAll("[a-z]", address)) == 0:
+                    if len(String(address).RegexFind("[a-z]",)) == 0:
                         continue 
 
-                    if len(Re.FindAll('https{0,1}://.+?' + address, text)) != 0:
+                    if len(String(text).RegexFind('https{0,1}://.+?' + address)) != 0:
                         continue 
 
-                    if len(Re.FindAll("[a-z]{"+str(int(len(address)/3))+",}", address)) != 0:
+                    if len(String(address).RegexFind("[a-z]{"+str(int(len(address)/3))+",}")) != 0:
                         continue 
 
-                    if len(Re.FindAll("[A-Z]{"+str(int(len(address)/3))+",}", address)) != 0:
+                    if len(String(address).RegexFind("[A-Z]{"+str(int(len(address)/3))+",}")) != 0:
                         continue 
                     
                     resca.append(cryptoAddress(ctype, address))
@@ -321,6 +317,64 @@ class String():
 
     def IsVisaCardNumber(self) -> bool:
         return validators.visa(self.string) == True
+    
+    def RegexFind(self, pattern:str, multiline=False) -> list[list[str]]:
+        res = []
+
+        pattern1 = ""
+        lasti = ""
+        for idx in range(len(pattern)):
+            i = pattern[idx]
+            pattern1 = pattern1 + i
+            if i == "(" and lasti != "\\" and (pattern[idx+1] != "?" and pattern[idx+2] != ":"):
+                pattern1 = pattern1 + "?:"
+            lasti = i 
+
+        if pattern != pattern1:
+            if multiline:
+                reres1 = re.findall(pattern1, self.string, re.MULTILINE)
+                reres2 = re.findall(pattern, self.string, re.MULTILINE)
+            else:
+                reres1 = re.findall(pattern1, self.string)
+                reres2 = re.findall(pattern, self.string)
+                
+            for idx in range(len(reres1)):
+                r1 = reres1[idx]
+                r2 = reres2[idx]
+
+                if type(r1) == tuple and type(r2) == tuple:
+                    res.append(list(r1) + list(r2))
+                elif type(r1) == tuple and type(r2) != tuple:
+                    t = list()
+                    t.append(r2)
+                    res.append(list(r1) + t)
+                elif type(r1) != tuple and type(r2) == tuple:
+                    t = list()
+                    t.append(r1)
+                    res.append(t + list(r2))
+                else:
+                    t = list()
+                    t.append(r1)
+                    t.append(r2)
+                    res.append(t)
+        else:
+            if multiline:
+                reres = re.findall(pattern, self.string, re.MULTILINE)
+            else:
+                reres = re.findall(pattern, self.string)
+
+            for i in reres:
+                if type(i) == tuple:
+                    res.append(list(i))
+                else:
+                    t = list()
+                    t.append(i)
+                    res.append(t)
+
+        return res 
+    
+    def RegexReplace(self, pattern:str, string:str) -> str:
+        return re.sub(pattern, string, self.string)
 
 if __name__ == "__main__":
     print(1, String("ABC").HasChinese())
@@ -330,3 +384,10 @@ if __name__ == "__main__":
     print(5, String("這是一段用鍵盤點擊出來的軌跡").TraditionalChineseToSimplified())
     print(6, String("This is a 用鼠标写的简体中文").SimplifiedChineseToTraditional())
     print(7, String("This is a 用鼠标写的盤點擊出來的軌跡").PinYin())
+    print(8, String("ac123bd456").RegexFind("([a-z])([a-z])[0-9]+"))     # ==> [['ac123', 'a', 'c'], ['bd456', 'b', 'd']]
+    print(9, String("c123d456").RegexFind("([a-z])[0-9]+"))              # ==> [['c123', 'c'], ['d456', 'd']]
+    print(10, String("c123d456").RegexFind("[a-z][0-9]+"))               # ==> [['c123'], ['d456']]
+    print(11, String("(c123d456").RegexFind("(\\()[a-z][0-9]+"))         # ==> [['(c123', '(']]
+    print(12, String("c123d456").RegexFind("(?:[a-z])[0-9]+"))           # ==> [['c123'], ['d456']]
+    print(13, String("111-def").RegexFind("(111|222)-def"))              # ==> [['111-def', '111']]
+    print(14, String("222-def").RegexFind("(111|222)-def"))              # ==> [['222-def', '222']]
