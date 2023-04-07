@@ -6,7 +6,7 @@ from tronpy.providers import HTTPProvider
 
 import traceback
 
-from bagbag import Http, Json, Re, Lg, Time, Random
+from bagbag import Http, Json, String, Lg, Time, Random
 
 tronOfficialNodes = [
     '3.225.171.164',
@@ -444,7 +444,7 @@ class tronTranscation():
                 c = Json.Loads(data)
                 precision = c["precision"]
             except:
-                precision = int(Re.FindAll('"precision": *([0-9]+)', data)[0][1])
+                precision = int(String(data).RegexFind('"precision": *([0-9]+)')[0][1])
 
             
             return precision
