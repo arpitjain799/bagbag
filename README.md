@@ -137,6 +137,7 @@ docker run --rm --name bagbag -v /path/to/file/run.py:/app/run.py darren2046/bag
     * Binance
       * OfficalAccountVertify
         * Twitter(account:str, waiteOnRateLimit:bool=True) -> bool
+      * GetPrice(pair:str|list=None) -> CoinsPairPrice | list[CoinsPairPrice]
   * Twitter
     * Essential(bearerToken:str)
       * Search(keyword:str, sinceID:int=None, tweetPerRequest:int=10) -> typing.Iterable[twitterTweet]
